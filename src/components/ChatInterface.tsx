@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSoulStore } from '../store/soulStore'
+import { CHARACTERS } from '../constants/characters'
 
 // Polyfill for SpeechRecognition
 const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
@@ -9,7 +10,12 @@ export const ChatInterface = () => {
     const [isListening, setIsListening] = useState(false)
     const [recognition, setRecognition] = useState<any>(null)
 
-    const { lastMessage, setLastMessage, isThinking, setIsThinking, setMood } = useSoulStore()
+    const { 
+        lastMessage, setLastMessage, 
+        isThinking, setIsThinking, 
+        setMood, setIntensity,
+        activeCharacterId, setActiveCharacterId 
+    } = useSoulStore()
 
     useEffect(() => {
         if (SpeechRecognition) {
@@ -18,8 +24,16 @@ export const ChatInterface = () => {
             recog.lang = 'es-ES'
             recog.interimResults = false
 
-            recog.onstart = () => setIsListening(true)
-            recog.onend = () => setIsListening(false)
+            recog.onstart = () => {
+                setIsListening(true)
+                setMood('listening')
+                setIntensity(0.8)
+            }
+            recog.onend = () => {
+                setIsListening(false)
+                setMood('calm')
+                setIntensity(0.5)
+            }
 
             recog.onresult = (event: any) => {
                 const transcript = event.results[0][0].transcript
@@ -44,12 +58,19 @@ export const ChatInterface = () => {
 
         setLastMessage(text)
         setIsThinking(true)
+        setMood('thinking')
+        setIntensity(1.0)
         setInputText('')
+
+        // Simple sentiment analysis simulation
+        const isHappy = /hola|feliz|bien|alegre|genial/i.test(text)
+        const isSad = /triste|mal|solo|problema/i.test(text)
 
         // Simulate response delay and TTS
         setTimeout(() => {
             setIsThinking(false)
-            setMood('excited')
+            setMood(isHappy ? 'excited' : isSad ? 'calm' : 'calm')
+            setIntensity(isHappy ? 1.5 : 0.5)
             speakResponse("Entendido, he recibido tu mensaje: " + text)
         }, 2000)
     }
@@ -80,11 +101,32 @@ export const ChatInterface = () => {
             border: '1px solid rgba(255, 255, 255, 0.1)',
             fontFamily: 'system-ui, sans-serif'
         }}>
+            {/* Character Selector */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '5px' }}>
+                {CHARACTERS.map(char => (
+                    <button
+                        key={char.id}
+                        onClick={() => setActiveCharacterId(char.id)}
+                        style={{
+                            padding: '6px 12px',
+                            borderRadius: '20px',
+                            border: 'none',
+                            background: activeCharacterId === char.id ? '#007bff' : 'rgba(255,255,255,0.1)',
+                            color: 'white',
+                            fontSize: '12px',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        {char.name}
+                    </button>
+                ))}
+            </div>
+
             <div style={{
                 marginBottom: '5px',
                 minHeight: '24px',
                 fontSize: '14px',
-                color: isThinking ? '#00ffff' : '#aaaaaa',
+                color: isThinking ? '#00ffff' : isListening ? '#ff4d4d' : '#aaaaaa',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px'
@@ -92,6 +134,10 @@ export const ChatInterface = () => {
                 {isThinking ? (
                     <>
                         <span className="animate-pulse">●</span> Procesando...
+                    </>
+                ) : isListening ? (
+                    <>
+                        <span style={{ color: '#ff4d4d' }}>●</span> Escuchando...
                     </>
                 ) : (
                     <span>Esperando input...</span>

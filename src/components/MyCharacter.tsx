@@ -4,7 +4,7 @@ import { useAnimations, useFBX } from '@react-three/drei'
 
 export const MyCharacter = () => {
     // Encoded URL to handle spaces and special characters safely
-    const fbx = useFBX('/Happy%20Idle%20(1).fbx')
+    const fbx = useFBX('/HappyIdle.fbx')
     const { actions } = useAnimations(fbx.animations, fbx)
 
     useEffect(() => {

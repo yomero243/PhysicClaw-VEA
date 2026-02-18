@@ -1,0 +1,6 @@
+node_modules
+.git
+.vscode
+dist
+dist-ssr
+*.log
