@@ -1,16 +1,17 @@
 # PhysicClaw-VEA
 
-**PhysicClaw-VEA** es una aplicación de visualización 3D interactiva construida con tecnologías web modernas. Presenta una "Entidad Aumentada" que reacciona dinámicamente a estados internos simulados (pensamiento, emociones) a través de shaders personalizados y animaciones.
+**PhysicClaw-VEA** is an interactive 3D visualization application built with modern web technologies. It features an "Augmented Entity" that reacts dynamically to simulated internal states (thinking, emotions) through custom shaders and animations.
 
-## 🚀 Características Principales
+## 🚀 Key Features
 
--   **Visualización 3D Avanzada**: Utiliza **React Three Fiber** y **Three.js** para renderizar una escena inmersiva.
--   **Shaders Reactivos**: Implementación de `EnergyShader` que modifica visualmente la entidad basándose en propiedades como intensidad, "pensamiento" y estado de ánimo.
--   **Sistema "Soul" (Alma)**: Gestión de estado global con **Zustand** para simular comportamientos de la entidad (e.g., `isThinking`, `mood`, `intensity`).
--   **Interfaz de Chat**: Componente de interfaz superpuesto para interacción.
--   **Soporte de Modelos GLB**: Capacidad para cargar modelos 3D externos con animaciones, con un fallback elegante a una geometría base procedural.
+-   **Advanced 3D Visualization**: Utilizes **React Three Fiber** and **Three.js** to render an immersive scene.
+-   **Reactive Shaders**: Implementation of `EnergyShader` that visually modifies the entity based on properties like intensity, "thinking", and mood.
+-   **"Soul" System**: Global state management with **Zustand** to simulate entity behaviors (e.g., `isThinking`, `mood`, `intensity`).
+-   **Chat Interface**: Overlay interface component for interaction.
+-   **GLB Model Support**: Capability to load external 3D models with animations, with elegant fallback to procedural base geometry.
+-   **FBX Character Loader**: Includes support for animated FBX characters (`MyCharacter` component).
 
-## 🛠️ Tecnologías Utilizadas
+## 🛠️ Technologies Used
 
 -   [Vite](https://vitejs.dev/)
 -   [React](https://react.dev/) (v19)
@@ -18,25 +19,25 @@
 -   [React Three Fiber](https://docs.pmnd.rs/react-three-fiber)
 -   [Zustand](https://zustand-demo.pmnd.rs/)
 
-## 📦 Instalación y Uso
+## 📦 Installation and Usage
 
-1.  **Instalar dependencias**:
+1.  **Install dependencies**:
     ```bash
     npm install
     ```
 
-2.  **Iniciar servidor de desarrollo**:
+2.  **Start development server**:
     ```bash
     npm run dev
     ```
 
-3.  **Construir para producción**:
+3.  **Build for production**:
     ```bash
     npm run build
     ```
 
-## 📂 Estructura del Proyecto
+## 📂 Project Structure
 
--   `src/components`: Componentes de React y R3F (e.g., `Experience`, `AugmentedEntity`, `ChatInterface`).
--   `src/shaders`: Definiciones de shaders personalizados (GLSL/TS).
--   `src/store`: Lógica de estado global (`soulStore`).
+-   `src/components`: React and R3F components (e.g., `Experience`, `AugmentedEntity`, `ChatInterface`, `MyCharacter`).
+-   `src/shaders`: Custom shader definitions (GLSL/TS).
+-   `src/store`: Global state logic (`soulStore`).
