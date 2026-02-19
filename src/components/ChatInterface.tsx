@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSoulStore } from '../store/soulStore'
 import { CHARACTERS } from '../constants/characters'
+import { openClawService } from '../services/openClawService'
 
 // Polyfill for SpeechRecognition
 const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
@@ -53,26 +54,18 @@ export const ChatInterface = () => {
         }
     }
 
-    const handleSendMessage = (text: string) => {
+    const handleSendMessage = async (text: string) => {
         if (!text.trim()) return
 
         setLastMessage(text)
-        setIsThinking(true)
-        setMood('thinking')
-        setIntensity(1.0)
         setInputText('')
 
-        // Simple sentiment analysis simulation
-        const isHappy = /hola|feliz|bien|alegre|genial/i.test(text)
-        const isSad = /triste|mal|solo|problema/i.test(text)
+        // Using OpenClaw Service instead of simulation
+        const response = await openClawService.sendMessage(text);
 
-        // Simulate response delay and TTS
-        setTimeout(() => {
-            setIsThinking(false)
-            setMood(isHappy ? 'excited' : isSad ? 'calm' : 'calm')
-            setIntensity(isHappy ? 1.5 : 0.5)
-            speakResponse("Entendido, he recibido tu mensaje: " + text)
-        }, 2000)
+        setMood(response.mood || 'calm');
+        setIntensity(response.intensity || 0.5);
+        speakResponse(response.text);
     }
 
     const speakResponse = (text: string) => {
