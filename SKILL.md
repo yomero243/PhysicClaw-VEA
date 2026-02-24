@@ -1,54 +1,78 @@
 ---
-name: physic-claw-vea
-description: An interactive 3D visualization application featuring an "Augmented Entity" with reactive shaders and emotional states.
+name: physicclaw-vea
+description: Control the PhysicClaw-VEA interactive 3D visualization application by sending commands to its Zustand store via a local control file. Use this skill to start the application and modify its internal state (mood, thinking, intensity, etc.).
 ---
 
-# PhysicClaw-VEA
+# PhysicClaw-VEA Control Skill
 
-## Overview
-PhysicClaw-VEA is an advanced interactive 3D experience built with **React Three Fiber** and **Three.js**. The core of the application is an "Augmented Entity" that dynamically reacts to simulated internal states such as "thinking", emotions, and intensity levels through custom shaders and animations.
+This skill allows OpenClaw to interact with the running instance of the `PhysicClaw-VEA` application by writing commands to the `openclaw-control.json` file in the project root. The `PhysicClaw-VEA` application must be running (e.g., via `npm run dev`) for these commands to take effect.
 
-## Key Features
+## Commands
 
-### 🎨 Advanced 3D Visualization
-- Immersive scene rendering using React Three Fiber.
-- Support for loaded 3D models (GLB/FBX) with animation playback.
-- Fallback to procedural geometry when models are loading or unavailable.
+### 1. Start PhysicClaw-VEA in development mode
 
-### ⚡ Reactive Shaders (`EnergyShader`)
-- Custom GLSL shaders that visually modify the entity in real-time.
-- Visual parameters include:
-    - **Intensity**: Fluctuating energy levels.
-    - **Thinking State**: Visual pulses indicating processing.
-    - **Mood**: Color shifts based on the entity's emotional state.
+To start the application, navigate to the `PhysicClaw-VEA` project directory and run the development server.
 
-### 🧠 "Soul" System (State Management)
-- Powered by **Zustand** for global state management (`soulStore`).
-- Simulates the entity's internal "soul" or consciousness, driving the visual changes and behaviors.
+```bash
+cd PhysicClaw-VEA
+npm run dev
+```
 
-### 💬 Chat Interface
-- An overlay interface allowing users to interact with the entity via text.
-- Connects directly to the entity's state to trigger responses or visual changes.
+### 2. Control the Soul Store
 
-## Tech Stack
-- **Frontend**: React (v19), TypeScript, Vite
-- **3D Graphics**: Three.js, React Three Fiber, Dre
-- **State**: Zustand
-- **Styling**: Tailwind CSS (configured)
+Use the `control_soul_store` function to send commands to the `PhysicClaw-VEA`'s Zustand store.
 
-## Installation & Usage
+```python
+# To set the mood:
+default_api.write(
+    file_path="PhysicClaw-VEA/openclaw-control.json",
+    content='''{ "command": "setMood", "value": "excited", "id": "<timestamp_or_uuid>" }'''
+)
 
-1.  **Install dependencies**:
+# To set thinking state:
+default_api.write(
+    file_path="PhysicClaw-VEA/openclaw-control.json",
+    content='''{ "command": "setIsThinking", "value": true, "id": "<timestamp_or_uuid>" }'''
+)
+
+# To set intensity:
+default_api.write(
+    file_path="PhysicClaw-VEA/openclaw-control.json",
+    content='''{ "command": "setIntensity", "value": 0.8, "id": "<timestamp_or_uuid>" }'''
+)
+
+# To set the last message:
+default_api.write(
+    file_path="PhysicClaw-VEA/openclaw-control.json",
+    content='''{ "command": "setLastMessage", "value": "Hello OpenClaw!", "id": "<timestamp_or_uuid>" }'''
+)
+
+# To set active character ID:
+default_api.write(
+    file_path="PhysicClaw-VEA/openclaw-control.json",
+    content='''{ "command": "setActiveCharacterId", "value": "listening", "id": "<timestamp_or_uuid>" }'''
+)
+```
+
+**Note:** Always include a unique `id` (e.g., a timestamp or UUID) with each command to ensure the application processes new commands and ignores stale ones.
+
+## Example Usage
+
+### Start application and make the entity excited
+
+1.  Navigate to the `PhysicClaw-VEA` directory:
     ```bash
-    npm install
+    cd PhysicClaw-VEA
     ```
-
-2.  **Run locally**:
+2.  Start the development server (this will run in the background):
     ```bash
-    npm run dev
+    npm run dev &
     ```
-
-3.  **Build**:
-    ```bash
-    npm run build
+3.  Send a command to set the mood:
+    ```python
+    import time
+    default_api.write(
+        file_path="PhysicClaw-VEA/openclaw-control.json",
+        content=f'''{{ "command": "setMood", "value": "excited", "id": "{int(time.time())}" }}'''
+    )
     ```
