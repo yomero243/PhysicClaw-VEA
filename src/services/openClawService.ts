@@ -1,6 +1,8 @@
 import { useSoulStore } from '../store/soulStore';
 
-const OPENCLAW_API_BASE = import.meta.env.VITE_OPENCLAW_API_URL || 'http://127.0.0.1:18789';
+// Use a relative URL so the request goes through the Vite proxy (see vite.config.ts).
+// This avoids ERR_CONNECTION_REFUSED when the browser can't reach 127.0.0.1:18789 directly.
+const OPENCLAW_API_BASE = import.meta.env.VITE_OPENCLAW_API_URL || '';
 const OPENCLAW_TOKEN = import.meta.env.VITE_OPENCLAW_TOKEN || '';
 const OPENCLAW_MODEL = import.meta.env.VITE_OPENCLAW_MODEL || 'google/gemini-2.5-flash';
 

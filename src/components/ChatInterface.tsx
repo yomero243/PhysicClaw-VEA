@@ -11,11 +11,11 @@ export const ChatInterface = () => {
     const [isListening, setIsListening] = useState(false)
     const [recognition, setRecognition] = useState<any>(null)
 
-    const { 
-        lastMessage, setLastMessage, 
-        isThinking, setIsThinking, 
+    const {
+        lastMessage, setLastMessage,
+        isThinking,
         setMood, setIntensity,
-        activeCharacterId, setActiveCharacterId 
+        activeCharacterId, setActiveCharacterId
     } = useSoulStore()
 
     useEffect(() => {
