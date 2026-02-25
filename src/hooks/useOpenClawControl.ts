@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
 import { useSoulStore } from '../store/soulStore'
 
+const VALID_MOODS = ['calm', 'excited', 'thinking', 'listening'] as const
+
 interface ControlCommand {
     command: string
     value: unknown
@@ -10,11 +12,26 @@ interface ControlCommand {
 function applyCommand(cmd: ControlCommand) {
     const store = useSoulStore.getState()
     switch (cmd.command) {
-        case 'setMood':             store.setMood(cmd.value as string); break
-        case 'setIsThinking':       store.setIsThinking(cmd.value as boolean); break
-        case 'setIntensity':        store.setIntensity(cmd.value as number); break
-        case 'setLastMessage':      store.setLastMessage(cmd.value as string); break
-        case 'setActiveCharacterId': store.setActiveCharacterId(cmd.value as string); break
+        case 'setMood':
+            if (typeof cmd.value === 'string' && (VALID_MOODS as readonly string[]).includes(cmd.value))
+                store.setMood(cmd.value)
+            break
+        case 'setIsThinking':
+            if (typeof cmd.value === 'boolean')
+                store.setIsThinking(cmd.value)
+            break
+        case 'setIntensity':
+            if (typeof cmd.value === 'number' && cmd.value >= 0 && cmd.value <= 2)
+                store.setIntensity(cmd.value)
+            break
+        case 'setLastMessage':
+            if (typeof cmd.value === 'string' && cmd.value.length <= 500)
+                store.setLastMessage(cmd.value)
+            break
+        case 'setActiveCharacterId':
+            if (typeof cmd.value === 'string' && cmd.value.length > 0 && cmd.value.length <= 64)
+                store.setActiveCharacterId(cmd.value)
+            break
     }
 }
 

@@ -40,8 +40,7 @@ export const openClawService = {
             });
 
             if (!response.ok) {
-                const errText = await response.text();
-                throw new Error(`OpenClaw error ${response.status}: ${errText}`);
+                throw new Error(`OpenClaw error ${response.status}`);
             }
 
             const data = await response.json();
@@ -54,8 +53,7 @@ export const openClawService = {
                 mood: 'calm',
                 intensity: 0.5,
             };
-        } catch (error) {
-            console.error('OpenClaw Service Error:', error);
+        } catch {
             conversationHistory.pop(); // remove failed user message
             return {
                 text: 'Lo siento, hubo un error al conectar con OpenClaw.',
