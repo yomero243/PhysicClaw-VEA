@@ -2,11 +2,19 @@ import { useRef, useEffect, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useGLTF, useFBX, useAnimations, Sphere } from '@react-three/drei'
 import * as THREE from 'three'
-import { useSoulStore } from '../store/soulStore'
+import { useSoulStore, MOOD_COLORS } from '../store/soulStore'
 import type { CharacterOverride } from '../store/soulStore'
 import { CHARACTERS } from '../constants/characters'
 import { EnergyShaderMaterial } from '../shaders/EnergyShader'
 import '../shaders/EnergyShader'
+
+/** Resolve the effective shader color: manual override > mood auto-color > default */
+function resolveShaderColor(overrides: CharacterOverride, mood: string, fallback: string): THREE.Color {
+    if (overrides.shaderColor) return new THREE.Color(overrides.shaderColor)
+    const moodColor = MOOD_COLORS[mood]
+    if (moodColor) return new THREE.Color(moodColor)
+    return new THREE.Color(fallback)
+}
 
 interface ModelProps {
     url: string
@@ -39,8 +47,7 @@ const FBXModel = ({ url, config, overrides }: ModelProps) => {
     useFrame((_, delta) => {
         if (material) {
             material.uTime += delta
-            const shaderColor = overrides.shaderColor
-            if (shaderColor) material.uColor = new THREE.Color(shaderColor)
+            material.uColor = resolveShaderColor(overrides, mood, '#00ffff')
             let targetIntensity = overrides.intensity ?? intensity
             if (isThinking) targetIntensity += 0.8
             if (mood === 'excited') targetIntensity += 0.5
@@ -86,8 +93,7 @@ const GLBModel = ({ url, config, overrides }: ModelProps) => {
     useFrame((_, delta) => {
         if (material) {
             material.uTime += delta
-            const shaderColor = overrides.shaderColor
-            if (shaderColor) material.uColor = new THREE.Color(shaderColor)
+            material.uColor = resolveShaderColor(overrides, mood, '#00ffff')
             let targetIntensity = overrides.intensity ?? intensity
             if (isThinking) targetIntensity += 0.8
             if (mood === 'excited') targetIntensity += 0.5
@@ -116,6 +122,9 @@ const BaseEntity = ({ overrides }: { overrides: CharacterOverride }) => {
     useFrame((_, delta) => {
         if (materialRef.current) {
             materialRef.current.uTime += delta
+            // Auto-color based on mood
+            const color = resolveShaderColor(overrides, mood, '#00ffff')
+            materialRef.current.uColor = color
             let targetIntensity = overrides.intensity ?? intensity
             if (isThinking) targetIntensity += 0.8
             if (mood === 'excited') targetIntensity += 0.5
@@ -123,7 +132,6 @@ const BaseEntity = ({ overrides }: { overrides: CharacterOverride }) => {
         }
     })
 
-    const shaderColor = overrides.shaderColor ?? '#00ffff'
     const scale = overrides.scale ?? 1
 
     return (
@@ -134,7 +142,7 @@ const BaseEntity = ({ overrides }: { overrides: CharacterOverride }) => {
                 attach="material"
                 transparent
                 args={[{
-                    uColor: new THREE.Color(shaderColor),
+                    uColor: new THREE.Color('#00ffff'),
                     uIntensity: 0.5,
                     uTime: 0
                 }]}

@@ -7,9 +7,6 @@ export const MyCharacter = () => {
     const { actions } = useAnimations(animations, scene)
 
     useEffect(() => {
-        // Log available animations to help debugging
-        console.log('Available animations:', Object.keys(actions))
-
         // Play the first available animation
         const action = actions[Object.keys(actions)[0]]
         if (action) {

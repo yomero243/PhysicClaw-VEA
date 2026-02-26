@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500" font-family="system-ui, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a1a"/>
+      <stop offset="100%" style="stop-color:#1a1a2e"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#007bff"/>
+      <stop offset="100%" style="stop-color:#00ccff"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ffff;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#aa44ff;stop-opacity:0.1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="500" fill="url(#bg)" rx="12"/>
+
+  <!-- Title -->
+  <text x="450" y="35" fill="white" font-size="18" font-weight="700" text-anchor="middle">PhysicClaw-VEA — Application Layout</text>
+
+  <!-- Icon Sidebar -->
+  <rect x="20" y="55" width="50" height="420" fill="#0f0f19" rx="8" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  <text x="45" y="80" fill="#4da6ff" font-size="9" text-anchor="middle" font-weight="600">SIDEBAR</text>
+  <circle cx="45" cy="105" r="12" fill="rgba(0,123,255,0.35)" stroke="none"/>
+  <text x="45" y="109" fill="#4da6ff" font-size="11" text-anchor="middle">&#x2191;</text>
+  <circle cx="45" cy="145" r="12" fill="transparent"/>
+  <text x="45" y="149" fill="rgba(255,255,255,0.45)" font-size="11" text-anchor="middle">&#x1F3A8;</text>
+  <circle cx="45" cy="185" r="12" fill="transparent"/>
+  <text x="45" y="189" fill="rgba(255,255,255,0.45)" font-size="11" text-anchor="middle">&#x2922;</text>
+  <circle cx="45" cy="225" r="12" fill="transparent"/>
+  <text x="45" y="229" fill="rgba(255,255,255,0.45)" font-size="11" text-anchor="middle">&#x25B6;</text>
+  <circle cx="45" cy="265" r="12" fill="transparent"/>
+  <text x="45" y="269" fill="rgba(255,255,255,0.45)" font-size="11" text-anchor="middle">&#x1F464;</text>
+  <circle cx="45" cy="305" r="12" fill="transparent"/>
+  <text x="45" y="309" fill="rgba(255,255,255,0.45)" font-size="11" text-anchor="middle">&#x2699;</text>
+
+  <!-- Category Panel -->
+  <rect x="75" y="55" width="230" height="420" fill="rgba(20,20,30,0.92)" rx="0" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+  <text x="190" y="82" fill="white" font-size="13" font-weight="600" text-anchor="middle">Upload</text>
+  <line x1="90" y1="92" x2="290" y2="92" stroke="rgba(255,255,255,0.08)"/>
+
+  <!-- Drop zone -->
+  <rect x="90" y="105" width="200" height="80" fill="rgba(255,255,255,0.03)" rx="10" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="190" y="140" fill="rgba(255,255,255,0.5)" font-size="11" text-anchor="middle">Drop FBX/GLB here</text>
+  <text x="190" y="158" fill="rgba(255,255,255,0.3)" font-size="9" text-anchor="middle">or click to browse</text>
+
+  <!-- Uploaded models -->
+  <text x="90" y="210" fill="rgba(255,255,255,0.4)" font-size="9" font-weight="600" letter-spacing="1">UPLOADED MODELS</text>
+  <rect x="90" y="220" width="200" height="32" fill="rgba(255,255,255,0.05)" rx="6"/>
+  <text x="100" y="240" fill="white" font-size="11">MyCharacter</text>
+  <text x="250" y="240" fill="rgba(255,255,255,0.35)" font-size="9">FBX</text>
+  <rect x="90" y="258" width="200" height="32" fill="rgba(255,255,255,0.05)" rx="6"/>
+  <text x="100" y="278" fill="white" font-size="11">RobotModel</text>
+  <text x="250" y="278" fill="rgba(255,255,255,0.35)" font-size="9">GLB</text>
+
+  <!-- Shader controls preview -->
+  <text x="90" y="320" fill="rgba(255,255,255,0.4)" font-size="9" font-weight="600" letter-spacing="1">SHADER COLOR</text>
+  <rect x="90" y="330" width="24" height="24" fill="#00ffff" rx="4"/>
+  <rect x="120" y="330" width="24" height="24" fill="#44ff88" rx="4"/>
+  <rect x="150" y="330" width="24" height="24" fill="#ffcc00" rx="4"/>
+  <rect x="180" y="330" width="24" height="24" fill="#aa44ff" rx="4"/>
+  <rect x="210" y="330" width="24" height="24" fill="#ff44aa" rx="4"/>
+  <rect x="240" y="330" width="24" height="24" fill="#ff4444" rx="4"/>
+
+  <text x="90" y="380" fill="rgba(255,255,255,0.4)" font-size="9" font-weight="600" letter-spacing="1">INTENSITY</text>
+  <rect x="90" y="390" width="200" height="4" fill="rgba(255,255,255,0.1)" rx="2"/>
+  <rect x="90" y="390" width="120" height="4" fill="url(#accent)" rx="2"/>
+  <circle cx="210" cy="392" r="6" fill="#007bff"/>
+
+  <!-- 3D Viewport -->
+  <rect x="315" y="55" width="565" height="420" fill="rgba(17,17,17,1)" rx="0" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+  <text x="597" y="82" fill="rgba(255,255,255,0.15)" font-size="11" text-anchor="middle">3D VIEWPORT</text>
+
+  <!-- Avatar glow -->
+  <ellipse cx="560" cy="260" rx="80" ry="80" fill="url(#glow)"/>
+  <ellipse cx="560" cy="260" rx="45" ry="45" fill="none" stroke="#00ffff" stroke-width="1.5" opacity="0.4"/>
+  <ellipse cx="560" cy="260" rx="60" ry="60" fill="none" stroke="#00ffff" stroke-width="0.5" opacity="0.2"/>
+
+  <!-- Avatar silhouette -->
+  <circle cx="560" cy="230" r="18" fill="none" stroke="#00ccff" stroke-width="1.5" opacity="0.6"/>
+  <path d="M530 290 Q560 270 590 290 L590 310 Q560 320 530 310 Z" fill="none" stroke="#00ccff" stroke-width="1.5" opacity="0.6"/>
+
+  <!-- Mood label -->
+  <rect x="530" y="335" width="60" height="20" fill="rgba(0,255,255,0.15)" rx="10"/>
+  <text x="560" y="349" fill="#00ffff" font-size="9" text-anchor="middle" font-weight="600">happy</text>
+
+  <!-- Floating Chat -->
+  <rect x="640" y="290" width="220" height="175" fill="rgba(20,20,30,0.92)" rx="14" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+
+  <!-- Chat header -->
+  <circle cx="658" cy="308" r="4" fill="#44ff88"/>
+  <text x="670" y="312" fill="white" font-size="11" font-weight="600">Chat</text>
+  <text x="700" y="312" fill="#44ff88" font-size="8">happy</text>
+  <text x="845" y="312" fill="rgba(255,255,255,0.4)" font-size="14" text-anchor="end">x</text>
+  <line x1="648" y1="320" x2="852" y2="320" stroke="rgba(255,255,255,0.08)"/>
+
+  <!-- Chat messages -->
+  <rect x="710" y="330" width="140" height="28" fill="rgba(0,123,255,0.25)" rx="8"/>
+  <text x="720" y="348" fill="white" font-size="9">Hey, how are you?</text>
+
+  <rect x="648" y="365" width="160" height="28" fill="rgba(255,255,255,0.08)" rx="8" stroke-left="3" />
+  <rect x="648" y="365" width="3" height="28" fill="#44ff88" rx="1"/>
+  <text x="658" y="383" fill="white" font-size="9">I'm great! Ready to help!</text>
+  <text x="648" y="400" fill="#44ff88" font-size="7">happy</text>
+
+  <!-- Chat input -->
+  <rect x="648" y="410" width="130" height="26" fill="rgba(0,0,0,0.3)" rx="6" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+  <text x="658" y="427" fill="rgba(255,255,255,0.35)" font-size="9">Type a message...</text>
+  <rect x="784" y="410" width="40" height="26" fill="url(#accent)" rx="6"/>
+  <text x="804" y="427" fill="white" font-size="9" font-weight="700" text-anchor="middle">Send</text>
+  <circle cx="840" cy="423" r="13" fill="rgba(255,255,255,0.1)"/>
+  <text x="840" y="427" fill="white" font-size="10" text-anchor="middle">&#x1F3A4;</text>
+
+  <!-- Labels -->
+  <text x="45" y="490" fill="rgba(255,255,255,0.2)" font-size="8" text-anchor="middle">Icon Bar</text>
+  <text x="190" y="490" fill="rgba(255,255,255,0.2)" font-size="8" text-anchor="middle">Category Panel</text>
+  <text x="560" y="490" fill="rgba(255,255,255,0.2)" font-size="8" text-anchor="middle">3D Scene + Avatar</text>
+  <text x="750" y="490" fill="rgba(255,255,255,0.2)" font-size="8" text-anchor="middle">Floating Chat</text>
+</svg>

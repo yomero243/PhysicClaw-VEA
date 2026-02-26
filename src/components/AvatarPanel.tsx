@@ -25,10 +25,16 @@ const UploadCategory = () => {
     const fileInputRef = useRef<HTMLInputElement>(null)
     const { customCharacters, addCustomCharacter, setActiveCharacterId, removeCustomCharacter } = useSoulStore()
 
+    const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
+
     const processFiles = useCallback((files: File[]) => {
         files.forEach(file => {
             const ext = file.name.split('.').pop()?.toLowerCase()
             if (ext !== 'fbx' && ext !== 'glb') return
+            if (file.size > MAX_FILE_SIZE) {
+                alert(`File "${file.name}" exceeds the 50MB limit.`)
+                return
+            }
             const objectUrl = URL.createObjectURL(file)
             const id = `custom-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
             addCustomCharacter({

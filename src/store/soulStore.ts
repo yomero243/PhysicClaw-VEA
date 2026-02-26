@@ -10,6 +10,27 @@ export interface CharacterOverride {
     positionY?: number
 }
 
+export interface ChatMessage {
+    role: 'user' | 'assistant'
+    content: string
+    mood?: string
+    timestamp: number
+}
+
+// Mood → color mapping for automatic avatar color changes
+export const MOOD_COLORS: Record<string, string> = {
+    calm: '#00ffff',
+    happy: '#44ff88',
+    excited: '#ffcc00',
+    thinking: '#aa44ff',
+    listening: '#4488ff',
+    sad: '#4466aa',
+    angry: '#ff4444',
+    surprised: '#ff44aa',
+    curious: '#ff8844',
+    love: '#ff66cc',
+}
+
 interface SoulState {
     isThinking: boolean
     mood: string
@@ -21,6 +42,11 @@ interface SoulState {
     setLastMessage: (msg: string) => void
     setIntensity: (intensity: number) => void
     setActiveCharacterId: (id: string) => void
+
+    // Chat messages history
+    chatMessages: ChatMessage[]
+    addChatMessage: (msg: ChatMessage) => void
+    clearChatMessages: () => void
 
     // Custom characters (uploaded by user)
     customCharacters: CharacterConfig[]
@@ -55,6 +81,12 @@ export const useSoulStore = create<SoulState>()(
             setLastMessage: (msg) => set({ lastMessage: msg }),
             setIntensity: (intensity) => set({ intensity }),
             setActiveCharacterId: (id) => set({ activeCharacterId: id }),
+
+            chatMessages: [],
+            addChatMessage: (msg) => set((state) => ({
+                chatMessages: [...state.chatMessages, msg]
+            })),
+            clearChatMessages: () => set({ chatMessages: [] }),
 
             customCharacters: [],
             addCustomCharacter: (config) => set((state) => ({
@@ -91,13 +123,11 @@ export const useSoulStore = create<SoulState>()(
             setApiConfig: (config) => set((state) => ({ ...state, ...config })),
         }),
         {
-            name: 'physicclaw-storage', // unique name for localStorage
+            name: 'physicclaw-storage',
             partialize: (state) => ({
-                apiBaseUrl: state.apiBaseUrl,
-                apiModel: state.apiModel,
-                apiToken: state.apiToken,
                 customCharacters: state.customCharacters,
-                characterOverrides: state.characterOverrides
-            }), // specify what to persist
+                characterOverrides: state.characterOverrides,
+            }),
         }
-    ))
+    )
+)
