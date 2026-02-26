@@ -8,8 +8,8 @@ const CATEGORIES = [
     { id: 'shader', label: 'Shader', icon: 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01' },
     { id: 'transform', label: 'Transform', icon: 'M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4' },
     { id: 'animations', label: 'Animations', icon: 'M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664zM21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
-    { id: 'presets', label: 'Presets', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
     { id: 'settings', label: 'Settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' },
+    { id: 'connection', label: 'Connection', icon: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1' },
 ]
 
 const SvgIcon = ({ path, size = 22 }: { path: string; size?: number }) => (
@@ -399,6 +399,68 @@ const SettingsCategory = () => {
     )
 }
 
+const ConnectionCategory = () => {
+    const { apiBaseUrl, apiModel, apiToken, setApiConfig } = useSoulStore()
+    const [showToken, setShowToken] = useState(false)
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.5, marginBottom: '4px' }}>
+                Connect your own proxy or API. Leave URL blank to use the default local proxy. Changes are saved automatically.
+            </div>
+
+            <div>
+                <label style={labelStyle}>API Provider URL</label>
+                <input
+                    type="text"
+                    value={apiBaseUrl}
+                    onChange={(e) => setApiConfig({ apiBaseUrl: e.target.value })}
+                    placeholder="Leave empty for local proxy"
+                    style={inputStyle}
+                />
+            </div>
+
+            <div>
+                <label style={labelStyle}>Model ID</label>
+                <input
+                    type="text"
+                    value={apiModel}
+                    onChange={(e) => setApiConfig({ apiModel: e.target.value })}
+                    placeholder="claude-3-5-sonnet-20241022"
+                    style={inputStyle}
+                />
+            </div>
+
+            <div>
+                <label style={labelStyle}>API Token (Bearer)</label>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                    <input
+                        type={showToken ? "text" : "password"}
+                        value={apiToken}
+                        onChange={(e) => setApiConfig({ apiToken: e.target.value })}
+                        placeholder="sk-ant-api03-..."
+                        style={{ ...inputStyle, flex: 1 }}
+                    />
+                    <button
+                        onClick={() => setShowToken(!showToken)}
+                        style={{
+                            background: 'rgba(255,255,255,0.1)',
+                            border: '1px solid rgba(255,255,255,0.15)',
+                            borderRadius: '6px',
+                            color: 'white',
+                            cursor: 'pointer',
+                            padding: '0 10px',
+                            fontSize: '12px',
+                        }}
+                    >
+                        {showToken ? "Hide" : "Show"}
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 // ── Category content map ──
 const CATEGORY_CONTENT: Record<string, React.FC> = {
     upload: UploadCategory,
@@ -407,6 +469,7 @@ const CATEGORY_CONTENT: Record<string, React.FC> = {
     animations: AnimationsCategory,
     presets: PresetsCategory,
     settings: SettingsCategory,
+    connection: ConnectionCategory,
 }
 
 // ── Main AvatarPanel ──
@@ -522,4 +585,16 @@ const sliderValueStyle: React.CSSProperties = {
     color: 'rgba(255,255,255,0.35)',
     textAlign: 'right',
     marginTop: '2px',
+}
+
+const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '8px 10px',
+    borderRadius: '6px',
+    border: '1px solid rgba(255, 255, 255, 0.15)',
+    background: 'rgba(0, 0, 0, 0.4)',
+    color: 'white',
+    fontSize: '13px',
+    outline: 'none',
+    boxSizing: 'border-box',
 }

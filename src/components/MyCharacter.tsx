@@ -1,11 +1,10 @@
-
 import { useEffect } from 'react'
-import { useAnimations, useFBX } from '@react-three/drei'
+import { useAnimations, useGLTF } from '@react-three/drei'
 
 export const MyCharacter = () => {
     // Encoded URL to handle spaces and special characters safely
-    const fbx = useFBX('/HappyIdle.fbx')
-    const { actions } = useAnimations(fbx.animations, fbx)
+    const { scene, animations } = useGLTF('/Avata1.glb')
+    const { actions } = useAnimations(animations, scene)
 
     useEffect(() => {
         // Log available animations to help debugging
@@ -18,7 +17,7 @@ export const MyCharacter = () => {
         }
     }, [actions])
 
-    return <primitive object={fbx} scale={0.01} position={[0, -1, 0.5]} />
+    return <primitive object={scene} scale={1} position={[0, -1, 0.5]} />
 }
 
 
