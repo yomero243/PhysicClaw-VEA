@@ -13,9 +13,9 @@ export const CHARACTERS: CharacterConfig[] = [
     {
         id: 'happy-idle',
         name: 'Happy Bot',
-        modelUrl: '/HappyIdle.fbx',
-        type: 'fbx',
-        scale: 0.01,
+        modelUrl: '/Avata1.glb',
+        type: 'glb',
+        scale: 1,
         position: [0, -1, 0.5],
         defaultAnimation: 'mixamo.com' // Usually FBX from Mixamo have this default name
     },

@@ -1,11 +1,5 @@
 import { useSoulStore } from '../store/soulStore';
 
-// Use a relative URL so the request goes through the Vite proxy (see vite.config.ts).
-// This avoids ERR_CONNECTION_REFUSED when the browser can't reach 127.0.0.1:18789 directly.
-const OPENCLAW_API_BASE = import.meta.env.VITE_OPENCLAW_API_URL || '';
-const OPENCLAW_TOKEN = import.meta.env.VITE_OPENCLAW_TOKEN || '';
-const OPENCLAW_MODEL = import.meta.env.VITE_OPENCLAW_MODEL || 'google/gemini-2.5-flash';
-
 export interface OpenClawResponse {
     text: string;
     mood?: string;
@@ -26,14 +20,15 @@ export const openClawService = {
         conversationHistory.push({ role: 'user', content: text });
 
         try {
-            const response = await fetch(`${OPENCLAW_API_BASE}/v1/chat/completions`, {
+            const baseUrl = store.apiBaseUrl.replace(/\/$/, '')
+            const response = await fetch(`${baseUrl}/v1/chat/completions`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${OPENCLAW_TOKEN}`,
+                    'Authorization': `Bearer ${store.apiToken}`,
                 },
                 body: JSON.stringify({
-                    model: OPENCLAW_MODEL,
+                    model: store.apiModel,
                     messages: conversationHistory,
                     stream: false,
                 }),

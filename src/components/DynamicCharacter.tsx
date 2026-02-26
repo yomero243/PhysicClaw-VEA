@@ -80,7 +80,7 @@ const GLBModel = ({ url, config, overrides }: ModelProps) => {
         }
     }, [actions, mood, config])
 
-    const useShader = overrides.useEnergyShader ?? true
+    const useShader = overrides.useEnergyShader ?? false
     const material = useMemo(() => useShader ? new EnergyShaderMaterial() : null, [useShader])
 
     useFrame((_, delta) => {
@@ -160,3 +160,7 @@ export const DynamicCharacter = () => {
 
     return <GLBModel url={config.modelUrl} config={config} overrides={overrides} />
 }
+
+useFBX.preload('/HappyIdle.fbx')
+useGLTF.preload('/HappyIdle.glb') // Para cuando conviertas el archivo
+
