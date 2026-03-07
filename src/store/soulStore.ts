@@ -35,6 +35,10 @@ interface SoulState {
     activeCategoryId: string | null
     setActiveCategoryId: (id: string | null) => void
 
+    // Auth
+    userId: string | null
+    setUserId: (id: string | null) => void
+
     // API Connection Settings
     apiBaseUrl: string
     apiModel: string
@@ -83,6 +87,10 @@ export const useSoulStore = create<SoulState>()(
             setActiveCategoryId: (id) => set((state) => ({
                 activeCategoryId: state.activeCategoryId === id ? null : id
             })),
+
+            // Auth
+            userId: null,
+            setUserId: (id) => set({ userId: id }),
 
             // Default API values (can be overridden by UI)
             apiBaseUrl: import.meta.env.VITE_OPENCLAW_API_URL || '',
