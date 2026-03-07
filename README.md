@@ -95,3 +95,139 @@ Switch the active character via the character selector buttons in the chat UI, o
 | `intensity` | `number` | `0.5` | Shader energy intensity (0 to ~2) |
 | `lastMessage` | `string` | `''` | Last user message shown in the UI |
 | `activeCharacterId` | `string` | `'happy-idle'` | ID of the currently rendered character |
+
+---
+
+## Roadmap — Future Deployment Architecture
+
+The following schema describes the planned evolution of PhysicClaw-VEA into a **multi-user**, **persistent**, and **team-deployable** platform.
+
+### Architecture Layers
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  LAYER 00 · CLIENT / BROWSER                                    │
+│                                                                 │
+│  ┌──────────────────┐  ┌────────────────┐  ┌────────────────┐  │
+│  │  Web App (R3F)   │  │  Auth Session  │  │  Voice / TTS   │  │
+│  │  React 19        │  │  JWT · Supabase│  │  Web Speech API│  │
+│  │  Three.js WebGPU │  │  @supabase/js  │  │  es-ES native  │  │
+│  └──────────────────┘  └────────────────┘  └────────────────┘  │
+└───────────────────────────────┬─────────────────────────────────┘
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  LAYER 01 · HOSTING & CDN · STATIC ASSETS                      │
+│                                                                 │
+│  ┌──────────────────────────┐  ┌────────────────────────────┐  │
+│  │  Vercel / Netlify        │  │  Supabase Storage          │  │
+│  │  Vite bundle · Edge CDN  │  │  GLB · FBX · Textures      │  │
+│  │  Auto CI/CD from GitHub  │  │  RLS per user              │  │
+│  └──────────────────────────┘  └────────────────────────────┘  │
+└───────────────────────────────┬─────────────────────────────────┘
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  LAYER 02 · API LAYER · GRAPHQL + REST                         │
+│                                                                 │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
+│  │  pg_graphql  │  │ Supabase Auth│  │  Supabase Realtime   │  │
+│  │  /graphql/v1 │  │  JWT · OAuth │  │  WebSocket · Live    │  │
+│  │  RLS via JWT │  │  Magic Link  │  │  multi-user scene    │  │
+│  └──────────────┘  └──────────────┘  └──────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  OpenClaw Gateway (Azure VM)                             │   │
+│  │  LLM Proxy · Gemini 2.5 Flash · POST /v1/chat            │   │
+│  └──────────────────────────────────────────────────────────┘   │
+└───────────────────────────────┬─────────────────────────────────┘
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  LAYER 03 · BACKEND SERVICES · PROCESSING                      │
+│                                                                 │
+│  ┌──────────────────────┐  ┌───────────────┐  ┌─────────────┐  │
+│  │  Edge Functions      │  │  DB Webhooks  │  │  Azure VM   │  │
+│  │  Deno · TypeScript   │  │  pg_net       │  │  OpenClaw   │  │
+│  │  upload-model        │  │  INSERT/UPDATE│  │  port       │  │
+│  │  chat-proxy          │  │  triggers     │  │  18789      │  │
+│  └──────────────────────┘  └───────────────┘  └─────────────┘  │
+└───────────────────────────────┬─────────────────────────────────┘
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  LAYER 04 · PERSISTENCE · POSTGRESQL + STORAGE                 │
+│                                                                 │
+│  ┌────────────────────┐  ┌───────────────┐  ┌───────────────┐  │
+│  │  PostgreSQL 15     │  │  Storage      │  │  Row Level    │  │
+│  │  Supabase Managed  │  │  Buckets      │  │  Security     │  │
+│  │  scenes            │  │  models/      │  │  auth.uid()   │  │
+│  │  objects_3d        │  │  textures/    │  │  per table    │  │
+│  │  agents · messages │  │  S3-compat    │  │               │  │
+│  └────────────────────┘  └───────────────┘  └───────────────┘  │
+└───────────────────────────────┬─────────────────────────────────┘
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  LAYER 05 · DEVOPS · CI/CD · MONITORING                        │
+│                                                                 │
+│  ┌──────────────┐  ┌─────────────────────┐  ┌──────────────┐  │
+│  │  GitHub      │  │  GitHub Actions     │  │  Monitoring  │  │
+│  │  main → prod │  │  lint · types       │  │  Sentry      │  │
+│  │  develop→stg │  │  supabase db push   │  │  Vercel Anlt │  │
+│  │  feature/*   │  │  vercel deploy      │  │  Supabase DB │  │
+│  └──────────────┘  └─────────────────────┘  └──────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### CI/CD Pipeline
+
+```
+[Dev local]  →  [Pull Request]  →  [CI checks]  →  [Staging]
+feature/*        → develop          lint · types      preview deploy
+                                    build
+
+[Staging]  →  [Code Review]  →  [DB Migration]  →  [Production]
+                 → main             supabase          vercel deploy
+                                    db push
+```
+
+### Environments
+
+| Environment | URL | Database | Branch |
+|-------------|-----|----------|--------|
+| **LOCAL** | `localhost:5173` | Supabase local CLI | `feature/*` |
+| **STAGING** | `preview.vercel.app` | Supabase staging project | `develop` |
+| **PRODUCTION** | `physiclaw.app` | Supabase prod project | `main` |
+
+### Environment Variables per Environment
+
+```env
+# Frontend (Vite — public, secured by RLS)
+VITE_SUPABASE_URL         = https://xxxx.supabase.co
+VITE_SUPABASE_ANON_KEY    = eyJ...
+VITE_OPENCLAW_API_URL     = https://your-vm.azure.com:18789
+
+# Edge Functions (private — never exposed to the client)
+OPENCLAW_SECRET_TOKEN     = sk-...
+SUPABASE_SERVICE_ROLE_KEY = eyJ...
+
+# CI/CD (GitHub Actions secrets)
+VERCEL_TOKEN              = ...
+SUPABASE_ACCESS_TOKEN     = ...
+SUPABASE_PROJECT_ID       = ...
+```
+
+### Team Roles
+
+| Role | Responsibilities |
+|------|-----------------|
+| **Frontend / 3D** (1–2 devs) | R3F scenes, TSL shaders, Zustand soulStore, TransformControls UX, DynamicCharacter, Chat UI / voice |
+| **Backend / Data** (1 dev) | PostgreSQL schema + RLS, Supabase migrations, Edge Functions (Deno), Storage policies, GraphQL queries/mutations |
+| **AI / Integration** (1 dev) | OpenClaw gateway config, per-user system prompts, conversation history, mood → shader mapping, alternative LLM models |
+| **DevOps** (1 dev part-time) | GitHub Actions pipelines, Vercel/Netlify config, environment variables, monitoring & alerts, Azure VM deploy |
+
+### Phase Roadmap
+
+| Phase | Goal | Key Technologies |
+|-------|------|-----------------|
+| **v1.x** *(current)* | Single-user local app with reactive VEA, AI chat and FBX/GLB support | React 19, R3F, Zustand, OpenClaw |
+| **v2.0** | Multi-user authentication + cloud scene persistence | Supabase Auth (JWT), PostgreSQL, RLS |
+| **v2.5** | Real-time collaborative scenes (multiple simultaneous users) | Supabase Realtime, WebSocket, Presence |
+| **v3.0** | Full deployment with automated CI/CD, staging and production | GitHub Actions, Vercel, supabase db push |
+| **v3.5** | Agent marketplace: per-user system prompts, models and avatars | Edge Functions, Storage buckets, pg_graphql |
+| **v4.0** | WebGPU renderer + TSL shaders for advanced effects on modern hardware | Three.js WebGPU, TSL, Chrome/Edge 113+ |
