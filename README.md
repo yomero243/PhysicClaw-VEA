@@ -16,6 +16,95 @@
   - Write a JSON command to `openclaw-control.json` (watched by the Vite plugin).
   - POST a JSON command to the `/api/control` HTTP endpoint exposed by the Vite dev server.
 
+## Setup
+
+Follow these steps to get PhysicClaw-VEA running locally from scratch.
+
+### 1. Create a Supabase project
+
+1. Go to [https://supabase.com](https://supabase.com) and sign in (or create a free account).
+2. Click **New project**, choose an organization, give the project a name, set a strong database password, and select a region close to you.
+3. Wait ~2 minutes for the project to provision.
+
+### 2. Obtain your Supabase credentials
+
+Once the project is ready:
+
+1. Open your project dashboard and go to **Settings → API**.
+2. Copy the following values:
+   - **Project URL** → this is your `VITE_SUPABASE_URL`  
+     Example: `https://abcdefghijklmnop.supabase.co`
+   - **Project API Keys → `anon` `public`** → this is your `VITE_SUPABASE_ANON_KEY`  
+     > ⚠️ The `anon` key is safe to expose in the frontend. Row Level Security (RLS) policies in `supabase/migrations/002_rls_policies.sql` restrict data access per user.
+
+### 3. Configure environment variables
+
+```bash
+# From the project root
+cp .env.example .env
+```
+
+Open `.env` and fill in at minimum:
+
+```env
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+```
+
+Adjust the other variables as needed (see `.env.example` for the full list with descriptions).
+
+### 4. Run database migrations
+
+Install the [Supabase CLI](https://supabase.com/docs/guides/cli) if you haven't already:
+
+```bash
+npm install -g supabase
+# or via brew:  brew install supabase/tap/supabase
+```
+
+Link the CLI to your remote project (run once):
+
+```bash
+supabase login          # opens browser for auth
+supabase link --project-ref <your-project-id>
+# Project ID is visible in Settings → General
+```
+
+Push all migrations in `supabase/migrations/` to the remote database:
+
+```bash
+supabase db push
+```
+
+This applies, in order:
+- `001_v2_schema.sql` — core tables (scenes, objects_3d, messages, agents…)
+- `002_rls_policies.sql` — Row Level Security policies tied to `auth.uid()`
+
+> **Local development alternative**: You can run a local Supabase stack with  
+> `supabase start` (requires Docker). Set `VITE_SUPABASE_URL=http://localhost:54321`  
+> and use the local anon key printed by `supabase start`.
+
+### 5. Install dependencies and start the project
+
+```bash
+# Install Node dependencies
+npm install
+
+# Start the Vite dev server
+npm run dev
+```
+
+The app will be available at `http://localhost:5173` (or the port set in `VITE_PORT`).
+
+To build for production:
+
+```bash
+npm run build
+npm run preview   # serves the build locally to verify
+```
+
+---
+
 ## Technologies Used
 
 - [Vite](https://vitejs.dev/) — build tool and dev server
