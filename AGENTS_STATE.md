@@ -70,6 +70,20 @@
 - All indexes use IF NOT EXISTS → fully idempotent migration
 **Expected output:** `003_*.sql` file, commit `feat(db): migration 003 - performance indexes and user_preferences improvements`
 
+### TASK-08: Connect ChatInterface to openClawService
+**Status:** ✅ DONE
+**Agent:** fix-agent
+**Completed:** 2026-03-08
+**Scope:** Replace hardcoded `setTimeout` in `handleSendMessage` with async call to `openClawService.sendMessage`. Add `clearHistory()` on sign-out.
+**Notes:**
+- Imported `openClawService` in `ChatInterface.tsx`
+- `handleSendMessage` converted to `async`, removed `setTimeout` block
+- Result fields mapped: `addMessage`, `setMood`, `setIntensity`, `speakResponse`
+- `openClawService.clearHistory()` added to sign-out button onClick
+- Removed unused `setIsThinking` destructure (service handles it internally)
+- `npx tsc --noEmit` → exit 0
+- Commit: `fix(chat): connect ChatInterface to openClawService — closes #8`
+
 ### TASK-04: EnergyShader refinement
 **Status:** PENDING  
 **Agent:** —  
