@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { Session, User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
+import { openClawService } from '../services/openClawService'
 
 interface AuthContextType {
   session: Session | null
@@ -42,6 +43,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
+    // Clear conversation history so it doesn't leak to the next user session
+    openClawService.clearHistory()
     await supabase.auth.signOut()
   }
 

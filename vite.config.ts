@@ -4,9 +4,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 // Origins allowed to POST to /api/control. Extend as needed.
+const VITE_PORT = Number(process.env.VITE_PORT ?? 5173)
 const ALLOWED_ORIGINS = [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
+    `http://localhost:${VITE_PORT}`,
+    `http://127.0.0.1:${VITE_PORT}`,
 ]
 
 // Secret token for /api/control. Set CONTROL_API_TOKEN in your shell before
@@ -21,6 +22,10 @@ const CONTROL_API_TOKEN =
         )
         return random
     })()
+
+// Port where OpenClaw / local LLM proxy is listening.
+// Override via OPENCLAW_LOCAL_PORT env var.
+const OPENCLAW_LOCAL_PORT = Number(process.env.OPENCLAW_LOCAL_PORT ?? 18789)
 
 // Allowed commands and their value validators
 const COMMAND_VALIDATORS: Record<string, (v: unknown) => boolean> = {
@@ -164,10 +169,10 @@ export default defineConfig({
     plugins: [react(), openClawControlPlugin()],
     server: {
         host: '127.0.0.1',
-        port: 5173,
+        port: VITE_PORT,
         proxy: {
             '/v1': {
-                target: 'http://127.0.0.1:18789',
+                target: `http://127.0.0.1:${OPENCLAW_LOCAL_PORT}`,
                 changeOrigin: true,
                 bypass(req) {
                     if (!ALLOWED_PROXY_PATHS.some(p => req.url?.startsWith(p))) {
