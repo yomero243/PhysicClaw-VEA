@@ -1,97 +1,204 @@
-# PhysicClaw-VEA
+<div align="center">
 
-**PhysicClaw-VEA** is an interactive 3D visualization application built with modern web technologies. It features a "Virtual Entity Augmented" (VEA) that reacts dynamically to simulated internal states (thinking, emotions) through custom shaders, animations, and real AI conversation via the OpenClaw API.
+# ⚡ PhysicClaw VEA
 
-## Key Features
+### Virtual Entity Augmented — An AI that you can *see* think
 
-- **Advanced 3D Visualization**: Uses **React Three Fiber** and **Three.js** to render an immersive 3D scene with environment lighting and contact shadows.
-- **Reactive Shaders**: `EnergyShader` visually modifies the entity based on `intensity`, `isThinking`, and `mood` state.
-- **"Soul" System**: Global state management with **Zustand** to simulate entity behaviors (`isThinking`, `mood`, `intensity`, `lastMessage`, `activeCharacterId`).
-- **AI Chat Interface**: Overlay UI to send text messages to the OpenClaw API (default model: `google/gemini-2.5-flash`) and receive AI responses.
-- **Voice Input / Text-to-Speech**: Microphone support via the Web SpeechRecognition API and spoken responses via SpeechSynthesis, both configured for `es-ES`.
-- **Dynamic Character System**: `DynamicCharacter` component loads FBX or GLB models defined in `CHARACTERS` config and switches animations based on the active mood.
-- **GLB Model Support**: Loads external GLB models with animations and applies the `EnergyShader` to all meshes.
-- **FBX Character Loader**: Loads animated FBX characters (e.g., Mixamo rigs) with mood-driven animation switching.
-- **OpenClaw External Control**: Two mechanisms let external agents control the entity state at runtime:
-  - Write a JSON command to `openclaw-control.json` (watched by the Vite plugin).
-  - POST a JSON command to the `/api/control` HTTP endpoint exposed by the Vite dev server.
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/)
+[![Three.js](https://img.shields.io/badge/Three.js-r168-black?logo=three.js)](https://threejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## Technologies Used
+**A 3D interactive entity that reacts in real time to its own AI emotions.**
+Talk to it. Watch it pulse, breathe, and glow as it thinks.
 
-- [Vite](https://vitejs.dev/) — build tool and dev server
-- [React](https://react.dev/) (v19)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Three.js](https://threejs.org/)
-- [React Three Fiber](https://docs.pmnd.rs/react-three-fiber) — React renderer for Three.js
-- [React Three Drei](https://github.com/pmndrs/drei) — helpers for R3F (`useGLTF`, `useFBX`, `ContactShadows`, `Environment`, `OrbitControls`, ...)
-- [Zustand](https://zustand-demo.pmnd.rs/) — global state management
+[**Live Demo**](#) · [**Report Bug**](../../issues) · [**Request Feature**](../../issues)
 
-## Installation and Usage
+---
 
-1. **Install dependencies**:
-    ```bash
-    npm install
-    ```
+<!-- Replace this line with a demo GIF: ![Demo](demo.gif) -->
+> 🎥 **Add a screen recording here — it's the #1 thing that will make people stop scrolling.**
 
-2. **Configure environment variables** (create a `.env` file in the project root):
-    ```env
-    VITE_OPENCLAW_API_URL=http://127.0.0.1:18789
-    VITE_OPENCLAW_TOKEN=your_token_here
-    VITE_OPENCLAW_MODEL=google/gemini-2.5-flash
-    ```
-    If `VITE_OPENCLAW_API_URL` is not set, requests go through the built-in Vite proxy (`/v1` -> `http://127.0.0.1:18789`).
+</div>
 
-3. **Start development server**:
-    ```bash
-    npm run dev
-    ```
+---
 
-4. **Build for production**:
-    ```bash
-    npm run build
-    ```
+## What is this?
+
+PhysicClaw VEA is a web app where an **AI-powered 3D entity** reacts visually to its own internal emotional state:
+
+- **Thinking** → the entity pulses faster, glows brighter
+- **Excited** → energy intensity spikes, animations shift
+- **Listening** → a calm breathing rhythm, waiting
+- **Calm** → slow oscillation, serene glow
+
+All of this is driven by **custom GLSL shaders** that read directly from a Zustand state store that the AI controls. The result: a living, breathing avatar that expresses its cognition through light and motion.
+
+---
+
+## Features
+
+| Feature | Details |
+|---|---|
+| **Custom GLSL Energy Shader** | Fresnel rim lighting, noise-based pulsing, time-driven displacement — all reactive to AI state |
+| **Real AI Conversations** | OpenAI-compatible API (default: `google/gemini-2.5-flash`). Full conversation history maintained |
+| **Mood-Driven Animations** | FBX/GLB model animations switch and crossfade (0.5s) based on the entity's mood |
+| **Voice I/O** | Web SpeechRecognition (input) + SpeechSynthesis (output), configured for `es-ES` |
+| **External Control API** | POST to `/api/control` or write to `openclaw-control.json` to drive the entity from any script |
+| **Pluggable Characters** | Drop in any Mixamo FBX or GLB model and it gets the shader treatment automatically |
+
+---
+
+## Quick Start
+
+```bash
+git clone https://github.com/yomero243/PhysicClaw-VEA.git
+cd PhysicClaw-VEA
+npm install
+```
+
+Create a `.env` file:
+
+```env
+VITE_OPENCLAW_API_URL=http://127.0.0.1:18789
+VITE_OPENCLAW_TOKEN=your_token_here
+VITE_OPENCLAW_MODEL=google/gemini-2.5-flash
+```
+
+```bash
+npm run dev
+```
+
+Open `http://localhost:5173` — that's it.
+
+> Works with **any OpenAI-compatible API** (OpenRouter, Ollama, LM Studio, etc.)
+
+---
+
+## How the shader reacts to AI state
+
+```
+AI response → soulStore (Zustand)
+                    │
+          ┌─────────┴──────────┐
+          │                    │
+    isThinking = true     mood = "excited"
+    intensity += 0.8      intensity += 0.5
+          │                    │
+          └─────────┬──────────┘
+                    │
+              EnergyShader uniforms
+              uIntensity / uTime / uColor
+                    │
+              WebGL renders live
+```
+
+The entity's glow, pulse speed, and rim brightness are all computed in the fragment shader every frame from these values. There is no tweening library — it's raw GPU math.
+
+---
 
 ## Project Structure
 
 ```
 src/
 ├── components/
-│   ├── AugmentedEntity.tsx   — Legacy entity component (GLB + EnergyShader fallback)
-│   ├── ChatInterface.tsx     — Chat overlay with voice input and character selector
-│   ├── DynamicCharacter.tsx  — Active character renderer (FBX / GLB / BaseEntity)
-│   ├── Experience.tsx        — R3F Canvas with lighting, shadows and environment
-│   └── MyCharacter.tsx       — Standalone FBX loader (legacy, not used in main scene)
-├── constants/
-│   └── characters.ts         — CHARACTERS config array (id, model URL, type, scale...)
-├── hooks/
-│   └── useOpenClawControl.ts — Listens for Vite HMR "openclaw-command" events
-├── services/
-│   └── openClawService.ts    — Fetch wrapper for the OpenClaw chat completions API
+│   ├── Experience.tsx        # R3F Canvas: lighting, shadows, camera
+│   ├── DynamicCharacter.tsx  # Loads FBX / GLB, applies EnergyShader
+│   ├── ChatInterface.tsx     # UI overlay: voice + text + character selector
+│   └── AugmentedEntity.tsx   # Legacy fallback entity
 ├── shaders/
-│   └── EnergyShader.ts       — Custom GLSL shader material (uTime, uIntensity, uColor)
+│   └── EnergyShader.ts       # Custom GLSL — the visual heart of the project
 ├── store/
-│   └── soulStore.ts          — Zustand store: isThinking, mood, intensity, lastMessage, activeCharacterId
-├── App.tsx                   — Root component
-└── OpenClawControl.tsx       — Polling-based control component (reads openclaw-control.json every 1 s)
+│   └── soulStore.ts          # Zustand: mood, intensity, isThinking
+├── services/
+│   └── openClawService.ts    # OpenAI-compatible API client
+├── hooks/
+│   └── useOpenClawControl.ts # HMR-based external command listener
+└── constants/
+    └── characters.ts         # Character config: id, model URL, type, scale
 ```
 
-## Available Characters
+---
 
-Defined in `src/constants/characters.ts`:
+## Control the entity from outside the browser
 
-| ID | Name | Type | Model |
-|----|------|------|-------|
-| `happy-idle` | Happy Bot | FBX | `/HappyIdle.fbx` |
-| `base-sphere` | Energy Core | GLB (procedural) | *(base geometry)* |
+You can drive the entity state from any external process (CLI scripts, AI agents, automation):
 
-Switch the active character via the character selector buttons in the chat UI, or via the `setActiveCharacterId` command through the OpenClaw control interface.
+**Option A — HTTP endpoint:**
+```bash
+curl -X POST http://localhost:5173/api/control \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your_token_here" \
+  -d '{"command": "setMood", "value": "excited"}'
+```
 
-## Soul Store — State Reference
+**Option B — JSON file watch:**
+```bash
+echo '{"id":"1","command":"setIntensity","value":2}' > openclaw-control.json
+```
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `isThinking` | `boolean` | `false` | Shows "thinking" animation; boosts intensity by 0.8 |
-| `mood` | `string` | `'calm'` | `'calm'`, `'excited'`, `'thinking'`, `'listening'` |
-| `intensity` | `number` | `0.5` | Shader energy intensity (0 to ~2) |
-| `lastMessage` | `string` | `''` | Last user message shown in the UI |
-| `activeCharacterId` | `string` | `'happy-idle'` | ID of the currently rendered character |
+Available commands: `setMood` · `setIsThinking` · `setIntensity` · `setLastMessage` · `setActiveCharacterId`
+
+---
+
+## Add your own character
+
+1. Drop an FBX or GLB into `public/`
+2. Add an entry to `src/constants/characters.ts`:
+
+```ts
+{
+  id: 'my-character',
+  name: 'My Character',
+  modelUrl: '/my-model.fbx',
+  type: 'fbx',
+  scale: 0.01,
+  position: [0, -1, 0],
+  defaultAnimation: 'Idle',
+  animations: {
+    calm: 'Idle',
+    excited: 'Running',
+    thinking: 'Thinking',
+    listening: 'Listening',
+  }
+}
+```
+
+3. Select it from the character buttons in the UI.
+
+The EnergyShader is applied automatically to every mesh in your model.
+
+---
+
+## Tech Stack
+
+- [React 19](https://react.dev/) — UI
+- [Three.js](https://threejs.org/) + [React Three Fiber](https://docs.pmnd.rs/react-three-fiber) — 3D rendering
+- [React Three Drei](https://github.com/pmndrs/drei) — R3F helpers
+- [Zustand](https://zustand-demo.pmnd.rs/) — state management
+- [Vite](https://vitejs.dev/) — dev server + build tool + control plugin
+- Custom GLSL shaders — visual emotion system
+
+---
+
+## Contributing
+
+PRs are welcome. For major changes, open an issue first to discuss what you'd like to change.
+
+```bash
+git checkout -b feature/your-feature
+# make changes
+git commit -m "feat: describe your feature"
+git push origin feature/your-feature
+```
+
+---
+
+<div align="center">
+
+Made with ⚡ by [yomero243](https://github.com/yomero243)
+
+If this project was useful or interesting to you, consider giving it a ⭐
+
+</div>
