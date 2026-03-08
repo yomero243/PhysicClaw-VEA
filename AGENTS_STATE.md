@@ -37,10 +37,15 @@
 **Expected output:** Zero TS errors, commit message `fix: resolve TypeScript compilation errors`
 
 ### TASK-02: `.env.example` + Supabase env documentation
-**Status:** IN_PROGRESS  
+**Status:** DONE ✅  
 **Agent:** docs-agent  
 **Scope:** Create `.env.example` with all required env vars. Update README with setup instructions for Supabase. Commit.  
-**Expected output:** `.env.example` file, README updated, commit `docs: add env vars and Supabase setup guide`
+**Expected output:** `.env.example` file, README updated, commit `docs: add env vars and Supabase setup guide`  
+**Notes:**
+- Created `.env.example` with all 8 vars: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_OPENCLAW_API_URL`, `VITE_OPENCLAW_TOKEN`, `VITE_OPENCLAW_MODEL`, `VITE_PORT`, `OPENCLAW_LOCAL_PORT`, `CONTROL_API_TOKEN`, `VITE_CONTROL_POLL_MS`
+- Added `.env.*` exception to `.gitignore` so `.env.example` is tracked
+- Added `## Setup` section to README.md with: Supabase project creation, credential retrieval, migration steps (`supabase db push`), local dev alternative, install & start instructions
+- Commit: `docs: add .env.example and Supabase setup guide` (23e37e2)
 
 ### TASK-03: Migration 003 — user_preferences & indexes
 **Status:** DONE ✅  
