@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSoulStore } from '../store/soulStore'
 import { useAuth } from '../auth/AuthProvider'
 import { CHARACTERS } from '../constants/characters'
+import { openClawService } from '../services/openClawService'
 
 // Polyfill for SpeechRecognition
 const SpeechRecognition =
@@ -30,7 +31,7 @@ export const ChatInterface = () => {
 
     const {
         lastMessage, setLastMessage,
-        isThinking, setIsThinking,
+        isThinking,
         setMood, setIntensity,
         activeCharacterId, setActiveCharacterId,
         messages, addMessage,
@@ -43,35 +44,24 @@ export const ChatInterface = () => {
     // Send message handler (memoized, captured via ref for recognition)
     // ----------------------------------------------------------------
     const handleSendMessage = useCallback(
-        (text: string) => {
+        async (text: string) => {
             if (!text.trim()) return
 
             const trimmed = text.trim()
 
-            // Record user message in history
             addMessage({ role: 'user', text: trimmed })
             setLastMessage(trimmed)
-            setIsThinking(true)
             setMood('thinking')
             setIntensity(1.0)
             setInputText('')
 
-            // Simple keyword sentiment
-            const isHappy = /hola|feliz|bien|alegre|genial/i.test(trimmed)
-            const isSad = /triste|mal|solo|problema/i.test(trimmed)
-
-            setTimeout(() => {
-                setIsThinking(false)
-                const newMood = isHappy ? 'excited' : isSad ? 'calm' : 'calm'
-                setMood(newMood)
-                setIntensity(isHappy ? 1.5 : 0.5)
-
-                const response = `Entendido, he recibido tu mensaje: "${trimmed}"`
-                addMessage({ role: 'assistant', text: response })
-                speakResponse(response)
-            }, 2000)
+            const result = await openClawService.sendMessage(trimmed)
+            addMessage({ role: 'assistant', text: result.text })
+            setMood(result.mood ?? 'calm')
+            setIntensity(result.intensity ?? 0.5)
+            speakResponse(result.text)
         },
-        [addMessage, setLastMessage, setIsThinking, setMood, setIntensity]
+        [addMessage, setLastMessage, setMood, setIntensity]
     )
 
     // Keep ref in sync so recognition handler always calls latest version
@@ -211,7 +201,7 @@ export const ChatInterface = () => {
                         <span>👤</span>
                         <span style={{ fontWeight: 700 }}>{userName}</span>
                         <button
-                            onClick={signOut}
+                            onClick={() => { openClawService.clearHistory(); signOut() }}
                             title="Cerrar sesión"
                             style={{
                                 background: 'none',
