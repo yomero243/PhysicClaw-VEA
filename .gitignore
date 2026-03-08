@@ -23,9 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 
-# Environment variables
+# Environment variables — ignore all .env files except the example template
 .env
 .env.*
+!.env.example
 
 # OpenClaw control file
 openclaw-control.json
