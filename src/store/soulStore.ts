@@ -2,12 +2,23 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { CharacterConfig } from '../constants/characters'
 
+// ----------------------------------------------------------------
+// Types
+// ----------------------------------------------------------------
+
 export interface CharacterOverride {
     scale?: number
     shaderColor?: string
     intensity?: number
     useEnergyShader?: boolean
     positionY?: number
+}
+
+export interface ChatMessage {
+    id: string
+    role: 'user' | 'assistant'
+    text: string
+    timestamp: number
 }
 
 interface SoulState {
@@ -35,16 +46,27 @@ interface SoulState {
     activeCategoryId: string | null
     setActiveCategoryId: (id: string | null) => void
 
-    // Auth
+    // Auth — userId for Supabase UUID, userName for display
     userId: string | null
     setUserId: (id: string | null) => void
+    userName: string | null
+    setUserName: (name: string | null) => void
+
+    // Chat history (session-only, not persisted)
+    messages: ChatMessage[]
+    addMessage: (msg: Omit<ChatMessage, 'id' | 'timestamp'>) => void
+    clearMessages: () => void
 
     // API Connection Settings
     apiBaseUrl: string
     apiModel: string
     apiToken: string
-    setApiConfig: (config: Partial<{ apiBaseUrl: string, apiModel: string, apiToken: string }>) => void
+    setApiConfig: (config: Partial<{ apiBaseUrl: string; apiModel: string; apiToken: string }>) => void
 }
+
+// ----------------------------------------------------------------
+// Store
+// ----------------------------------------------------------------
 
 export const useSoulStore = create<SoulState>()(
     persist(
@@ -61,51 +83,78 @@ export const useSoulStore = create<SoulState>()(
             setActiveCharacterId: (id) => set({ activeCharacterId: id }),
 
             customCharacters: [],
-            addCustomCharacter: (config) => set((state) => ({
-                customCharacters: [...state.customCharacters, config]
-            })),
-            removeCustomCharacter: (id) => set((state) => {
-                const char = state.customCharacters.find(c => c.id === id)
-                if (char?.modelUrl) URL.revokeObjectURL(char.modelUrl)
-                const { [id]: _, ...remainingOverrides } = state.characterOverrides
-                return {
-                    customCharacters: state.customCharacters.filter(c => c.id !== id),
-                    activeCharacterId: state.activeCharacterId === id ? 'happy-idle' : state.activeCharacterId,
-                    characterOverrides: remainingOverrides,
-                }
-            }),
+            addCustomCharacter: (config) =>
+                set((state) => ({
+                    customCharacters: [...state.customCharacters, config],
+                })),
+            removeCustomCharacter: (id) =>
+                set((state) => {
+                    const char = state.customCharacters.find((c) => c.id === id)
+                    if (char?.modelUrl) URL.revokeObjectURL(char.modelUrl)
+                    const { [id]: _, ...remainingOverrides } = state.characterOverrides
+                    return {
+                        customCharacters: state.customCharacters.filter((c) => c.id !== id),
+                        activeCharacterId:
+                            state.activeCharacterId === id
+                                ? 'happy-idle'
+                                : state.activeCharacterId,
+                        characterOverrides: remainingOverrides,
+                    }
+                }),
 
             characterOverrides: {},
-            setCharacterOverride: (id, overrides) => set((state) => ({
-                characterOverrides: {
-                    ...state.characterOverrides,
-                    [id]: { ...state.characterOverrides[id], ...overrides }
-                }
-            })),
+            setCharacterOverride: (id, overrides) =>
+                set((state) => ({
+                    characterOverrides: {
+                        ...state.characterOverrides,
+                        [id]: { ...state.characterOverrides[id], ...overrides },
+                    },
+                })),
 
             activeCategoryId: null,
-            setActiveCategoryId: (id) => set((state) => ({
-                activeCategoryId: state.activeCategoryId === id ? null : id
-            })),
+            setActiveCategoryId: (id) =>
+                set((state) => ({
+                    activeCategoryId: state.activeCategoryId === id ? null : id,
+                })),
 
             // Auth
             userId: null,
             setUserId: (id) => set({ userId: id }),
+            userName: null,
+            setUserName: (name) => set({ userName: name }),
 
-            // Default API values (can be overridden by UI)
+            // Chat history (session-only)
+            messages: [],
+            addMessage: (msg) =>
+                set((state) => ({
+                    messages: [
+                        ...state.messages,
+                        {
+                            ...msg,
+                            id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                            timestamp: Date.now(),
+                        },
+                    ],
+                })),
+            clearMessages: () => set({ messages: [] }),
+
+            // API settings
             apiBaseUrl: import.meta.env.VITE_OPENCLAW_API_URL || '',
-            apiModel: import.meta.env.VITE_OPENCLAW_MODEL || 'claude-3-5-sonnet-20241022',
+            apiModel:
+                import.meta.env.VITE_OPENCLAW_MODEL || 'claude-3-5-sonnet-20241022',
             apiToken: import.meta.env.VITE_OPENCLAW_TOKEN || '',
             setApiConfig: (config) => set((state) => ({ ...state, ...config })),
         }),
         {
-            name: 'physicclaw-storage', // unique name for localStorage
+            name: 'physicclaw-storage',
+            // messages and userName are session-only — do not persist
             partialize: (state) => ({
                 apiBaseUrl: state.apiBaseUrl,
                 apiModel: state.apiModel,
                 apiToken: state.apiToken,
                 customCharacters: state.customCharacters,
-                characterOverrides: state.characterOverrides
-            }), // specify what to persist
+                characterOverrides: state.characterOverrides,
+            }),
         }
-    ))
+    )
+)

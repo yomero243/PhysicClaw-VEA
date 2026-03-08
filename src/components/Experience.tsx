@@ -1,8 +1,12 @@
-import { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Environment, ContactShadows, Grid } from '@react-three/drei'
+import { OrbitControls, Environment, ContactShadows } from '@react-three/drei'
 import { DynamicCharacter } from './DynamicCharacter'
 
+/**
+ * Experience — R3F Canvas wrapper.
+ * Note: modelUrl prop removed (was declared but never used).
+ * Character selection is driven by soulStore.activeCharacterId.
+ */
 export const Experience = () => {
     return (
         <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
@@ -11,27 +15,19 @@ export const Experience = () => {
             <ambientLight intensity={0.5} />
             <pointLight position={[10, 10, 10]} intensity={1} />
 
-            <Suspense fallback={null}>
-                <DynamicCharacter />
-            </Suspense>
+            <DynamicCharacter />
 
-            <ContactShadows resolution={1024} scale={10} blur={2.5} opacity={0.5} far={10} color="#000000" />
-            <Environment preset="city" />
-
-            <Grid
-                infiniteGrid
-                position={[0, -1, 0]}
-                cellSize={1}
-                cellThickness={1}
-                cellColor="#666666"
-                sectionSize={5}
-                sectionThickness={1.5}
-                sectionColor="#333333"
-                fadeDistance={50}
+            <ContactShadows
+                resolution={1024}
+                scale={10}
+                blur={2.5}
+                opacity={0.5}
+                far={10}
+                color="#000000"
             />
+            <Environment preset="city" />
 
             <OrbitControls makeDefault />
         </Canvas>
     )
 }
-

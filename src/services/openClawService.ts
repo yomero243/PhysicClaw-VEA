@@ -6,7 +6,12 @@ export interface OpenClawResponse {
     intensity?: number;
 }
 
-// Conversation history for context
+/**
+ * Conversation history for the current session.
+ * Stored at module level so it persists across React re-renders.
+ * Call clearHistory() on user sign-out to prevent context leaking between
+ * different user sessions.
+ */
 const conversationHistory: Array<{ role: string; content: string }> = [];
 
 export const openClawService = {
@@ -20,13 +25,25 @@ export const openClawService = {
         conversationHistory.push({ role: 'user', content: text });
 
         try {
-            const baseUrl = store.apiBaseUrl.replace(/\/$/, '')
-            const response = await fetch(`${baseUrl}/v1/chat/completions`, {
+            const baseUrl = store.apiBaseUrl.trim().replace(/\/$/, '')
+
+            // When apiBaseUrl is empty, use a relative path so the Vite dev-server
+            // proxy (or any reverse proxy in production) can forward the request to
+            // the local OpenClaw / LLM API. When a custom URL is set, the request
+            // goes directly to that origin — ensure that server allows CORS from
+            // your frontend origin, or configure a proxy in vite.config.ts.
+            const endpoint = baseUrl
+                ? `${baseUrl}/v1/chat/completions`
+                : '/v1/chat/completions'
+
+            const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+            if (store.apiToken) {
+                headers['Authorization'] = `Bearer ${store.apiToken}`
+            }
+
+            const response = await fetch(endpoint, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${store.apiToken}`,
-                },
+                headers,
                 body: JSON.stringify({
                     model: store.apiModel,
                     messages: conversationHistory,
@@ -35,7 +52,7 @@ export const openClawService = {
             });
 
             if (!response.ok) {
-                throw new Error(`OpenClaw error ${response.status}`);
+                throw new Error(`OpenClaw API responded with HTTP ${response.status}`);
             }
 
             const data = await response.json();
@@ -48,8 +65,10 @@ export const openClawService = {
                 mood: 'calm',
                 intensity: 0.5,
             };
-        } catch {
-            conversationHistory.pop(); // remove failed user message
+        } catch (err) {
+            // Remove the failed user message so the model context stays consistent
+            conversationHistory.pop();
+            console.error('[OpenClawService] sendMessage failed:', err);
             return {
                 text: 'Lo siento, hubo un error al conectar con OpenClaw.',
                 mood: 'calm',
@@ -60,7 +79,20 @@ export const openClawService = {
         }
     },
 
+    /**
+     * Clear in-memory conversation history.
+     * Must be called on user sign-out to prevent history leaking between
+     * different user sessions within the same browser tab.
+     */
     clearHistory() {
         conversationHistory.length = 0;
+    },
+
+    /**
+     * Returns a read-only copy of the current conversation history.
+     * Useful for debugging or displaying the full chat log.
+     */
+    getHistory(): ReadonlyArray<{ role: string; content: string }> {
+        return [...conversationHistory];
     },
 };
