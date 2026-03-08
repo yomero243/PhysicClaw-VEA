@@ -31,10 +31,16 @@
 ## 🔄 PENDING TASKS (pick one, mark IN_PROGRESS, complete, mark DONE)
 
 ### TASK-01: TypeScript compilation check & fix
-**Status:** IN_PROGRESS  
+**Status:** ✅ DONE  
 **Agent:** ts-fix-agent  
 **Scope:** Run `npx tsc --noEmit` in the project, fix ALL TypeScript errors one by one. Commit result.  
-**Expected output:** Zero TS errors, commit message `fix: resolve TypeScript compilation errors`
+**Expected output:** Zero TS errors, commit message `fix: resolve TypeScript compilation errors`  
+**Notes:**
+- Found 11 errors across 3 files + 1 missing module.
+- `src/lib/supabase.ts`: Added full API layer exports (`auth`, `scenesApi`, `sceneObjectsApi`, `sessionsApi`, `messagesApi`, `avatarConfigsApi`, `realtimeApi`) — hook `useScenePersistence` imported these but they didn't exist.
+- `src/components/AvatarPanel.tsx`: Added `[key: string]: unknown` index signature to `ShaderConfig` (required for `AvatarConfig.shader_params` compatibility). Moved `title` from inside `style={{}}` to HTML attribute on `<span>`.
+- `src/components/ChatInterface.tsx`: Replaced `user` → `userName` (SoulState has no `user` field; `userName: string | null` is the correct field). Replaced `logout` → `signOut` (AuthContextType exposes `signOut`, not `logout`). Also fixed `auth.getUser()` destructuring in `useScenePersistence.ts` (wrapper returns data directly, not nested under `data:`).
+- Final `npx tsc --noEmit` → exit 0, zero errors.
 
 ### TASK-02: `.env.example` + Supabase env documentation
 **Status:** DONE ✅  

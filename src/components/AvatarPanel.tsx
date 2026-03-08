@@ -23,6 +23,7 @@ interface ShaderConfig {
     glowIntensity: number
     pulseSpeed: number
     distortion: number
+    [key: string]: unknown
 }
 
 const DEFAULT_COLORS: ColorConfig = {
@@ -205,12 +206,14 @@ export const AvatarPanel = () => {
                 </span>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     {/* Auth status */}
-                    <span style={{
-                        width: '8px', height: '8px', borderRadius: '50%',
-                        background: isAuthenticated ? '#00ff88' : '#ff4444',
-                        display: 'inline-block',
-                        title: isAuthenticated ? 'Conectado' : 'Sin conexión',
-                    }} />
+                    <span
+                        title={isAuthenticated ? 'Conectado' : 'Sin conexión'}
+                        style={{
+                            width: '8px', height: '8px', borderRadius: '50%',
+                            background: isAuthenticated ? '#00ff88' : '#ff4444',
+                            display: 'inline-block',
+                        }}
+                    />
                     <button
                         onClick={() => setIsOpen(false)}
                         style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '16px' }}
