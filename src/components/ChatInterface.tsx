@@ -34,10 +34,10 @@ export const ChatInterface = () => {
         setMood, setIntensity,
         activeCharacterId, setActiveCharacterId,
         messages, addMessage,
-        user,
+        userName,
     } = useSoulStore()
 
-    const { logout } = useAuth()
+    const { signOut } = useAuth()
 
     // ----------------------------------------------------------------
     // Send message handler (memoized, captured via ref for recognition)
@@ -198,7 +198,7 @@ export const ChatInterface = () => {
                 </div>
 
                 {/* Logged-in user badge */}
-                {user && (
+                {userName && (
                     <div
                         style={{
                             display: 'flex',
@@ -209,9 +209,9 @@ export const ChatInterface = () => {
                         }}
                     >
                         <span>👤</span>
-                        <span style={{ fontWeight: 700 }}>{user}</span>
+                        <span style={{ fontWeight: 700 }}>{userName}</span>
                         <button
-                            onClick={logout}
+                            onClick={signOut}
                             title="Cerrar sesión"
                             style={{
                                 background: 'none',
@@ -307,7 +307,7 @@ export const ChatInterface = () => {
                                     paddingInline: '4px',
                                 }}
                             >
-                                {msg.role === 'user' ? (user ?? 'Tú') : 'VEA'} ·{' '}
+                                {msg.role === 'user' ? (userName ?? 'Tú') : 'VEA'} ·{' '}
                                 {new Date(msg.timestamp).toLocaleTimeString('es-MX', {
                                     hour: '2-digit',
                                     minute: '2-digit',

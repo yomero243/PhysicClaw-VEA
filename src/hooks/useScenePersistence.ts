@@ -139,7 +139,7 @@ export function useScenePersistence(): UseScenePersistenceReturn {
 
         const initAuth = async () => {
             try {
-                const { data: { user } } = await auth.getUser()
+                const { user } = await auth.getUser()
 
                 if (user && mounted) {
                     setState(s => ({
