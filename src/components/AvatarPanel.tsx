@@ -1,479 +1,460 @@
 // ============================================================
-// PhysicClaw-VEA v2.0 — AvatarPanel Component
-// src/components/AvatarPanel.tsx
-//
-// Panel de personalización del avatar + configuración de escena.
-// Lee/escribe usando useScenePersistence → Supabase.
+// PhysicClaw-VEA — AvatarPanel (Cyber Redesign)
 // ============================================================
 import { useState, useEffect } from 'react'
 import { useScenePersistence } from '../hooks/useScenePersistence'
 import { CHARACTERS } from '../constants/characters'
 import { useSoulStore } from '../store/soulStore'
 
-// ---- Sub-types para el formulario de color ----
 interface ColorConfig {
-    primary: string
-    secondary: string
-    glow: string
-    emission: string
+  primary: string; secondary: string; glow: string; emission: string
 }
-
 interface ShaderConfig {
-    wireframeOpacity: number
-    glowIntensity: number
-    pulseSpeed: number
-    distortion: number
-    [key: string]: unknown
+  wireframeOpacity: number; glowIntensity: number; pulseSpeed: number; distortion: number
+  [key: string]: unknown
 }
 
-const DEFAULT_COLORS: ColorConfig = {
-    primary: '#00ccff',
-    secondary: '#7700ff',
-    glow: '#00ffcc',
-    emission: '#ffffff',
+const DEFAULT_COLORS: ColorConfig = { primary: '#00ccff', secondary: '#7700ff', glow: '#00ffcc', emission: '#ffffff' }
+const DEFAULT_SHADERS: ShaderConfig = { wireframeOpacity: 0.3, glowIntensity: 1.2, pulseSpeed: 1.0, distortion: 0.1 }
+
+const ENVS = ['apartment','city','dawn','forest','lobby','night','park','studio','sunset','warehouse']
+
+type Tab = 'avatar' | 'scene' | 'shader'
+
+// ─── Small atoms ──────────────────────────────────────────────────
+
+function PanelLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ fontSize: 9, letterSpacing: 3, color: 'rgba(0,212,255,0.4)', marginBottom: 10, fontFamily: '"Courier New", monospace' }}>
+      {children}
+    </div>
+  )
 }
 
-const DEFAULT_SHADERS: ShaderConfig = {
-    wireframeOpacity: 0.3,
-    glowIntensity: 1.2,
-    pulseSpeed: 1.0,
-    distortion: 0.1,
+function Divider() {
+  return <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(0,212,255,0.15), transparent)', margin: '14px 0' }} />
 }
 
-// ============================================================
-// AvatarPanel
-// ============================================================
+function CyberSlider({
+  label, value, min, max, step, onChange,
+}: { label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+        <span style={{ fontSize: 11, color: '#4a7a9a', fontFamily: '"Courier New", monospace' }}>{label}</span>
+        <span style={{ fontSize: 10, color: '#00d4ff', fontFamily: '"Courier New", monospace' }}>{value.toFixed(2)}</span>
+      </div>
+      <div style={{ position: 'relative', height: 3, background: 'rgba(0,212,255,0.1)', borderRadius: 2 }}>
+        <div style={{
+          position: 'absolute', left: 0, top: 0, height: '100%', borderRadius: 2,
+          width: `${((value - min) / (max - min)) * 100}%`,
+          background: 'linear-gradient(to right, rgba(0,212,255,0.4), #00d4ff)',
+        }} />
+        <input type="range" min={min} max={max} step={step} value={value}
+          onChange={e => onChange(parseFloat(e.target.value))}
+          style={{
+            position: 'absolute', inset: 0, width: '100%', height: '100%',
+            opacity: 0, cursor: 'pointer', margin: 0,
+          }}
+        />
+      </div>
+    </div>
+  )
+}
+
+function ColorRow({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+      <div style={{ position: 'relative', width: 28, height: 28, flexShrink: 0 }}>
+        <div style={{
+          width: 28, height: 28, borderRadius: 3,
+          background: value,
+          border: '1px solid rgba(0,212,255,0.2)',
+          boxShadow: `0 0 8px ${value}44`,
+        }} />
+        <input type="color" value={value} onChange={e => onChange(e.target.value)}
+          style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%', border: 'none', padding: 0 }}
+        />
+      </div>
+      <span style={{ flex: 1, fontSize: 11, color: '#4a7a9a', fontFamily: '"Courier New", monospace', textTransform: 'capitalize' }}>{label}</span>
+      <span style={{ fontSize: 10, color: '#2a5a7a', fontFamily: '"Courier New", monospace' }}>{value.toUpperCase()}</span>
+    </div>
+  )
+}
+
+function CyberSelect({ value, options, onChange }: { value: string; options: string[]; onChange: (v: string) => void }) {
+  return (
+    <div style={{ position: 'relative' }}>
+      <select value={value} onChange={e => onChange(e.target.value)}
+        style={{
+          width: '100%', padding: '8px 12px',
+          background: 'rgba(0,10,24,0.6)',
+          border: '1px solid rgba(0,180,255,0.15)',
+          borderRadius: 4, color: '#c8e8ff',
+          fontSize: 11, fontFamily: '"Courier New", monospace',
+          outline: 'none', cursor: 'pointer',
+          appearance: 'none',
+        }}>
+        {options.map(o => <option key={o} value={o}>{o.toUpperCase()}</option>)}
+      </select>
+      <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: 'rgba(0,212,255,0.4)', pointerEvents: 'none', fontSize: 10 }}>▾</span>
+    </div>
+  )
+}
+
+function CyberInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+  const [focused, setFocused] = useState(false)
+  return (
+    <input
+      type="text" value={value} placeholder={placeholder}
+      onChange={e => onChange(e.target.value)}
+      onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+      style={{
+        width: '100%', padding: '8px 12px', boxSizing: 'border-box',
+        background: 'rgba(0,10,24,0.6)',
+        border: `1px solid ${focused ? 'rgba(0,212,255,0.45)' : 'rgba(0,180,255,0.15)'}`,
+        borderRadius: 4, color: '#c8e8ff',
+        fontSize: 11, fontFamily: '"Courier New", monospace',
+        outline: 'none', transition: 'border-color 0.2s',
+      }}
+    />
+  )
+}
+
+function SaveButton({ onClick, disabled, saving }: { onClick: () => void; disabled: boolean; saving: boolean }) {
+  return (
+    <button onClick={onClick} disabled={disabled}
+      style={{
+        padding: '8px 20px', borderRadius: 4,
+        border: `1px solid ${disabled ? 'rgba(0,212,255,0.1)' : '#00d4ff'}`,
+        background: disabled ? 'transparent' : 'linear-gradient(135deg, rgba(0,212,255,0.15), rgba(0,212,255,0.05))',
+        color: disabled ? '#2a5a7a' : '#00d4ff',
+        fontSize: 10, fontFamily: '"Courier New", monospace', fontWeight: 700, letterSpacing: 2,
+        cursor: disabled ? 'not-allowed' : 'pointer', transition: 'all 0.15s',
+        boxShadow: disabled ? 'none' : '0 0 10px rgba(0,212,255,0.15)',
+      }}>
+      {saving ? 'SAVING...' : 'SAVE'}
+    </button>
+  )
+}
+
+// ─── Main Component ───────────────────────────────────────────────
 export const AvatarPanel = () => {
-    const {
-        isAuthenticated,
-        currentScene,
-        avatarConfig,
-        isLoadingScene,
-        error,
-        saveSceneSettings,
-        saveAvatarConfig,
-        clearError,
-    } = useScenePersistence()
+  const {
+    isAuthenticated, currentScene, avatarConfig, isLoadingScene, error,
+    saveSceneSettings, saveAvatarConfig, clearError,
+  } = useScenePersistence()
 
-    const { activeCharacterId, setActiveCharacterId, mood, intensity } = useSoulStore()
+  const { activeCharacterId, setActiveCharacterId, mood, intensity } = useSoulStore()
 
-    const [isOpen, setIsOpen] = useState(false)
-    const [activeTab, setActiveTab] = useState<'avatar' | 'scene' | 'shader'>('avatar')
-    const [saving, setSaving] = useState(false)
-    const [saveMsg, setSaveMsg] = useState<string | null>(null)
+  const [open, setOpen] = useState(false)
+  const [tab, setTab] = useState<Tab>('avatar')
+  const [saving, setSaving] = useState(false)
+  const [saveMsg, setSaveMsg] = useState<{ text: string; ok: boolean } | null>(null)
 
-    // ---- Estado local del formulario ----
-    const [colors, setColors] = useState<ColorConfig>(DEFAULT_COLORS)
-    const [shaders, setShaders] = useState<ShaderConfig>(DEFAULT_SHADERS)
-    const [sceneName, setSceneName] = useState('')
-    const [sceneEnv, setSceneEnv] = useState('city')
-    const [bgColor, setBgColor] = useState('#111111')
-    const [ambientIntensity, setAmbientIntensity] = useState(0.5)
+  const [colors, setColors] = useState<ColorConfig>(DEFAULT_COLORS)
+  const [shaders, setShaders] = useState<ShaderConfig>(DEFAULT_SHADERS)
+  const [sceneName, setSceneName] = useState('')
+  const [sceneEnv, setSceneEnv] = useState('city')
+  const [bgColor, setBgColor] = useState('#111111')
+  const [ambientIntensity, setAmbientIntensity] = useState(0.5)
 
-    // ---- Sincronizar desde DB cuando carga ----
-    useEffect(() => {
-        if (avatarConfig) {
-            setColors({
-                primary: avatarConfig.custom_colors?.primary ?? DEFAULT_COLORS.primary,
-                secondary: avatarConfig.custom_colors?.secondary ?? DEFAULT_COLORS.secondary,
-                glow: avatarConfig.custom_colors?.glow ?? DEFAULT_COLORS.glow,
-                emission: avatarConfig.custom_colors?.emission ?? DEFAULT_COLORS.emission,
-            })
-            setShaders({
-                wireframeOpacity: (avatarConfig.shader_params?.wireframeOpacity as number) ?? DEFAULT_SHADERS.wireframeOpacity,
-                glowIntensity: (avatarConfig.shader_params?.glowIntensity as number) ?? DEFAULT_SHADERS.glowIntensity,
-                pulseSpeed: (avatarConfig.shader_params?.pulseSpeed as number) ?? DEFAULT_SHADERS.pulseSpeed,
-                distortion: (avatarConfig.shader_params?.distortion as number) ?? DEFAULT_SHADERS.distortion,
-            })
-        }
-    }, [avatarConfig])
-
-    useEffect(() => {
-        if (currentScene) {
-            setSceneName(currentScene.name)
-            setSceneEnv(currentScene.environment)
-            setBgColor(currentScene.background_color)
-            setAmbientIntensity(currentScene.ambient_intensity)
-        }
-    }, [currentScene])
-
-    // ---- Handlers ----
-    const showSaveMsg = (msg: string) => {
-        setSaveMsg(msg)
-        setTimeout(() => setSaveMsg(null), 2500)
+  useEffect(() => {
+    if (avatarConfig) {
+      setColors({
+        primary:   avatarConfig.custom_colors?.primary   ?? DEFAULT_COLORS.primary,
+        secondary: avatarConfig.custom_colors?.secondary ?? DEFAULT_COLORS.secondary,
+        glow:      avatarConfig.custom_colors?.glow      ?? DEFAULT_COLORS.glow,
+        emission:  avatarConfig.custom_colors?.emission  ?? DEFAULT_COLORS.emission,
+      })
+      setShaders({
+        wireframeOpacity: (avatarConfig.shader_params?.wireframeOpacity as number) ?? DEFAULT_SHADERS.wireframeOpacity,
+        glowIntensity:    (avatarConfig.shader_params?.glowIntensity    as number) ?? DEFAULT_SHADERS.glowIntensity,
+        pulseSpeed:       (avatarConfig.shader_params?.pulseSpeed       as number) ?? DEFAULT_SHADERS.pulseSpeed,
+        distortion:       (avatarConfig.shader_params?.distortion       as number) ?? DEFAULT_SHADERS.distortion,
+      })
     }
+  }, [avatarConfig])
 
-    const handleSaveAvatar = async () => {
-        setSaving(true)
-        try {
-            await saveAvatarConfig({
-                character_id: null,
-                config_name: 'Mi Avatar',
-                custom_colors: colors,
-                shader_params: shaders,
-                is_active: true,
-            })
-            showSaveMsg('✅ Avatar guardado')
-        } catch {
-            showSaveMsg('❌ Error al guardar')
-        } finally {
-            setSaving(false)
-        }
+  useEffect(() => {
+    if (currentScene) {
+      setSceneName(currentScene.name)
+      setSceneEnv(currentScene.environment)
+      setBgColor(currentScene.background_color)
+      setAmbientIntensity(currentScene.ambient_intensity)
     }
+  }, [currentScene])
 
-    const handleSaveScene = async () => {
-        if (!currentScene) return
-        setSaving(true)
-        try {
-            await saveSceneSettings({
-                name: sceneName,
-                environment: sceneEnv,
-                background_color: bgColor,
-                ambient_intensity: ambientIntensity,
-            })
-            showSaveMsg('✅ Escena guardada')
-        } catch {
-            showSaveMsg('❌ Error al guardar escena')
-        } finally {
-            setSaving(false)
-        }
+  const flash = (text: string, ok: boolean) => {
+    setSaveMsg({ text, ok })
+    setTimeout(() => setSaveMsg(null), 2500)
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      if (tab === 'scene') {
+        await saveSceneSettings({ name: sceneName, environment: sceneEnv, background_color: bgColor, ambient_intensity: ambientIntensity })
+        flash('SCENE SAVED', true)
+      } else {
+        await saveAvatarConfig({ character_id: null, config_name: 'Mi Avatar', custom_colors: colors, shader_params: shaders, is_active: true })
+        flash('AVATAR SAVED', true)
+      }
+    } catch {
+      flash('SAVE FAILED', false)
+    } finally {
+      setSaving(false)
     }
+  }
 
-    // ============================================================
-    // Render — toggle button
-    // ============================================================
-    if (!isOpen) {
-        return (
-            <button
-                onClick={() => setIsOpen(true)}
-                title="Abrir panel de avatar"
-                style={{
-                    position: 'absolute',
-                    top: '20px',
-                    right: '20px',
-                    zIndex: 20,
-                    background: 'rgba(0, 204, 255, 0.15)',
-                    border: '1px solid rgba(0, 204, 255, 0.4)',
-                    borderRadius: '50%',
-                    width: '48px',
-                    height: '48px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '20px',
-                    cursor: 'pointer',
-                    backdropFilter: 'blur(10px)',
-                    transition: 'all 0.3s',
-                    color: '#00ccff',
-                }}
-            >
-                🎛️
-            </button>
-        )
-    }
-
-    // ============================================================
-    // Render — panel completo
-    // ============================================================
+  // ── Closed state: floating trigger button ──────────────────────
+  if (!open) {
     return (
-        <div
-            style={{
-                position: 'absolute',
-                top: '20px',
-                right: '20px',
-                zIndex: 20,
-                width: '320px',
-                background: 'rgba(10, 10, 20, 0.92)',
-                backdropFilter: 'blur(16px)',
-                border: '1px solid rgba(0, 204, 255, 0.25)',
-                borderRadius: '16px',
-                color: 'white',
-                fontFamily: 'system-ui, sans-serif',
-                fontSize: '13px',
-                boxShadow: '0 0 40px rgba(0, 204, 255, 0.1)',
-            }}
-        >
-            {/* Header */}
-            <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '14px 16px',
-                borderBottom: '1px solid rgba(255,255,255,0.08)',
-            }}>
-                <span style={{ fontWeight: 'bold', color: '#00ccff', letterSpacing: '0.5px' }}>
-                    ⚡ PhysicClaw Panel
-                </span>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    {/* Auth status */}
-                    <span
-                        title={isAuthenticated ? 'Conectado' : 'Sin conexión'}
-                        style={{
-                            width: '8px', height: '8px', borderRadius: '50%',
-                            background: isAuthenticated ? '#00ff88' : '#ff4444',
-                            display: 'inline-block',
-                        }}
-                    />
-                    <button
-                        onClick={() => setIsOpen(false)}
-                        style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '16px' }}
-                    >
-                        ✕
-                    </button>
-                </div>
-            </div>
-
-            {/* Error banner */}
-            {error && (
-                <div style={{
-                    padding: '8px 16px',
-                    background: 'rgba(255, 50, 50, 0.15)',
-                    borderBottom: '1px solid rgba(255,50,50,0.3)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    fontSize: '11px',
-                    color: '#ff8888',
-                }}>
-                    <span>⚠️ {error}</span>
-                    <button
-                        onClick={clearError}
-                        style={{ background: 'none', border: 'none', color: '#ff8888', cursor: 'pointer' }}
-                    >
-                        ✕
-                    </button>
-                </div>
-            )}
-
-            {/* Loading */}
-            {isLoadingScene && (
-                <div style={{ padding: '12px 16px', color: '#888', textAlign: 'center' }}>
-                    Cargando escena...
-                </div>
-            )}
-
-            {/* Status bar */}
-            <div style={{
-                padding: '8px 16px',
-                display: 'flex',
-                gap: '12px',
-                borderBottom: '1px solid rgba(255,255,255,0.06)',
-                fontSize: '11px',
-                color: '#666',
-            }}>
-                <span>Mood: <strong style={{ color: '#00ccff' }}>{mood}</strong></span>
-                <span>Intensidad: <strong style={{ color: '#00ccff' }}>{intensity.toFixed(2)}</strong></span>
-                {currentScene && <span style={{ marginLeft: 'auto' }}>📍 {currentScene.name}</span>}
-            </div>
-
-            {/* Tabs */}
-            <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                {(['avatar', 'scene', 'shader'] as const).map(tab => (
-                    <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        style={{
-                            flex: 1,
-                            padding: '10px 0',
-                            background: activeTab === tab ? 'rgba(0, 204, 255, 0.1)' : 'none',
-                            border: 'none',
-                            borderBottom: activeTab === tab ? '2px solid #00ccff' : '2px solid transparent',
-                            color: activeTab === tab ? '#00ccff' : '#666',
-                            cursor: 'pointer',
-                            fontSize: '11px',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px',
-                            transition: 'all 0.2s',
-                        }}
-                    >
-                        {tab === 'avatar' ? '🤖 Avatar' : tab === 'scene' ? '🌍 Escena' : '✨ Shader'}
-                    </button>
-                ))}
-            </div>
-
-            {/* Tab: Avatar */}
-            {activeTab === 'avatar' && (
-                <div style={{ padding: '16px' }}>
-                    {/* Character selector */}
-                    <label style={{ color: '#aaa', display: 'block', marginBottom: '6px' }}>Personaje activo</label>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px' }}>
-                        {CHARACTERS.map(char => (
-                            <button
-                                key={char.id}
-                                onClick={() => setActiveCharacterId(char.id)}
-                                style={{
-                                    padding: '8px 12px',
-                                    borderRadius: '8px',
-                                    border: '1px solid',
-                                    borderColor: activeCharacterId === char.id ? '#00ccff' : 'rgba(255,255,255,0.1)',
-                                    background: activeCharacterId === char.id ? 'rgba(0, 204, 255, 0.1)' : 'transparent',
-                                    color: activeCharacterId === char.id ? '#00ccff' : '#aaa',
-                                    cursor: 'pointer',
-                                    textAlign: 'left',
-                                    fontSize: '12px',
-                                    transition: 'all 0.2s',
-                                }}
-                            >
-                                {activeCharacterId === char.id ? '● ' : '○ '}{char.name}
-                                <span style={{ opacity: 0.5, marginLeft: '6px', fontSize: '10px' }}>
-                                    ({char.type.toUpperCase()})
-                                </span>
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Colors */}
-                    <label style={{ color: '#aaa', display: 'block', marginBottom: '8px' }}>Colores del avatar</label>
-                    {(Object.entries(colors) as [keyof ColorConfig, string][]).map(([key, value]) => (
-                        <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                            <input
-                                type="color"
-                                value={value}
-                                onChange={e => setColors(c => ({ ...c, [key]: e.target.value }))}
-                                style={{ width: '32px', height: '28px', border: 'none', borderRadius: '4px', cursor: 'pointer', background: 'none' }}
-                            />
-                            <span style={{ color: '#888', flex: 1, textTransform: 'capitalize' }}>{key}</span>
-                            <span style={{ color: '#555', fontFamily: 'monospace', fontSize: '11px' }}>{value}</span>
-                        </div>
-                    ))}
-                </div>
-            )}
-
-            {/* Tab: Scene */}
-            {activeTab === 'scene' && (
-                <div style={{ padding: '16px' }}>
-                    <label style={{ color: '#aaa', display: 'block', marginBottom: '6px' }}>Nombre de la escena</label>
-                    <input
-                        type="text"
-                        value={sceneName}
-                        onChange={e => setSceneName(e.target.value)}
-                        style={inputStyle}
-                    />
-
-                    <label style={{ color: '#aaa', display: 'block', margin: '12px 0 6px' }}>Entorno</label>
-                    <select
-                        value={sceneEnv}
-                        onChange={e => setSceneEnv(e.target.value)}
-                        style={{ ...inputStyle, cursor: 'pointer' }}
-                    >
-                        {['apartment', 'city', 'dawn', 'forest', 'lobby', 'night', 'park', 'studio', 'sunset', 'warehouse'].map(env => (
-                            <option key={env} value={env}>{env}</option>
-                        ))}
-                    </select>
-
-                    <label style={{ color: '#aaa', display: 'block', margin: '12px 0 6px' }}>Color de fondo</label>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                        <input type="color" value={bgColor} onChange={e => setBgColor(e.target.value)}
-                            style={{ width: '40px', height: '32px', border: 'none', borderRadius: '4px', cursor: 'pointer' }} />
-                        <span style={{ color: '#555', fontFamily: 'monospace', fontSize: '12px' }}>{bgColor}</span>
-                    </div>
-
-                    <label style={{ color: '#aaa', display: 'block', margin: '12px 0 6px' }}>
-                        Luz ambiental: <strong style={{ color: '#00ccff' }}>{ambientIntensity.toFixed(2)}</strong>
-                    </label>
-                    <input
-                        type="range"
-                        min="0" max="2" step="0.05"
-                        value={ambientIntensity}
-                        onChange={e => setAmbientIntensity(parseFloat(e.target.value))}
-                        style={{ width: '100%', accentColor: '#00ccff' }}
-                    />
-                </div>
-            )}
-
-            {/* Tab: Shader */}
-            {activeTab === 'shader' && (
-                <div style={{ padding: '16px' }}>
-                    <label style={{ color: '#aaa', display: 'block', marginBottom: '12px' }}>
-                        Parámetros del EnergyShader
-                    </label>
-
-                    {(Object.entries(shaders) as [keyof ShaderConfig, number][]).map(([key, value]) => {
-                        const ranges: Record<keyof ShaderConfig, [number, number, number]> = {
-                            wireframeOpacity: [0, 1, 0.01],
-                            glowIntensity: [0, 3, 0.05],
-                            pulseSpeed: [0, 5, 0.1],
-                            distortion: [0, 1, 0.01],
-                        }
-                        const [min, max, step] = ranges[key]
-                        const labels: Record<keyof ShaderConfig, string> = {
-                            wireframeOpacity: 'Opacidad Wireframe',
-                            glowIntensity: 'Intensidad de Glow',
-                            pulseSpeed: 'Velocidad de Pulso',
-                            distortion: 'Distorsión',
-                        }
-                        return (
-                            <div key={key} style={{ marginBottom: '14px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                                    <span style={{ color: '#888', fontSize: '12px' }}>{labels[key]}</span>
-                                    <span style={{ color: '#00ccff', fontFamily: 'monospace', fontSize: '11px' }}>
-                                        {value.toFixed(2)}
-                                    </span>
-                                </div>
-                                <input
-                                    type="range"
-                                    min={min} max={max} step={step}
-                                    value={value}
-                                    onChange={e => setShaders(s => ({ ...s, [key]: parseFloat(e.target.value) }))}
-                                    style={{ width: '100%', accentColor: '#00ccff' }}
-                                />
-                            </div>
-                        )
-                    })}
-                </div>
-            )}
-
-            {/* Footer — botón guardar */}
-            <div style={{
-                padding: '12px 16px',
-                borderTop: '1px solid rgba(255,255,255,0.06)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-            }}>
-                {saveMsg ? (
-                    <span style={{ fontSize: '12px', color: saveMsg.startsWith('✅') ? '#00ff88' : '#ff8888' }}>
-                        {saveMsg}
-                    </span>
-                ) : (
-                    <span style={{ fontSize: '11px', color: '#444' }}>
-                        {isAuthenticated ? '🟢 Conectado a Supabase' : '🔴 Sin conexión'}
-                    </span>
-                )}
-
-                <button
-                    onClick={activeTab === 'scene' ? handleSaveScene : handleSaveAvatar}
-                    disabled={saving || !isAuthenticated}
-                    style={{
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        background: saving || !isAuthenticated
-                            ? 'rgba(255,255,255,0.05)'
-                            : 'linear-gradient(135deg, #007bff, #00ccff)',
-                        color: saving || !isAuthenticated ? '#444' : 'white',
-                        fontWeight: 'bold',
-                        cursor: saving || !isAuthenticated ? 'not-allowed' : 'pointer',
-                        fontSize: '12px',
-                        transition: 'all 0.2s',
-                    }}
-                >
-                    {saving ? 'Guardando...' : '💾 Guardar'}
-                </button>
-            </div>
-        </div>
+      <button onClick={() => setOpen(true)} title="Open panel"
+        style={{
+          position: 'absolute', top: 20, left: 20, zIndex: 20,
+          width: 44, height: 44, borderRadius: 4,
+          background: 'rgba(2,8,18,0.75)', backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(0,212,255,0.25)',
+          color: '#00d4ff', fontSize: 18, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 0 16px rgba(0,212,255,0.1)',
+          transition: 'all 0.2s',
+          fontFamily: '"Courier New", monospace',
+        }}>
+        ⊞
+      </button>
     )
-}
+  }
 
-// ---- Shared styles ----
-const inputStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '8px 10px',
-    borderRadius: '8px',
-    border: '1px solid rgba(255,255,255,0.1)',
-    background: 'rgba(0, 0, 0, 0.3)',
-    color: 'white',
-    outline: 'none',
-    fontSize: '12px',
-    boxSizing: 'border-box',
+  // ── Open panel ─────────────────────────────────────────────────
+  return (
+    <>
+      <style>{`
+        .vea-panel-scroll::-webkit-scrollbar { width: 3px; }
+        .vea-panel-scroll::-webkit-scrollbar-track { background: transparent; }
+        .vea-panel-scroll::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.2); border-radius: 2px; }
+        select option { background: #030810; color: #c8e8ff; }
+      `}</style>
+
+      <div style={{
+        position: 'absolute', top: 20, left: 20, zIndex: 20,
+        width: 300,
+        background: 'rgba(2,8,18,0.90)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(0,212,255,0.18)',
+        borderRadius: 6,
+        boxShadow: '0 0 40px rgba(0,212,255,0.06), 0 16px 40px rgba(0,0,0,0.5)',
+        fontFamily: '"Courier New", monospace',
+        overflow: 'hidden',
+      }}>
+
+        {/* top accent bar */}
+        <div style={{ height: 1, background: 'linear-gradient(to right, transparent, #00d4ff, transparent)' }} />
+
+        {/* corner ornaments */}
+        {[
+          { top: 5, left: 5, borderTop: '1px solid #00d4ff', borderLeft: '1px solid #00d4ff' },
+          { top: 5, right: 5, borderTop: '1px solid #00d4ff', borderRight: '1px solid #00d4ff' },
+          { bottom: 5, left: 5, borderBottom: '1px solid rgba(0,212,255,0.3)', borderLeft: '1px solid rgba(0,212,255,0.3)' },
+          { bottom: 5, right: 5, borderBottom: '1px solid rgba(0,212,255,0.3)', borderRight: '1px solid rgba(0,212,255,0.3)' },
+        ].map((s, i) => (
+          <span key={i} style={{ position: 'absolute', width: 10, height: 10, ...s as React.CSSProperties }} />
+        ))}
+
+        {/* ── Header ── */}
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          padding: '10px 14px',
+          borderBottom: '1px solid rgba(0,212,255,0.08)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 11, letterSpacing: 3, color: '#00d4ff', fontWeight: 700 }}>
+              VEA<span style={{ color: 'rgba(0,212,255,0.3)' }}>::PANEL</span>
+            </span>
+            <span style={{
+              width: 6, height: 6, borderRadius: '50%', display: 'inline-block',
+              background: isAuthenticated ? '#00ff88' : '#ff4444',
+              boxShadow: `0 0 6px ${isAuthenticated ? '#00ff88' : '#ff4444'}`,
+            }} />
+          </div>
+          <button onClick={() => setOpen(false)}
+            style={{ background: 'none', border: 'none', color: '#2a5a7a', cursor: 'pointer', fontSize: 14, lineHeight: 1 }}>
+            ✕
+          </button>
+        </div>
+
+        {/* ── Status bar ── */}
+        <div style={{
+          padding: '6px 14px',
+          display: 'flex', gap: 14, alignItems: 'center',
+          borderBottom: '1px solid rgba(0,212,255,0.06)',
+          fontSize: 9, letterSpacing: 2,
+        }}>
+          <span style={{ color: '#2a6a8a' }}>MOOD <span style={{ color: '#00d4ff' }}>{mood.toUpperCase()}</span></span>
+          <span style={{ color: '#2a6a8a' }}>INT <span style={{ color: '#00d4ff' }}>{intensity.toFixed(2)}</span></span>
+          {currentScene && (
+            <span style={{ marginLeft: 'auto', color: '#1a4a6a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 100 }}>
+              {currentScene.name.toUpperCase()}
+            </span>
+          )}
+        </div>
+
+        {/* ── Error banner ── */}
+        {error && (
+          <div style={{
+            padding: '7px 14px', fontSize: 10, letterSpacing: 1,
+            background: 'rgba(255,50,50,0.08)', borderBottom: '1px solid rgba(255,80,80,0.2)',
+            color: '#ff6060', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          }}>
+            <span>⚠ {error}</span>
+            <button onClick={clearError} style={{ background: 'none', border: 'none', color: '#ff6060', cursor: 'pointer', fontSize: 12 }}>✕</button>
+          </div>
+        )}
+
+        {/* ── Loading ── */}
+        {isLoadingScene && (
+          <div style={{ padding: '10px 14px', fontSize: 10, letterSpacing: 2, color: '#2a6a8a', textAlign: 'center' }}>
+            LOADING SCENE...
+          </div>
+        )}
+
+        {/* ── Tabs ── */}
+        <div style={{ display: 'flex', borderBottom: '1px solid rgba(0,212,255,0.08)' }}>
+          {(['avatar', 'scene', 'shader'] as Tab[]).map(t => (
+            <button key={t} onClick={() => setTab(t)}
+              style={{
+                flex: 1, padding: '9px 0',
+                background: tab === t ? 'rgba(0,212,255,0.06)' : 'none',
+                border: 'none',
+                borderBottom: `2px solid ${tab === t ? '#00d4ff' : 'transparent'}`,
+                color: tab === t ? '#00d4ff' : '#2a5a7a',
+                cursor: 'pointer', fontSize: 9, letterSpacing: 2,
+                fontFamily: '"Courier New", monospace',
+                transition: 'all 0.15s',
+              }}>
+              {t === 'avatar' ? 'AVATAR' : t === 'scene' ? 'SCENE' : 'SHADER'}
+            </button>
+          ))}
+        </div>
+
+        {/* ── Tab content ── */}
+        <div className="vea-panel-scroll" style={{ maxHeight: 360, overflowY: 'auto', padding: '14px' }}>
+
+          {/* AVATAR TAB */}
+          {tab === 'avatar' && (
+            <>
+              <PanelLabel>ACTIVE CHARACTER</PanelLabel>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 14 }}>
+                {CHARACTERS.map(char => {
+                  const active = activeCharacterId === char.id
+                  return (
+                    <button key={char.id} onClick={() => setActiveCharacterId(char.id)}
+                      style={{
+                        padding: '7px 10px', borderRadius: 3, cursor: 'pointer',
+                        border: `1px solid ${active ? '#00d4ff' : 'rgba(0,180,255,0.12)'}`,
+                        background: active ? 'rgba(0,212,255,0.1)' : 'transparent',
+                        color: active ? '#00d4ff' : '#4a7a9a',
+                        fontSize: 10, fontFamily: '"Courier New", monospace', letterSpacing: 1,
+                        textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        transition: 'all 0.15s',
+                        boxShadow: active ? '0 0 8px rgba(0,212,255,0.15)' : 'none',
+                      }}>
+                      <span>{active ? '▶ ' : '· '}{char.name.toUpperCase()}</span>
+                      <span style={{ opacity: 0.4, fontSize: 9 }}>{char.type.toUpperCase()}</span>
+                    </button>
+                  )
+                })}
+              </div>
+
+              <Divider />
+              <PanelLabel>COLOR CONFIG</PanelLabel>
+              {(Object.entries(colors) as [keyof ColorConfig, string][]).map(([key, val]) => (
+                <ColorRow key={key} label={key} value={val} onChange={v => setColors(c => ({ ...c, [key]: v }))} />
+              ))}
+            </>
+          )}
+
+          {/* SCENE TAB */}
+          {tab === 'scene' && (
+            <>
+              <PanelLabel>SCENE SETTINGS</PanelLabel>
+
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 9, letterSpacing: 2, color: '#2a6a8a', marginBottom: 5 }}>NAME</div>
+                <CyberInput value={sceneName} onChange={setSceneName} placeholder="SCENE NAME" />
+              </div>
+
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 9, letterSpacing: 2, color: '#2a6a8a', marginBottom: 5 }}>ENVIRONMENT</div>
+                <CyberSelect value={sceneEnv} options={ENVS} onChange={setSceneEnv} />
+              </div>
+
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 9, letterSpacing: 2, color: '#2a6a8a', marginBottom: 5 }}>BACKGROUND COLOR</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ position: 'relative', width: 32, height: 28 }}>
+                    <div style={{
+                      width: 32, height: 28, borderRadius: 3,
+                      background: bgColor, border: '1px solid rgba(0,212,255,0.2)',
+                      boxShadow: `0 0 8px ${bgColor}44`,
+                    }} />
+                    <input type="color" value={bgColor} onChange={e => setBgColor(e.target.value)}
+                      style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} />
+                  </div>
+                  <span style={{ fontSize: 10, color: '#2a5a7a', fontFamily: '"Courier New", monospace' }}>{bgColor.toUpperCase()}</span>
+                </div>
+              </div>
+
+              <Divider />
+              <CyberSlider label="AMBIENT LIGHT" value={ambientIntensity} min={0} max={2} step={0.05} onChange={setAmbientIntensity} />
+            </>
+          )}
+
+          {/* SHADER TAB */}
+          {tab === 'shader' && (
+            <>
+              <PanelLabel>ENERGY SHADER PARAMS</PanelLabel>
+              <CyberSlider label="WIREFRAME OPACITY"  value={shaders.wireframeOpacity} min={0} max={1}   step={0.01} onChange={v => setShaders(s => ({ ...s, wireframeOpacity: v }))} />
+              <CyberSlider label="GLOW INTENSITY"     value={shaders.glowIntensity}    min={0} max={3}   step={0.05} onChange={v => setShaders(s => ({ ...s, glowIntensity: v }))} />
+              <CyberSlider label="PULSE SPEED"        value={shaders.pulseSpeed}       min={0} max={5}   step={0.1}  onChange={v => setShaders(s => ({ ...s, pulseSpeed: v }))} />
+              <CyberSlider label="DISTORTION"         value={shaders.distortion}       min={0} max={1}   step={0.01} onChange={v => setShaders(s => ({ ...s, distortion: v }))} />
+
+              {/* Live preview strip */}
+              <Divider />
+              <PanelLabel>PREVIEW</PanelLabel>
+              <div style={{
+                height: 40, borderRadius: 4,
+                background: `linear-gradient(135deg, ${colors.primary}22, ${colors.glow}22)`,
+                border: `1px solid ${colors.primary}44`,
+                boxShadow: `0 0 ${shaders.glowIntensity * 14}px ${colors.glow}55`,
+                transition: 'all 0.3s',
+              }} />
+            </>
+          )}
+        </div>
+
+        {/* ── Footer ── */}
+        <div style={{
+          padding: '10px 14px',
+          borderTop: '1px solid rgba(0,212,255,0.08)',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        }}>
+          {saveMsg ? (
+            <span style={{ fontSize: 9, letterSpacing: 2, color: saveMsg.ok ? '#00ff88' : '#ff6060' }}>
+              {saveMsg.ok ? '✓' : '✗'} {saveMsg.text}
+            </span>
+          ) : (
+            <span style={{ fontSize: 9, letterSpacing: 1, color: '#1a4a6a' }}>
+              {isAuthenticated ? '● ONLINE' : '● OFFLINE'}
+            </span>
+          )}
+          <SaveButton onClick={handleSave} disabled={saving || !isAuthenticated} saving={saving} />
+        </div>
+
+        {/* bottom accent */}
+        <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(0,212,255,0.12), transparent)' }} />
+      </div>
+    </>
+  )
 }
