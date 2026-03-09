@@ -6,383 +6,447 @@ import { openClawService } from '../services/openClawService'
 
 // Polyfill for SpeechRecognition
 const SpeechRecognition =
-    (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+  (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
 
-/**
- * ChatInterface
- *
- * Improvements over the original:
- * - Uses the authenticated user name from AuthProvider / soulStore
- * - Persists chat history via soulStore.addMessage
- * - Displays full conversation history with user/assistant bubbles
- * - Fixes stale closure in SpeechRecognition.onresult by forwarding
- *   the latest handleSendMessage via a ref
- * - Separates recognition setup (once) from the callback (dynamic)
- */
-export const ChatInterface = () => {
-    const [inputText, setInputText] = useState('')
-    const [isListening, setIsListening] = useState(false)
-    const recognitionRef = useRef<any>(null)
-    const messagesEndRef = useRef<HTMLDivElement>(null)
+// ─── Types ────────────────────────────────────────────────────────
+interface ChatMsg {
+  id: string
+  role: 'user' | 'assistant'
+  text: string
+  timestamp: number
+}
 
-    // Use a ref to always have the latest sendMessage callback inside
-    // the SpeechRecognition handler without re-creating the recognizer.
-    const sendRef = useRef<(text: string) => void>(() => {})
+// ─── Sub-components ───────────────────────────────────────────────
 
-    const {
-        lastMessage, setLastMessage,
-        isThinking,
-        setMood, setIntensity,
-        activeCharacterId, setActiveCharacterId,
-        messages, addMessage,
-        userName,
-    } = useSoulStore()
+function MoodDot({ mood, isThinking, isListening }: { mood: string; isThinking: boolean; isListening: boolean }) {
+  const color = isThinking ? '#b060ff' : isListening ? '#ff4444' : '#00d4ff'
+  const label = isThinking ? 'PROCESSING' : isListening ? 'LISTENING' : mood.toUpperCase()
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <span style={{
+        display: 'inline-block', width: 7, height: 7, borderRadius: '50%',
+        background: color,
+        boxShadow: `0 0 8px ${color}`,
+        animation: (isThinking || isListening) ? 'vea-pulse 1s ease-in-out infinite' : 'none',
+      }} />
+      <span style={{ fontSize: 10, letterSpacing: 2, color, fontFamily: '"Courier New", monospace' }}>
+        {label}
+      </span>
+    </div>
+  )
+}
 
-    const { signOut } = useAuth()
-
-    // ----------------------------------------------------------------
-    // Send message handler (memoized, captured via ref for recognition)
-    // ----------------------------------------------------------------
-    const handleSendMessage = useCallback(
-        async (text: string) => {
-            if (!text.trim()) return
-
-            const trimmed = text.trim()
-
-            addMessage({ role: 'user', text: trimmed })
-            setLastMessage(trimmed)
-            setMood('thinking')
-            setIntensity(1.0)
-            setInputText('')
-
-            const result = await openClawService.sendMessage(trimmed)
-            addMessage({ role: 'assistant', text: result.text })
-            setMood(result.mood ?? 'calm')
-            setIntensity(result.intensity ?? 0.5)
-            speakResponse(result.text)
-        },
-        [addMessage, setLastMessage, setMood, setIntensity]
-    )
-
-    // Keep ref in sync so recognition handler always calls latest version
-    useEffect(() => {
-        sendRef.current = handleSendMessage
-    }, [handleSendMessage])
-
-    // ----------------------------------------------------------------
-    // SpeechRecognition setup — runs once on mount
-    // ----------------------------------------------------------------
-    useEffect(() => {
-        if (!SpeechRecognition) return
-
-        const recog = new SpeechRecognition()
-        recog.continuous = false
-        recog.lang = 'es-ES'
-        recog.interimResults = false
-
-        recog.onstart = () => {
-            setIsListening(true)
-            setMood('listening')
-            setIntensity(0.8)
-        }
-        recog.onend = () => {
-            setIsListening(false)
-            setMood('calm')
-            setIntensity(0.5)
-        }
-
-        // Use ref to avoid stale closure
-        recog.onresult = (event: any) => {
-            const transcript = event.results[0][0].transcript
-            sendRef.current(transcript)
-        }
-
-        recognitionRef.current = recog
-
-        return () => {
-            try { recog.abort() } catch (_) {}
-        }
-    }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-    // Auto-scroll to latest message
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }, [messages])
-
-    // ----------------------------------------------------------------
-    // Helpers
-    // ----------------------------------------------------------------
-    const toggleListening = () => {
-        const recog = recognitionRef.current
-        if (!recog) {
-            alert('Speech Recognition no está soportado en este navegador.')
-            return
-        }
-        if (isListening) recog.stop()
-        else recog.start()
-    }
-
-    const speakResponse = (text: string) => {
-        const utterance = new SpeechSynthesisUtterance(text)
-        utterance.lang = 'es-ES'
-        window.speechSynthesis.speak(utterance)
-    }
-
-    // ----------------------------------------------------------------
-    // Render
-    // ----------------------------------------------------------------
-    return (
-        <div
+function CharacterTabs({
+  characters,
+  activeId,
+  onSelect,
+}: {
+  characters: typeof CHARACTERS
+  activeId: string
+  onSelect: (id: string) => void
+}) {
+  return (
+    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      {characters.map((char) => {
+        const active = activeId === char.id
+        return (
+          <button
+            key={char.id}
+            onClick={() => onSelect(char.id)}
             style={{
-                position: 'absolute',
-                bottom: '20px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                zIndex: 10,
-                width: '90%',
-                maxWidth: '640px',
-                background: 'rgba(14, 14, 24, 0.88)',
-                backdropFilter: 'blur(12px)',
-                padding: '20px',
-                borderRadius: '18px',
-                color: 'white',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                fontFamily: 'system-ui, sans-serif',
+              padding: '4px 12px',
+              borderRadius: 2,
+              border: `1px solid ${active ? '#00d4ff' : 'rgba(0,180,255,0.2)'}`,
+              background: active ? 'rgba(0,212,255,0.12)' : 'transparent',
+              color: active ? '#00d4ff' : '#4a7a9a',
+              fontSize: 10,
+              fontFamily: '"Courier New", monospace',
+              letterSpacing: 1,
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+              boxShadow: active ? '0 0 8px rgba(0,212,255,0.2)' : 'none',
             }}
-        >
-            {/* Character + user header */}
-            <div
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '8px',
-                    flexWrap: 'wrap',
-                }}
-            >
-                {/* Character selector */}
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    {CHARACTERS.map((char) => (
-                        <button
-                            key={char.id}
-                            onClick={() => setActiveCharacterId(char.id)}
-                            style={{
-                                padding: '6px 14px',
-                                borderRadius: '20px',
-                                border: 'none',
-                                background:
-                                    activeCharacterId === char.id
-                                        ? '#007bff'
-                                        : 'rgba(255,255,255,0.1)',
-                                color: 'white',
-                                fontSize: '12px',
-                                cursor: 'pointer',
-                            }}
-                        >
-                            {char.name}
-                        </button>
-                    ))}
-                </div>
+          >
+            {char.name.toUpperCase()}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
 
-                {/* Logged-in user badge */}
-                {userName && (
-                    <div
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            fontSize: '12px',
-                            color: '#00ccff',
-                        }}
-                    >
-                        <span>👤</span>
-                        <span style={{ fontWeight: 700 }}>{userName}</span>
-                        <button
-                            onClick={() => { openClawService.clearHistory(); signOut() }}
-                            title="Cerrar sesión"
-                            style={{
-                                background: 'none',
-                                border: 'none',
-                                color: '#555',
-                                cursor: 'pointer',
-                                fontSize: '14px',
-                                lineHeight: 1,
-                                padding: '0 2px',
-                            }}
-                        >
-                            ×
-                        </button>
-                    </div>
-                )}
+function MessageBubble({ msg, userName }: { msg: ChatMsg; userName: string | null }) {
+  const isUser = msg.role === 'user'
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: isUser ? 'flex-end' : 'flex-start',
+    }}>
+      <div style={{
+        maxWidth: '80%',
+        padding: '9px 14px',
+        background: isUser
+          ? 'linear-gradient(135deg, rgba(0,212,255,0.12), rgba(0,100,180,0.08))'
+          : 'rgba(255,255,255,0.04)',
+        border: `1px solid ${isUser ? 'rgba(0,212,255,0.25)' : 'rgba(255,255,255,0.07)'}`,
+        borderRadius: isUser ? '8px 8px 2px 8px' : '8px 8px 8px 2px',
+        fontSize: 13,
+        lineHeight: 1.6,
+        color: isUser ? '#c8e8ff' : '#9ab8d0',
+        fontFamily: '"Courier New", monospace',
+        position: 'relative',
+      }}>
+        {/* sender tag */}
+        <div style={{
+          fontSize: 9,
+          letterSpacing: 2,
+          color: isUser ? 'rgba(0,212,255,0.5)' : 'rgba(100,160,200,0.4)',
+          marginBottom: 4,
+        }}>
+          {isUser ? (userName ?? 'USER') : 'VEA'}
+        </div>
+        {msg.text}
+      </div>
+      <div style={{
+        fontSize: 9, color: '#2a4a6a',
+        marginTop: 3, paddingInline: 4,
+        fontFamily: '"Courier New", monospace',
+        letterSpacing: 1,
+      }}>
+        {new Date(msg.timestamp).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+      </div>
+    </div>
+  )
+}
+
+function ThinkingBubble() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+      <div style={{
+        padding: '10px 16px',
+        background: 'rgba(255,255,255,0.04)',
+        border: '1px solid rgba(255,255,255,0.07)',
+        borderRadius: '8px 8px 8px 2px',
+        display: 'flex', gap: 5, alignItems: 'center',
+      }}>
+        {[0, 1, 2].map(i => (
+          <span key={i} style={{
+            width: 6, height: 6, borderRadius: '50%',
+            background: '#00d4ff',
+            display: 'inline-block',
+            animation: `vea-blink 1.2s ease-in-out ${i * 0.2}s infinite`,
+            opacity: 0.4,
+          }} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function SendButton({ onClick, disabled }: { onClick: () => void; disabled: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        padding: '0 20px',
+        height: 44,
+        borderRadius: 4,
+        border: `1px solid ${disabled ? 'rgba(0,212,255,0.15)' : '#00d4ff'}`,
+        background: disabled ? 'transparent' : 'linear-gradient(135deg, rgba(0,212,255,0.15), rgba(0,212,255,0.05))',
+        color: disabled ? '#2a5a7a' : '#00d4ff',
+        fontFamily: '"Courier New", monospace',
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: 2,
+        cursor: disabled ? 'default' : 'pointer',
+        whiteSpace: 'nowrap',
+        transition: 'all 0.15s',
+        boxShadow: disabled ? 'none' : '0 0 10px rgba(0,212,255,0.15)',
+        flexShrink: 0,
+      }}
+    >
+      SEND
+    </button>
+  )
+}
+
+function MicButton({ isListening, onClick }: { isListening: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      title={isListening ? 'Stop' : 'Voice input'}
+      style={{
+        width: 44, height: 44, borderRadius: 4, border: 'none', flexShrink: 0,
+        background: isListening ? 'rgba(255,50,50,0.2)' : 'rgba(255,255,255,0.04)',
+        color: isListening ? '#ff6060' : '#4a7a9a',
+        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 16, transition: 'all 0.15s',
+        boxShadow: isListening ? '0 0 12px rgba(255,60,60,0.3)' : 'none',
+      }}
+    >
+      {isListening ? '⬛' : '🎙'}
+    </button>
+  )
+}
+
+// ─── Main Component ───────────────────────────────────────────────
+export const ChatInterface = () => {
+  const [inputText, setInputText] = useState('')
+  const [isListening, setIsListening] = useState(false)
+  const [collapsed, setCollapsed] = useState(false)
+  const recognitionRef = useRef<any>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const sendRef = useRef<(text: string) => void>(() => {})
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const {
+    lastMessage, setLastMessage,
+    isThinking,
+    mood, setMood, setIntensity,
+    activeCharacterId, setActiveCharacterId,
+    messages, addMessage,
+    userName,
+  } = useSoulStore()
+
+  const { signOut } = useAuth()
+
+  // ── Send handler ────────────────────────────────────────────────
+  const handleSend = useCallback(async (text: string) => {
+    if (!text.trim() || isThinking) return
+    const trimmed = text.trim()
+    addMessage({ role: 'user', text: trimmed })
+    setLastMessage(trimmed)
+    setMood('thinking')
+    setIntensity(1.0)
+    setInputText('')
+
+    const result = await openClawService.sendMessage(trimmed)
+    addMessage({ role: 'assistant', text: result.text })
+    setMood(result.mood ?? 'calm')
+    setIntensity(result.intensity ?? 0.5)
+    speakResponse(result.text)
+  }, [addMessage, setLastMessage, setMood, setIntensity, isThinking])
+
+  useEffect(() => { sendRef.current = handleSend }, [handleSend])
+
+  // ── Speech recognition ─────────────────────────────────────────
+  useEffect(() => {
+    if (!SpeechRecognition) return
+    const recog = new SpeechRecognition()
+    recog.continuous = false
+    recog.lang = 'es-ES'
+    recog.interimResults = false
+    recog.onstart = () => { setIsListening(true); setMood('listening'); setIntensity(0.8) }
+    recog.onend = () => { setIsListening(false); setMood('calm'); setIntensity(0.5) }
+    recog.onresult = (e: any) => sendRef.current(e.results[0][0].transcript)
+    recognitionRef.current = recog
+    return () => { try { recog.abort() } catch (_) {} }
+  }, []) // eslint-disable-line
+
+  // ── Auto scroll ─────────────────────────────────────────────────
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, isThinking])
+
+  const toggleListening = () => {
+    const r = recognitionRef.current
+    if (!r) { alert('Speech Recognition no soportado.'); return }
+    isListening ? r.stop() : r.start()
+  }
+
+  const speakResponse = (text: string) => {
+    const u = new SpeechSynthesisUtterance(text)
+    u.lang = 'es-ES'
+    window.speechSynthesis.speak(u)
+  }
+
+  // ── Render ──────────────────────────────────────────────────────
+  return (
+    <>
+      <style>{`
+        @keyframes vea-pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.4; transform: scale(0.8); }
+        }
+        @keyframes vea-blink {
+          0%, 80%, 100% { opacity: 0.2; transform: scaleY(0.6); }
+          40% { opacity: 1; transform: scaleY(1); }
+        }
+        .vea-input::placeholder { color: rgba(0,180,255,0.25); }
+        .vea-input:focus { border-color: rgba(0,212,255,0.5) !important; box-shadow: 0 0 12px rgba(0,212,255,0.12); }
+        .vea-scrollbar::-webkit-scrollbar { width: 3px; }
+        .vea-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .vea-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.2); border-radius: 2px; }
+      `}</style>
+
+      <div style={{
+        position: 'absolute',
+        bottom: 20,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 10,
+        width: '92%',
+        maxWidth: 660,
+        fontFamily: '"Courier New", monospace',
+      }}>
+        {/* ── Main panel ── */}
+        <div style={{
+          background: 'rgba(2,8,18,0.88)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(0,212,255,0.18)',
+          borderRadius: 6,
+          boxShadow: '0 0 40px rgba(0,212,255,0.06), 0 16px 40px rgba(0,0,0,0.5)',
+          overflow: 'hidden',
+        }}>
+
+          {/* top accent */}
+          <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(0,212,255,0.4), transparent)' }} />
+
+          {/* ── Header ── */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '10px 16px',
+            borderBottom: '1px solid rgba(0,212,255,0.08)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              {/* VEA label */}
+              <span style={{ fontSize: 11, letterSpacing: 3, color: '#00d4ff', fontWeight: 700 }}>
+                VEA<span style={{ color: 'rgba(0,212,255,0.3)' }}>::CHAT</span>
+              </span>
+              <MoodDot mood={mood} isThinking={isThinking} isListening={isListening} />
             </div>
 
-            {/* Status indicator */}
-            <div
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {/* User badge */}
+              {userName && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 9, color: 'rgba(0,212,255,0.5)', letterSpacing: 1 }}>
+                    {userName.toUpperCase()}
+                  </span>
+                  <button
+                    onClick={() => { openClawService.clearHistory(); signOut() }}
+                    title="Sign out"
+                    style={{
+                      background: 'none', border: 'none', color: '#2a4a6a',
+                      cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0,
+                    }}
+                  >×</button>
+                </div>
+              )}
+
+              {/* Collapse toggle */}
+              <button
+                onClick={() => setCollapsed(c => !c)}
+                title={collapsed ? 'Expand' : 'Collapse'}
                 style={{
-                    minHeight: '22px',
-                    fontSize: '13px',
-                    color: isThinking ? '#ab47bc' : isListening ? '#ff4d4d' : '#666',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
+                  background: 'none', border: 'none', color: '#2a5a7a',
+                  cursor: 'pointer', fontSize: 12, lineHeight: 1, padding: '0 2px',
+                  fontFamily: '"Courier New", monospace', letterSpacing: 1,
                 }}
-            >
-                {isThinking ? (
-                    <>
-                        <span style={{ animation: 'pulse 1s infinite' }}>●</span>
-                        Procesando...
-                    </>
-                ) : isListening ? (
-                    <>
-                        <span style={{ color: '#ff4d4d' }}>●</span>
-                        Escuchando...
-                    </>
-                ) : (
-                    <span>Esperando input…</span>
-                )}
+              >
+                {collapsed ? '▲' : '▼'}
+              </button>
             </div>
+          </div>
 
-            {/* Chat history */}
-            {messages.length > 0 && (
+          {!collapsed && (
+            <>
+              {/* ── Character tabs ── */}
+              <div style={{
+                padding: '8px 16px',
+                borderBottom: '1px solid rgba(0,212,255,0.06)',
+              }}>
+                <CharacterTabs
+                  characters={CHARACTERS}
+                  activeId={activeCharacterId}
+                  onSelect={setActiveCharacterId}
+                />
+              </div>
+
+              {/* ── Message list ── */}
+              {(messages.length > 0 || isThinking || (!isThinking && lastMessage && messages.length === 0)) && (
                 <div
-                    style={{
-                        maxHeight: '220px',
-                        overflowY: 'auto',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '8px',
-                        paddingRight: '4px',
-                    }}
+                  className="vea-scrollbar"
+                  style={{
+                    maxHeight: 220,
+                    overflowY: 'auto',
+                    padding: '12px 16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 10,
+                    borderBottom: '1px solid rgba(0,212,255,0.06)',
+                  }}
                 >
-                    {messages.map((msg) => (
-                        <div
-                            key={msg.id}
-                            style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems:
-                                    msg.role === 'user' ? 'flex-end' : 'flex-start',
-                            }}
-                        >
-                            <div
-                                style={{
-                                    maxWidth: '85%',
-                                    padding: '10px 14px',
-                                    borderRadius:
-                                        msg.role === 'user'
-                                            ? '16px 16px 4px 16px'
-                                            : '16px 16px 16px 4px',
-                                    background:
-                                        msg.role === 'user'
-                                            ? 'linear-gradient(135deg, #007bff33, #00ccff33)'
-                                            : 'rgba(255,255,255,0.07)',
-                                    border:
-                                        msg.role === 'user'
-                                            ? '1px solid #007bff44'
-                                            : '1px solid rgba(255,255,255,0.08)',
-                                    fontSize: '14px',
-                                    lineHeight: 1.5,
-                                }}
-                            >
-                                {msg.text}
-                            </div>
-                            <div
-                                style={{
-                                    fontSize: '10px',
-                                    color: '#444',
-                                    marginTop: '3px',
-                                    paddingInline: '4px',
-                                }}
-                            >
-                                {msg.role === 'user' ? (userName ?? 'Tú') : 'VEA'} ·{' '}
-                                {new Date(msg.timestamp).toLocaleTimeString('es-MX', {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                })}
-                            </div>
-                        </div>
-                    ))}
-                    <div ref={messagesEndRef} />
-                </div>
-            )}
+                  {/* Fallback if no history */}
+                  {messages.length === 0 && lastMessage && (
+                    <MessageBubble
+                      msg={{ id: 'legacy', role: 'user', text: lastMessage, timestamp: Date.now() }}
+                      userName={userName}
+                    />
+                  )}
 
-            {/* Last message fallback if no history */}
-            {messages.length === 0 && lastMessage && (
-                <div
-                    style={{
-                        background: 'rgba(255,255,255,0.07)',
-                        padding: '12px',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                    }}
-                >
-                    <strong style={{ opacity: 0.6 }}>Tú:</strong> {lastMessage}
-                </div>
-            )}
+                  {messages.map(msg => (
+                    <MessageBubble key={msg.id} msg={msg} userName={userName} />
+                  ))}
 
-            {/* Input row */}
-            <div style={{ display: 'flex', gap: '10px' }}>
-                <input
+                  {isThinking && <ThinkingBubble />}
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
+
+              {/* ── Input row ── */}
+              <div style={{ padding: '12px 16px', display: 'flex', gap: 8, alignItems: 'center' }}>
+                <div style={{ flex: 1, position: 'relative' }}>
+                  {/* corner accents on input */}
+                  <span style={{
+                    position: 'absolute', top: -1, left: -1, width: 6, height: 6,
+                    borderTop: '1px solid rgba(0,212,255,0.4)', borderLeft: '1px solid rgba(0,212,255,0.4)',
+                    pointerEvents: 'none',
+                  }} />
+                  <span style={{
+                    position: 'absolute', bottom: -1, right: -1, width: 6, height: 6,
+                    borderBottom: '1px solid rgba(0,212,255,0.4)', borderRight: '1px solid rgba(0,212,255,0.4)',
+                    pointerEvents: 'none',
+                  }} />
+                  <input
+                    ref={inputRef}
+                    className="vea-input"
                     type="text"
                     value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSendMessage(inputText)}
-                    placeholder="Escribe un mensaje..."
+                    onChange={e => setInputText(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend(inputText)}
+                    placeholder="SEND COMMAND..."
+                    disabled={isThinking}
                     style={{
-                        flex: 1,
-                        padding: '12px',
-                        borderRadius: '10px',
-                        border: '1px solid rgba(255,255,255,0.15)',
-                        background: 'rgba(0,0,0,0.3)',
-                        color: 'white',
-                        outline: 'none',
-                        fontSize: '14px',
+                      width: '100%',
+                      height: 44,
+                      padding: '0 14px',
+                      background: 'rgba(0,10,24,0.6)',
+                      border: '1px solid rgba(0,180,255,0.15)',
+                      borderRadius: 4,
+                      color: '#c8e8ff',
+                      fontSize: 13,
+                      fontFamily: '"Courier New", monospace',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                      transition: 'border-color 0.2s, box-shadow 0.2s',
+                      opacity: isThinking ? 0.5 : 1,
                     }}
-                />
-                <button
-                    onClick={() => handleSendMessage(inputText)}
-                    style={{
-                        padding: '0 20px',
-                        borderRadius: '10px',
-                        border: 'none',
-                        background: 'linear-gradient(45deg, #007bff, #00ccff)',
-                        color: 'white',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        whiteSpace: 'nowrap',
-                        fontSize: '14px',
-                    }}
-                >
-                    Enviar
-                </button>
-                <button
-                    onClick={toggleListening}
-                    title={isListening ? 'Detener escucha' : 'Activar micrófono'}
-                    style={{
-                        padding: '12px',
-                        borderRadius: '50%',
-                        border: 'none',
-                        background: isListening
-                            ? '#ff4d4d'
-                            : 'rgba(255,255,255,0.1)',
-                        color: 'white',
-                        cursor: 'pointer',
-                        width: '44px',
-                        height: '44px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '18px',
-                        flexShrink: 0,
-                        transition: 'background 0.3s',
-                    }}
-                >
-                    {isListening ? '⬛' : '🎤'}
-                </button>
-            </div>
+                  />
+                </div>
+
+                <SendButton onClick={() => handleSend(inputText)} disabled={!inputText.trim() || isThinking} />
+                <MicButton isListening={isListening} onClick={toggleListening} />
+              </div>
+            </>
+          )}
+
+          {/* bottom accent */}
+          <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(0,212,255,0.12), transparent)' }} />
         </div>
-    )
+      </div>
+    </>
+  )
 }
