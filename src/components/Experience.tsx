@@ -1,6 +1,7 @@
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Environment, ContactShadows } from '@react-three/drei'
 import { DynamicCharacter } from './DynamicCharacter'
+import { CAMERA } from '../lib/constraints'
 
 /**
  * Experience — R3F Canvas wrapper.
@@ -9,7 +10,7 @@ import { DynamicCharacter } from './DynamicCharacter'
  */
 export const Experience = () => {
     return (
-        <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
+        <Canvas camera={{ position: [0, 0, 5], fov: CAMERA.FOV }}>
             <color attach="background" args={['#111']} />
 
             <ambientLight intensity={0.5} />
@@ -27,7 +28,13 @@ export const Experience = () => {
             />
             <Environment preset="city" />
 
-            <OrbitControls makeDefault />
+            <OrbitControls
+                makeDefault
+                minPolarAngle={CAMERA.POLAR_MIN}
+                maxPolarAngle={CAMERA.POLAR_MAX}
+                minDistance={CAMERA.ZOOM_MIN}
+                maxDistance={CAMERA.ZOOM_MAX}
+            />
         </Canvas>
     )
 }

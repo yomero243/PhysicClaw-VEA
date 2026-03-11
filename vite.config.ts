@@ -27,6 +27,7 @@ const CONTROL_API_TOKEN =
 // Override via OPENCLAW_LOCAL_PORT env var.
 const OPENCLAW_LOCAL_PORT = Number(process.env.OPENCLAW_LOCAL_PORT ?? 18789)
 
+
 // Allowed commands and their value validators
 const COMMAND_VALIDATORS: Record<string, (v: unknown) => boolean> = {
     setMood: v => typeof v === 'string' && ['calm', 'excited', 'thinking', 'listening'].includes(v),

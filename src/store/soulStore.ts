@@ -23,12 +23,12 @@ export interface ChatMessage {
 
 interface SoulState {
     isThinking: boolean
-    mood: string
+    mood: Mood
     lastMessage: string
-    intensity: number
-    activeCharacterId: string
+    intensity: Intensity
+    activeCharacterId: CharacterId
     setIsThinking: (thinking: boolean) => void
-    setMood: (mood: string) => void
+    setMood: (mood: Mood) => void
     setLastMessage: (msg: string) => void
     setIntensity: (intensity: number) => void
     setActiveCharacterId: (id: string) => void
