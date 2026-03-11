@@ -2,10 +2,12 @@ import React, { useRef, useEffect, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useGLTF, useFBX, useAnimations, Sphere } from '@react-three/drei'
 import * as THREE from 'three'
-import { useSoulStore } from '../store/soulStore'
+import { useSoulStore, MOOD_COLORS } from '../store/soulStore'
+import type { CharacterOverride } from '../store/soulStore'
 import { CHARACTERS } from '../constants/characters'
 import { EnergyShaderMaterial } from '../shaders/EnergyShader'
 import '../shaders/EnergyShader'
+
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -91,17 +93,21 @@ const GLBModel = ({ url, config }: { url: string; config: any }) => {
         return mat
     }, [shaderColor])
 
+
     useFrame((_, delta) => {
         if (material) {
             material.uTime += delta
+
             let target = overrides.intensity ?? intensity
             if (isThinking) target += 0.8
             if (mood === 'excited') target += 0.5
             material.uIntensity = THREE.MathUtils.lerp(material.uIntensity, target, 0.1)
+
         }
     })
 
     useEffect(() => {
+
         if (overrides.useEnergyShader === false) return // user opted out
         scene.traverse((child: any) => {
             if (child.isMesh) child.material = material
@@ -124,6 +130,7 @@ const GLBModel = ({ url, config }: { url: string; config: any }) => {
 // ── Base Entity (no model URL) ─────────────────────────────────────────────────
 
 const BaseEntity = ({ characterId }: { characterId: string }) => {
+
     const materialRef = useRef<any>(null)
     const { intensity, isThinking, mood, characterOverrides } = useSoulStore()
     const overrides = characterOverrides[characterId] || {}
@@ -132,6 +139,7 @@ const BaseEntity = ({ characterId }: { characterId: string }) => {
     useFrame((_, delta) => {
         if (materialRef.current) {
             materialRef.current.uTime += delta
+
             let target = overrides.intensity ?? intensity
             if (isThinking) target += 0.8
             if (mood === 'excited') target += 0.5
@@ -142,11 +150,14 @@ const BaseEntity = ({ characterId }: { characterId: string }) => {
             )
             // Live-update color when override changes
             materialRef.current.uColor = shaderColor
+
         }
     })
 
+    const scale = overrides.scale ?? 1
+
     return (
-        <Sphere args={[1, 64, 64]}>
+        <Sphere args={[1, 64, 64]} scale={scale}>
             {/* @ts-ignore */}
             <energyShaderMaterial
                 ref={materialRef}
@@ -158,6 +169,7 @@ const BaseEntity = ({ characterId }: { characterId: string }) => {
     )
 }
 
+
 // ── DynamicCharacter ──────────────────────────────────────────────────────────
 
 export const DynamicCharacter: React.FC = () => {
@@ -167,11 +179,16 @@ export const DynamicCharacter: React.FC = () => {
 
     if (!config.modelUrl) {
         return <BaseEntity characterId={config.id} />
+
     }
 
     if (config.type === 'fbx') {
-        return <FBXModel url={config.modelUrl} config={config} />
+        return <FBXModel url={config.modelUrl} config={config} overrides={overrides} />
     }
 
-    return <GLBModel url={config.modelUrl} config={config} />
+    return <GLBModel url={config.modelUrl} config={config} overrides={overrides} />
 }
+
+useFBX.preload('/HappyIdle.fbx')
+useGLTF.preload('/HappyIdle.glb') // Para cuando conviertas el archivo
+

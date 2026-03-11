@@ -75,6 +75,7 @@ function CharacterTabs({
   )
 }
 
+
 function MessageBubble({ msg, userName }: { msg: ChatMsg; userName: string | null }) {
   const isUser = msg.role === 'user'
   return (
@@ -449,4 +450,5 @@ export const ChatInterface = () => {
       </div>
     </>
   )
+
 }

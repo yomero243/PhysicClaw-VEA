@@ -18,6 +18,8 @@ export const CHARACTERS: CharacterConfig[] = [
         id: 'happy-idle' as CharacterId,
         name: 'Happy Bot',
         modelUrl: '/Avata1.glb',
+
+
         type: 'glb',
         scale: 1,
         position: [0, -1, 0.5],
