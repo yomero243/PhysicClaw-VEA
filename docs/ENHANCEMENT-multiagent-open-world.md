@@ -230,9 +230,9 @@ No new UI framework, no physics engine, no external 3D assets — consistent wit
 
 ---
 
-## Reference Architecture
+## Architectural Patterns
 
-Design inspired by **openclaw-world**:
+Key design decisions:
 - Dual-renderer pattern (WebGL + CSS2DRenderer for labels)
 - HTTP-for-agents / WS-for-browsers transport split
 - Nostr-based decentralized discovery (kind-30078)
