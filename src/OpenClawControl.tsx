@@ -1,19 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { applyCommand, type ControlCommand } from './lib/clawControl';
-
-function parseCommand(raw: unknown): ControlCommand | null {
-    if (
-        typeof raw !== 'object' ||
-        raw === null ||
-        !('command' in raw) ||
-        typeof (raw as Record<string, unknown>).command !== 'string'
-    ) return null;
-
-    const rec = raw as Record<string, unknown>;
-    if (rec.id !== undefined && typeof rec.id !== 'string') return null;
-
-    return rec as unknown as ControlCommand;
-}
+import { applyCommand, parseControlCommand } from './lib/clawControl';
 
 export function OpenClawControl() {
     const lastProcessedId = useRef<string | undefined>(undefined);
@@ -27,7 +13,7 @@ export function OpenClawControl() {
                 const response = await fetch('/openclaw-control.json');
                 if (!response.ok) return;
 
-                const control = parseCommand(await response.json());
+                const control = parseControlCommand(await response.json());
                 if (!control) return;
 
                 if (control.id !== lastProcessedId.current) {

@@ -1,39 +1,33 @@
+import { ControlCommandSchema, type ControlCommand, toIntensity, toCharacterId } from './constraints'
 import { useSoulStore } from '../store/soulStore'
+import { REGISTERED_CHARACTER_IDS } from '../constants/characters'
 
-export const VALID_MOODS = ['calm', 'excited', 'thinking', 'listening'] as const
-export type Mood = typeof VALID_MOODS[number]
+export type { ControlCommand }
 
-export const INTENSITY_MIN = 0
-export const INTENSITY_MAX = 2
-
-export interface ControlCommand {
-    command: string
-    value: unknown
-    id?: string
+export function parseControlCommand(raw: unknown): ControlCommand | null {
+    const result = ControlCommandSchema.safeParse(raw)
+    return result.success ? result.data : null
 }
 
 export function applyCommand(cmd: ControlCommand) {
     const store = useSoulStore.getState()
     switch (cmd.command) {
         case 'setMood':
-            if (typeof cmd.value === 'string' && (VALID_MOODS as readonly string[]).includes(cmd.value))
-                store.setMood(cmd.value as Mood)
+            store.setMood(cmd.value)
             break
         case 'setIsThinking':
-            if (typeof cmd.value === 'boolean')
-                store.setIsThinking(cmd.value)
+            store.setIsThinking(cmd.value)
             break
         case 'setIntensity':
-            if (typeof cmd.value === 'number' && cmd.value >= INTENSITY_MIN && cmd.value <= INTENSITY_MAX)
-                store.setIntensity(cmd.value)
+            store.setIntensity(toIntensity(cmd.value))
             break
         case 'setLastMessage':
-            if (typeof cmd.value === 'string' && cmd.value.length <= 500)
-                store.setLastMessage(cmd.value)
+            store.setLastMessage(cmd.value)
             break
-        case 'setActiveCharacterId':
-            if (typeof cmd.value === 'string' && cmd.value.length > 0 && cmd.value.length <= 64)
-                store.setActiveCharacterId(cmd.value)
+        case 'setActiveCharacterId': {
+            const id = toCharacterId(cmd.value, REGISTERED_CHARACTER_IDS)
+            if (id) store.setActiveCharacterId(id)
             break
+        }
     }
 }

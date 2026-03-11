@@ -1,11 +1,14 @@
 import { useEffect } from 'react'
-import { applyCommand, type ControlCommand } from '../lib/clawControl'
+import { applyCommand, parseControlCommand } from '../lib/clawControl'
 
 export function useOpenClawControl() {
     useEffect(() => {
         // Dev: Vite HMR channel
         if (import.meta.hot) {
-            const handler = (data: ControlCommand) => applyCommand(data)
+            const handler = (data: unknown) => {
+                const cmd = parseControlCommand(data)
+                if (cmd) applyCommand(cmd)
+            }
             import.meta.hot.on('openclaw-command', handler)
             return () => { import.meta.hot?.off('openclaw-command', handler) }
         }
@@ -19,9 +22,8 @@ export function useOpenClawControl() {
             try {
                 const res = await fetch('/openclaw-control.json')
                 if (!res.ok) return
-                const raw: unknown = await res.json()
-                if (typeof raw !== 'object' || raw === null || !('command' in raw)) return
-                const cmd = raw as ControlCommand
+                const cmd = parseControlCommand(await res.json())
+                if (!cmd) return
                 if (cmd.id !== lastId) {
                     applyCommand(cmd)
                     lastId = cmd.id
