@@ -1,10 +1,12 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { CharacterConfig } from '../constants/characters'
+import type { Mood, Intensity, CharacterId } from '../lib/constraints'
 
 // ----------------------------------------------------------------
 // Types
 // ----------------------------------------------------------------
+
 
 export interface CharacterOverride {
     scale?: number
@@ -15,23 +17,45 @@ export interface CharacterOverride {
 }
 
 export interface ChatMessage {
-    id: string
+    id?: string
     role: 'user' | 'assistant'
-    text: string
+    content?: string    // used by openClawService / chatMessages
+    text?: string       // used by ChatInterface / messages
+    mood?: string
     timestamp: number
+}
+
+// Mood → color mapping for automatic avatar color changes
+export const MOOD_COLORS: Record<string, string> = {
+    calm: '#00ffff',
+    happy: '#44ff88',
+    excited: '#ffcc00',
+    thinking: '#aa44ff',
+    listening: '#4488ff',
+    sad: '#4466aa',
+    angry: '#ff4444',
+    surprised: '#ff44aa',
+    curious: '#ff8844',
+    love: '#ff66cc',
 }
 
 interface SoulState {
     isThinking: boolean
-    mood: string
+    mood: Mood
     lastMessage: string
-    intensity: number
-    activeCharacterId: string
+    intensity: Intensity
+    activeCharacterId: CharacterId
     setIsThinking: (thinking: boolean) => void
-    setMood: (mood: string) => void
+    setMood: (mood: Mood) => void
     setLastMessage: (msg: string) => void
     setIntensity: (intensity: number) => void
     setActiveCharacterId: (id: string) => void
+
+    // Chat messages history (used by openClawService)
+    chatMessages: ChatMessage[]
+    addChatMessage: (msg: ChatMessage) => void
+    clearChatMessages: () => void
+
 
     // Custom characters (uploaded by user)
     customCharacters: CharacterConfig[]
@@ -52,10 +76,11 @@ interface SoulState {
     userName: string | null
     setUserName: (name: string | null) => void
 
-    // Chat history (session-only, not persisted)
+    // Session chat history (used by ChatInterface)
     messages: ChatMessage[]
     addMessage: (msg: Omit<ChatMessage, 'id' | 'timestamp'>) => void
     clearMessages: () => void
+
 
     // API Connection Settings
     apiBaseUrl: string
@@ -67,6 +92,7 @@ interface SoulState {
 // ----------------------------------------------------------------
 // Store
 // ----------------------------------------------------------------
+
 
 export const useSoulStore = create<SoulState>()(
     persist(
@@ -81,6 +107,12 @@ export const useSoulStore = create<SoulState>()(
             setLastMessage: (msg) => set({ lastMessage: msg }),
             setIntensity: (intensity) => set({ intensity }),
             setActiveCharacterId: (id) => set({ activeCharacterId: id }),
+
+            chatMessages: [],
+            addChatMessage: (msg) => set((state) => ({
+                chatMessages: [...state.chatMessages, msg],
+            })),
+            clearChatMessages: () => set({ chatMessages: [] }),
 
             customCharacters: [],
             addCustomCharacter: (config) =>
@@ -123,7 +155,7 @@ export const useSoulStore = create<SoulState>()(
             userName: null,
             setUserName: (name) => set({ userName: name }),
 
-            // Chat history (session-only)
+            // Session chat history (ChatInterface local display)
             messages: [],
             addMessage: (msg) =>
                 set((state) => ({
@@ -140,14 +172,13 @@ export const useSoulStore = create<SoulState>()(
 
             // API settings
             apiBaseUrl: import.meta.env.VITE_OPENCLAW_API_URL || '',
-            apiModel:
-                import.meta.env.VITE_OPENCLAW_MODEL || 'claude-3-5-sonnet-20241022',
+            apiModel: import.meta.env.VITE_OPENCLAW_MODEL || 'claude-3-5-sonnet-20241022',
             apiToken: import.meta.env.VITE_OPENCLAW_TOKEN || '',
             setApiConfig: (config) => set((state) => ({ ...state, ...config })),
         }),
         {
             name: 'physicclaw-storage',
-            // messages and userName are session-only — do not persist
+            // session-only fields excluded — only persist api config + customizations
             partialize: (state) => ({
                 apiBaseUrl: state.apiBaseUrl,
                 apiModel: state.apiModel,
