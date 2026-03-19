@@ -82,10 +82,10 @@ function GridCanvas() {
 
 /* ─── Shared input component ─── */
 function CyberInput({
-  type, placeholder, value, onChange, minLength, required,
+  type, placeholder, value, onChange, minLength, required, disabled,
 }: {
   type: string; placeholder: string; value: string
-  onChange: (v: string) => void; minLength?: number; required?: boolean
+  onChange: (v: string) => void; minLength?: number; required?: boolean; disabled?: boolean
 }) {
   const [focused, setFocused] = useState(false)
   return (
@@ -97,21 +97,23 @@ function CyberInput({
         onChange={e => onChange(e.target.value)}
         required={required}
         minLength={minLength}
+        disabled={disabled}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         style={{
           width: '100%',
           padding: '12px 14px',
-          background: 'rgba(0,20,40,0.6)',
-          border: `1px solid ${focused ? '#00d4ff' : 'rgba(0,180,255,0.2)'}`,
+          background: disabled ? 'rgba(0,10,20,0.4)' : 'rgba(0,20,40,0.6)',
+          border: `1px solid ${focused && !disabled ? '#00d4ff' : 'rgba(0,180,255,0.2)'}`,
           borderRadius: 4,
-          color: '#e2f0ff',
+          color: disabled ? 'rgba(100,140,180,0.5)' : '#e2f0ff',
           fontSize: 14,
           fontFamily: '"Courier New", monospace',
           outline: 'none',
           boxSizing: 'border-box',
           transition: 'border-color 0.2s',
-          boxShadow: focused ? '0 0 12px rgba(0,212,255,0.2)' : 'none',
+          boxShadow: focused && !disabled ? '0 0 12px rgba(0,212,255,0.2)' : 'none',
+          cursor: disabled ? 'not-allowed' : 'text',
         }}
       />
       {/* corner accents */}
@@ -162,8 +164,8 @@ function LoginView({ onSwitch }: { onSwitch: () => void }) {
       <Divider />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <CyberInput type="email" placeholder="user@domain.com" value={email} onChange={setEmail} required />
-        <CyberInput type="password" placeholder="Password" value={password} onChange={setPassword} minLength={6} required />
+        <CyberInput type="email" placeholder="user@domain.com" value={email} onChange={setEmail} required disabled={submitting} />
+        <CyberInput type="password" placeholder="Password" value={password} onChange={setPassword} minLength={6} required disabled={submitting} />
       </div>
 
       {error && <ErrorBadge msg={error} />}
@@ -172,7 +174,7 @@ function LoginView({ onSwitch }: { onSwitch: () => void }) {
 
       <div style={{ textAlign: 'center' }}>
         <span style={{ color: '#4a6a8a', fontSize: 12 }}>No credentials? </span>
-        <button type="button" onClick={onSwitch} style={linkBtn}>
+        <button type="button" onClick={onSwitch} disabled={submitting} style={{ ...linkBtn, opacity: submitting ? 0.4 : 0.85, cursor: submitting ? 'not-allowed' : 'pointer' }}>
           REQUEST ACCESS
         </button>
       </div>
@@ -239,9 +241,9 @@ function RegisterView({ onSwitch }: { onSwitch: () => void }) {
       <Divider />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <CyberInput type="email" placeholder="user@domain.com" value={email} onChange={setEmail} required />
-        <CyberInput type="password" placeholder="Password (min. 6 chars)" value={password} onChange={setPassword} minLength={6} required />
-        <CyberInput type="password" placeholder="Confirm password" value={confirm} onChange={setConfirm} minLength={6} required />
+        <CyberInput type="email" placeholder="user@domain.com" value={email} onChange={setEmail} required disabled={submitting} />
+        <CyberInput type="password" placeholder="Password (min. 6 chars)" value={password} onChange={setPassword} minLength={6} required disabled={submitting} />
+        <CyberInput type="password" placeholder="Confirm password" value={confirm} onChange={setConfirm} minLength={6} required disabled={submitting} />
       </div>
 
       {error && <ErrorBadge msg={error} />}
@@ -250,7 +252,7 @@ function RegisterView({ onSwitch }: { onSwitch: () => void }) {
 
       <div style={{ textAlign: 'center' }}>
         <span style={{ color: '#4a6a8a', fontSize: 12 }}>Already have access? </span>
-        <button type="button" onClick={onSwitch} style={linkBtn}>
+        <button type="button" onClick={onSwitch} disabled={submitting} style={{ ...linkBtn, opacity: submitting ? 0.4 : 0.85, cursor: submitting ? 'not-allowed' : 'pointer' }}>
           SIGN IN
         </button>
       </div>
@@ -288,7 +290,7 @@ function Divider() {
 
 function ErrorBadge({ msg }: { msg: string }) {
   return (
-    <div style={{
+    <div role="alert" style={{
       padding: '8px 12px',
       background: 'rgba(255,50,50,0.1)',
       border: '1px solid rgba(255,80,80,0.3)',
@@ -307,6 +309,8 @@ function SubmitButton({ submitting, label }: { submitting: boolean; label: strin
     <button
       type="submit"
       disabled={submitting}
+      aria-busy={submitting}
+      aria-disabled={submitting}
       style={{
         padding: '12px 0',
         background: submitting

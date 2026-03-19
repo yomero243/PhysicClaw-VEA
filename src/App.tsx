@@ -1,15 +1,20 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Experience } from './components/Experience'
 import { ChatInterface } from './components/ChatInterface'
 import { AvatarPanel } from './components/AvatarPanel'
 import { LoginPage } from './components/LoginPage'
+import { MoodDemo } from './components/MoodDemo'
 import { AuthProvider, useAuth } from './auth'
 import { useOpenClawControl } from './hooks/useOpenClawControl'
 import { useSoulStore } from './store/soulStore'
 
+// Public demo — accessible at /?demo without authentication
+const isDemoMode = new URLSearchParams(window.location.search).has('demo')
+
 function AppContent() {
     const { session, user, loading, signOut } = useAuth()
     const setUserId = useSoulStore((s) => s.setUserId)
+    const [signingOut, setSigningOut] = useState(false)
     useOpenClawControl()
 
     useEffect(() => {
@@ -58,7 +63,13 @@ function AppContent() {
 
             {/* Sign Out Button */}
             <button
-                onClick={signOut}
+                onClick={async () => {
+                    if (signingOut) return
+                    setSigningOut(true)
+                    await signOut()
+                    setSigningOut(false)
+                }}
+                disabled={signingOut}
                 style={{
                     position: 'fixed',
                     top: 12,
@@ -67,20 +78,21 @@ function AppContent() {
                     background: 'rgba(10, 16, 32, 0.8)',
                     border: '1px solid #1a2a40',
                     borderRadius: 4,
-                    color: '#6b7a90',
+                    color: signingOut ? '#3a4a60' : '#6b7a90',
                     fontSize: 11,
                     fontFamily: '"Courier New", monospace',
-                    cursor: 'pointer',
+                    cursor: signingOut ? 'wait' : 'pointer',
                     zIndex: 1000,
                 }}
             >
-                Sign Out
+                {signingOut ? 'SIGNING OUT...' : 'Sign Out'}
             </button>
         </div>
     )
 }
 
 function App() {
+    if (isDemoMode) return <MoodDemo />
     return (
         <AuthProvider>
             <AppContent />
