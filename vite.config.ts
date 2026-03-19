@@ -17,15 +17,14 @@ const CONTROL_API_TOKEN =
     process.env.CONTROL_API_TOKEN ??
     (() => {
         const random = Math.random().toString(36).slice(2)
-        console.warn(
-            `[openclaw-control] CONTROL_API_TOKEN not set. Using random token for this session: ${random}`,
-        )
+        console.warn('[openclaw-control] CONTROL_API_TOKEN not set. Using auto-generated token for this session.')
         return random
     })()
 
 // Port where OpenClaw / local LLM proxy is listening.
 // Override via OPENCLAW_LOCAL_PORT env var.
 const OPENCLAW_LOCAL_PORT = Number(process.env.OPENCLAW_LOCAL_PORT ?? 18789)
+
 
 // Allowed commands and their value validators
 const COMMAND_VALIDATORS: Record<string, (v: unknown) => boolean> = {

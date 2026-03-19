@@ -3,20 +3,20 @@ import { useFrame } from '@react-three/fiber'
 import { useGLTF, useAnimations, Sphere } from '@react-three/drei'
 import * as THREE from 'three'
 import { useSoulStore } from '../store/soulStore'
-import { EnergyShaderMaterial } from '../shaders/EnergyShader'
+import { EnergyShaderMaterial, EnergyShaderMaterialType } from '../shaders/EnergyShader'
 import '../shaders/EnergyShader' // Ensure side effects run
 
 // --------------------------------------------------------
 // Helper to manage shader uniforms updates based on store
 // --------------------------------------------------------
-const useEnergyUniforms = (materialRef: React.MutableRefObject<any>) => {
+const useEnergyUniforms = (materialRef: React.MutableRefObject<EnergyShaderMaterialType | null>) => {
     const { intensity, isThinking, mood } = useSoulStore()
 
     useFrame((_, delta) => {
         if (materialRef.current) {
             materialRef.current.uTime += delta
 
-            let targetIntensity = intensity
+            let targetIntensity = intensity as number
             if (isThinking) targetIntensity += 0.8
             if (mood === 'excited') targetIntensity += 0.5
 
@@ -57,9 +57,9 @@ const ModelEntity = ({ url }: { url: string }) => {
     useEnergyUniforms(materialRef)
 
     useEffect(() => {
-        scene.traverse((child: any) => {
-            if (child.isMesh) {
-                child.material = material
+        scene.traverse((child) => {
+            if ((child as THREE.Mesh).isMesh) {
+                (child as THREE.Mesh).material = material
             }
         })
     }, [scene, material])
@@ -72,7 +72,7 @@ const ModelEntity = ({ url }: { url: string }) => {
 // --------------------------------------------------------
 const BaseEntity = () => {
     const mesh = useRef<THREE.Mesh>(null)
-    const materialRef = useRef<any>(null)
+    const materialRef = useRef<EnergyShaderMaterialType | null>(null)
 
     useEnergyUniforms(materialRef)
 

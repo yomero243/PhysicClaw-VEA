@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSoulStore } from '../store/soulStore'
+import type { Mood } from '../lib/constraints'
 import { useAuth } from '../auth/AuthProvider'
 import { CHARACTERS } from '../constants/characters'
 import { openClawService } from '../services/openClawService'
@@ -224,7 +225,7 @@ export const ChatInterface = () => {
 
     const result = await openClawService.sendMessage(trimmed)
     addMessage({ role: 'assistant', text: result.text })
-    setMood(result.mood ?? 'calm')
+    setMood((result.mood ?? 'calm') as Mood)
     setIntensity(result.intensity ?? 0.5)
     speakResponse(result.text)
   }, [addMessage, setLastMessage, setMood, setIntensity, isThinking])
@@ -388,7 +389,7 @@ export const ChatInterface = () => {
                   )}
 
                   {messages.map(msg => (
-                    <MessageBubble key={msg.id} msg={msg} userName={userName} />
+                    <MessageBubble key={msg.id} msg={msg as ChatMsg} userName={userName} />
                   ))}
 
                   {isThinking && <ThinkingBubble />}

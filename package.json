@@ -6,15 +6,20 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "devDependencies": {
     "@types/node": "^25.3.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.4",
+    "@vitest/coverage-v8": "^4.1.0",
+    "supabase": "^2.82.0",
     "typescript": "~5.9.3",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vitest": "^4.1.0"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
@@ -24,6 +29,7 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "three": "^0.182.0",
+    "zod": "^4.3.6",
     "zustand": "^5.0.11"
   }
 }

@@ -1,10 +1,12 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { CharacterConfig } from '../constants/characters'
+import type { Mood, Intensity, CharacterId } from '../lib/constraints'
 
 // ----------------------------------------------------------------
 // Types
 // ----------------------------------------------------------------
+
 
 export interface CharacterOverride {
     scale?: number
@@ -15,28 +17,55 @@ export interface CharacterOverride {
 }
 
 export interface ChatMessage {
-    id: string
+    id?: string
     role: 'user' | 'assistant'
-    text: string
+    content?: string    // used by openClawService / chatMessages
+    text?: string       // used by ChatInterface / messages
+    mood?: string
     timestamp: number
+}
+
+// Mood → color mapping for automatic avatar color changes
+export const MOOD_COLORS: Record<string, string> = {
+    calm: '#00ffff',
+    happy: '#44ff88',
+    excited: '#ffcc00',
+    thinking: '#aa44ff',
+    listening: '#4488ff',
+    sad: '#4466aa',
+    angry: '#ff4444',
+    surprised: '#ff44aa',
+    curious: '#ff8844',
+    love: '#ff66cc',
 }
 
 interface SoulState {
     isThinking: boolean
-    mood: string
+    mood: Mood
     lastMessage: string
-    intensity: number
-    activeCharacterId: string
+    intensity: Intensity
+    activeCharacterId: CharacterId
     setIsThinking: (thinking: boolean) => void
-    setMood: (mood: string) => void
+    setMood: (mood: Mood) => void
     setLastMessage: (msg: string) => void
     setIntensity: (intensity: number) => void
     setActiveCharacterId: (id: string) => void
+
+    // Chat messages history (used by openClawService)
+    chatMessages: ChatMessage[]
+    addChatMessage: (msg: ChatMessage) => void
+    clearChatMessages: () => void
+
 
     // Custom characters (uploaded by user)
     customCharacters: CharacterConfig[]
     addCustomCharacter: (config: CharacterConfig) => void
     removeCustomCharacter: (id: string) => void
+
+    // Visibility: which objects are shown in the scene (multi-object support)
+    visibleObjects: Record<string, boolean>
+    toggleObjectVisibility: (id: string) => void
+    setObjectVisible: (id: string, visible: boolean) => void
 
     // Per-character overrides
     characterOverrides: Record<string, CharacterOverride>
@@ -52,10 +81,11 @@ interface SoulState {
     userName: string | null
     setUserName: (name: string | null) => void
 
-    // Chat history (session-only, not persisted)
+    // Session chat history (used by ChatInterface)
     messages: ChatMessage[]
     addMessage: (msg: Omit<ChatMessage, 'id' | 'timestamp'>) => void
     clearMessages: () => void
+
 
     // API Connection Settings
     apiBaseUrl: string
@@ -68,39 +98,65 @@ interface SoulState {
 // Store
 // ----------------------------------------------------------------
 
+
 export const useSoulStore = create<SoulState>()(
     persist(
         (set) => ({
             isThinking: false,
             mood: 'calm',
             lastMessage: '',
-            intensity: 0.5,
-            activeCharacterId: 'happy-idle',
+            intensity: 0.5 as Intensity,
+            activeCharacterId: 'happy-idle' as CharacterId,
             setIsThinking: (thinking) => set({ isThinking: thinking }),
             setMood: (mood) => set({ mood }),
             setLastMessage: (msg) => set({ lastMessage: msg }),
-            setIntensity: (intensity) => set({ intensity }),
-            setActiveCharacterId: (id) => set({ activeCharacterId: id }),
+            setIntensity: (intensity) => set({ intensity: intensity as Intensity }),
+            setActiveCharacterId: (id) => set({ activeCharacterId: id as CharacterId }),
+
+            chatMessages: [],
+            addChatMessage: (msg) => set((state) => ({
+                chatMessages: [...state.chatMessages, msg],
+            })),
+            clearChatMessages: () => set({ chatMessages: [] }),
 
             customCharacters: [],
             addCustomCharacter: (config) =>
                 set((state) => ({
                     customCharacters: [...state.customCharacters, config],
+                    visibleObjects: { ...state.visibleObjects, [config.id]: true },
                 })),
             removeCustomCharacter: (id) =>
                 set((state) => {
                     const char = state.customCharacters.find((c) => c.id === id)
                     if (char?.modelUrl) URL.revokeObjectURL(char.modelUrl)
                     const { [id]: _, ...remainingOverrides } = state.characterOverrides
+                    const { [id]: __, ...remainingVisibility } = state.visibleObjects
                     return {
                         customCharacters: state.customCharacters.filter((c) => c.id !== id),
                         activeCharacterId:
                             state.activeCharacterId === id
-                                ? 'happy-idle'
+                                ? 'happy-idle' as CharacterId
                                 : state.activeCharacterId,
                         characterOverrides: remainingOverrides,
+                        visibleObjects: remainingVisibility,
                     }
                 }),
+
+            visibleObjects: { 'happy-idle': true },
+            toggleObjectVisibility: (id) =>
+                set((state) => ({
+                    visibleObjects: {
+                        ...state.visibleObjects,
+                        [id]: !state.visibleObjects[id],
+                    },
+                })),
+            setObjectVisible: (id, visible) =>
+                set((state) => ({
+                    visibleObjects: {
+                        ...state.visibleObjects,
+                        [id]: visible,
+                    },
+                })),
 
             characterOverrides: {},
             setCharacterOverride: (id, overrides) =>
@@ -123,7 +179,7 @@ export const useSoulStore = create<SoulState>()(
             userName: null,
             setUserName: (name) => set({ userName: name }),
 
-            // Chat history (session-only)
+            // Session chat history (ChatInterface local display)
             messages: [],
             addMessage: (msg) =>
                 set((state) => ({
@@ -140,20 +196,20 @@ export const useSoulStore = create<SoulState>()(
 
             // API settings
             apiBaseUrl: import.meta.env.VITE_OPENCLAW_API_URL || '',
-            apiModel:
-                import.meta.env.VITE_OPENCLAW_MODEL || 'claude-3-5-sonnet-20241022',
+            apiModel: import.meta.env.VITE_OPENCLAW_MODEL || 'claude-3-5-sonnet-20241022',
             apiToken: import.meta.env.VITE_OPENCLAW_TOKEN || '',
             setApiConfig: (config) => set((state) => ({ ...state, ...config })),
         }),
         {
             name: 'physicclaw-storage',
-            // messages and userName are session-only — do not persist
+            // session-only fields excluded — only persist api config + customizations
             partialize: (state) => ({
                 apiBaseUrl: state.apiBaseUrl,
                 apiModel: state.apiModel,
                 apiToken: state.apiToken,
                 customCharacters: state.customCharacters,
                 characterOverrides: state.characterOverrides,
+                visibleObjects: state.visibleObjects,
             }),
         }
     )
