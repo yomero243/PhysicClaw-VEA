@@ -2,8 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(npx tsc:*)",
+      "Bash(git fetch:*)",
       "Bash(git merge:*)",
-      "Bash(node -e \"\nconst fs = require\\('fs'\\);\nconst content = fs.readFileSync\\('C:/Users/yo_me/PhysicClaw-VEA/src/components/ChatInterface.tsx', 'utf-8'\\);\n\n// Find the conflict block and keep HEAD side\nconst conflictStart = content.indexOf\\('<<<<<<< HEAD'\\);\nconst separator = content.indexOf\\('=======', conflictStart\\);\nconst conflictEnd = content.indexOf\\('>>>>>>> origin/feature/avatar-customization-dashboard', separator\\);\n\nif \\(conflictStart === -1\\) { console.log\\('No conflicts found'\\); process.exit\\(0\\); }\n\nconst before = content.substring\\(0, conflictStart\\);\nconst headContent = content.substring\\(conflictStart + '<<<<<<< HEAD\\\\n'.length, separator\\);\nconst after = content.substring\\(conflictEnd + '>>>>>>> origin/feature/avatar-customization-dashboard'.length\\);\n\nconst resolved = before + headContent + after;\nfs.writeFileSync\\('C:/Users/yo_me/PhysicClaw-VEA/src/components/ChatInterface.tsx', resolved\\);\nconsole.log\\('Resolved. Remaining markers:', \\(resolved.match\\(/<<<<<<</\\) || []\\).length\\);\n\")"
+      "Bash(git stash:*)"
     ]
   }
 }

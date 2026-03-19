@@ -97,10 +97,19 @@
 **Expected output:** Polished login flow, commit `feat(auth): polish login page and auth flow`
 
 ### TASK-06: openClawService integration test stubs
-**Status:** PENDING  
-**Agent:** —  
-**Scope:** Create `src/services/__tests__/openClawService.test.ts` with basic unit test stubs for the service. Commit.  
+**Status:** ✅ DONE
+**Agent:** claude-main
+**Completed:** 2026-03-18
+**Scope:** Create `src/services/__tests__/openClawService.test.ts` with basic unit test stubs for the service. Commit.
 **Expected output:** Test file, commit `test: add openClawService unit test stubs`
+**Notes:**
+- Installed `vitest` + `@vitest/coverage-v8` as devDependencies
+- Created `vitest.config.ts` with `environment: 'node'`
+- Created `src/services/__tests__/openClawService.test.ts` — 13 tests across 3 describes: `clearHistory()`, `getHistory()`, `sendMessage()`
+- `useSoulStore` mocked via `vi.mock`, `fetch` mocked per-test via `vi.stubGlobal`
+- Covers: happy path, markdown JSON block parsing, invalid JSON fallback, HTTP error, network error, Authorization header presence/absence, history isolation (read-only copy)
+- All 13 tests pass: `npx vitest run` → 13/13 ✓
+- Added `"test"` and `"test:watch"` scripts to `package.json`
 
 ---
 
