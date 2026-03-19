@@ -1,8 +1,10 @@
 name: Deploy to Vercel
 
-on:
-  push:
-    branches: [main]
+# Disabled — Vercel handles deploys directly via Git integration
+# on:
+#   push:
+#     branches: [main]
+on: workflow_dispatch
 
 jobs:
   deploy:
