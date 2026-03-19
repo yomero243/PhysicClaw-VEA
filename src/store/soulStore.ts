@@ -62,6 +62,11 @@ interface SoulState {
     addCustomCharacter: (config: CharacterConfig) => void
     removeCustomCharacter: (id: string) => void
 
+    // Visibility: which objects are shown in the scene (multi-object support)
+    visibleObjects: Record<string, boolean>
+    toggleObjectVisibility: (id: string) => void
+    setObjectVisible: (id: string, visible: boolean) => void
+
     // Per-character overrides
     characterOverrides: Record<string, CharacterOverride>
     setCharacterOverride: (id: string, overrides: Partial<CharacterOverride>) => void
@@ -118,12 +123,14 @@ export const useSoulStore = create<SoulState>()(
             addCustomCharacter: (config) =>
                 set((state) => ({
                     customCharacters: [...state.customCharacters, config],
+                    visibleObjects: { ...state.visibleObjects, [config.id]: true },
                 })),
             removeCustomCharacter: (id) =>
                 set((state) => {
                     const char = state.customCharacters.find((c) => c.id === id)
                     if (char?.modelUrl) URL.revokeObjectURL(char.modelUrl)
                     const { [id]: _, ...remainingOverrides } = state.characterOverrides
+                    const { [id]: __, ...remainingVisibility } = state.visibleObjects
                     return {
                         customCharacters: state.customCharacters.filter((c) => c.id !== id),
                         activeCharacterId:
@@ -131,8 +138,25 @@ export const useSoulStore = create<SoulState>()(
                                 ? 'happy-idle' as CharacterId
                                 : state.activeCharacterId,
                         characterOverrides: remainingOverrides,
+                        visibleObjects: remainingVisibility,
                     }
                 }),
+
+            visibleObjects: { 'happy-idle': true },
+            toggleObjectVisibility: (id) =>
+                set((state) => ({
+                    visibleObjects: {
+                        ...state.visibleObjects,
+                        [id]: !state.visibleObjects[id],
+                    },
+                })),
+            setObjectVisible: (id, visible) =>
+                set((state) => ({
+                    visibleObjects: {
+                        ...state.visibleObjects,
+                        [id]: visible,
+                    },
+                })),
 
             characterOverrides: {},
             setCharacterOverride: (id, overrides) =>
@@ -185,6 +209,7 @@ export const useSoulStore = create<SoulState>()(
                 apiToken: state.apiToken,
                 customCharacters: state.customCharacters,
                 characterOverrides: state.characterOverrides,
+                visibleObjects: state.visibleObjects,
             }),
         }
     )

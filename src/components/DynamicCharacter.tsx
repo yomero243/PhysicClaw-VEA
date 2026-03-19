@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import { useGLTF, useFBX, useAnimations, Sphere } from '@react-three/drei'
 import * as THREE from 'three'
 import { useSoulStore } from '../store/soulStore'
-import { CHARACTERS } from '../constants/characters'
+import { CHARACTERS, type CharacterConfig } from '../constants/characters'
 import { EnergyShaderMaterial } from '../shaders/EnergyShader'
 import '../shaders/EnergyShader'
 
@@ -106,8 +106,8 @@ const GLBModel = ({ url, config }: { url: string; config: any }) => {
     })
 
     useEffect(() => {
-
-        if (overrides.useEnergyShader === false) return // user opted out
+        // Only apply EnergyShader when explicitly opted in (default: keep original materials)
+        if (!overrides.useEnergyShader) return
         scene.traverse((child: any) => {
             if (child.isMesh) child.material = material
         })
@@ -169,23 +169,33 @@ const BaseEntity = ({ characterId }: { characterId: string }) => {
 }
 
 
-// ── DynamicCharacter ──────────────────────────────────────────────────────────
+// ── Single character renderer ─────────────────────────────────────────────────
 
-export const DynamicCharacter: React.FC = () => {
-    const { activeCharacterId, customCharacters } = useSoulStore()
-    const allChars = [...CHARACTERS, ...customCharacters]
-    const config = allChars.find((c) => c.id === activeCharacterId) || CHARACTERS[0]
-
+const CharacterRenderer: React.FC<{ config: CharacterConfig }> = ({ config }) => {
     if (!config.modelUrl) {
         return <BaseEntity characterId={config.id} />
-
     }
-
     if (config.type === 'fbx') {
         return <FBXModel url={config.modelUrl} config={config} />
     }
-
     return <GLBModel url={config.modelUrl} config={config} />
+}
+
+// ── DynamicCharacter — renders all visible objects ───────────────────────────
+
+export const DynamicCharacter: React.FC = () => {
+    const { customCharacters, visibleObjects } = useSoulStore()
+    const allChars = [...CHARACTERS, ...customCharacters]
+
+    const visibleChars = allChars.filter((c) => visibleObjects[c.id])
+
+    return (
+        <>
+            {visibleChars.map((config) => (
+                <CharacterRenderer key={config.id} config={config} />
+            ))}
+        </>
+    )
 }
 
 useFBX.preload('/HappyIdle.fbx')

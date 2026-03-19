@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Experience } from './components/Experience'
 import { ChatInterface } from './components/ChatInterface'
 import { AvatarPanel } from './components/AvatarPanel'
+import { GLBUploadPanel } from './components/GLBUploadPanel'
 import { LoginPage } from './components/LoginPage'
 import { MoodDemo } from './components/MoodDemo'
 import { AuthProvider, useAuth } from './auth'
@@ -54,6 +55,9 @@ function AppContent() {
         }}>
             {/* Left - Avatar Customization Panel */}
             <AvatarPanel />
+
+            {/* GLB Upload Panel */}
+            <GLBUploadPanel />
 
             {/* Center - 3D Viewport */}
             <div style={{ flex: 1, position: 'relative' }}>
