@@ -2,6 +2,15 @@ import { shaderMaterial } from '@react-three/drei'
 import * as THREE from 'three'
 import { extend } from '@react-three/fiber'
 
+export interface EnergyShaderUniforms {
+  uTime: number
+  uIntensity: number
+  uColor: THREE.Color
+}
+
+// THREE.ShaderMaterial + uniform properties exposed as direct fields by shaderMaterial()
+export type EnergyShaderMaterialType = THREE.ShaderMaterial & EnergyShaderUniforms
+
 // Define the shader material
 const EnergyShaderMaterial = shaderMaterial(
   {
@@ -60,7 +69,7 @@ extend({ EnergyShaderMaterial })
 // Add type definition for TypeScript
 declare module '@react-three/fiber' {
   interface ThreeElements {
-    energyShaderMaterial: any // Using any to avoid version-specific type issues
+    energyShaderMaterial: any // eslint-disable-line @typescript-eslint/no-explicit-any -- R3F JSX ThreeElements for custom shaderMaterial(); version-specific type divergence with drei's shaderMaterial makes strict typing incompatible
   }
 }
 

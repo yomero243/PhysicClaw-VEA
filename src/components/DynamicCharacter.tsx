@@ -2,8 +2,7 @@ import React, { useRef, useEffect, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useGLTF, useFBX, useAnimations, Sphere } from '@react-three/drei'
 import * as THREE from 'three'
-import { useSoulStore, MOOD_COLORS } from '../store/soulStore'
-import type { CharacterOverride } from '../store/soulStore'
+import { useSoulStore } from '../store/soulStore'
 import { CHARACTERS } from '../constants/characters'
 import { EnergyShaderMaterial } from '../shaders/EnergyShader'
 import '../shaders/EnergyShader'
@@ -98,7 +97,7 @@ const GLBModel = ({ url, config }: { url: string; config: any }) => {
         if (material) {
             material.uTime += delta
 
-            let target = overrides.intensity ?? intensity
+            let target = (overrides.intensity ?? intensity) as number
             if (isThinking) target += 0.8
             if (mood === 'excited') target += 0.5
             material.uIntensity = THREE.MathUtils.lerp(material.uIntensity, target, 0.1)
@@ -140,7 +139,7 @@ const BaseEntity = ({ characterId }: { characterId: string }) => {
         if (materialRef.current) {
             materialRef.current.uTime += delta
 
-            let target = overrides.intensity ?? intensity
+            let target = (overrides.intensity ?? intensity) as number
             if (isThinking) target += 0.8
             if (mood === 'excited') target += 0.5
             materialRef.current.uIntensity = THREE.MathUtils.lerp(
@@ -183,10 +182,10 @@ export const DynamicCharacter: React.FC = () => {
     }
 
     if (config.type === 'fbx') {
-        return <FBXModel url={config.modelUrl} config={config} overrides={overrides} />
+        return <FBXModel url={config.modelUrl} config={config} />
     }
 
-    return <GLBModel url={config.modelUrl} config={config} overrides={overrides} />
+    return <GLBModel url={config.modelUrl} config={config} />
 }
 
 useFBX.preload('/HappyIdle.fbx')

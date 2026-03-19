@@ -1,4 +1,5 @@
 import { useSoulStore } from '../store/soulStore';
+import type { Mood } from '../lib/constraints';
 
 export interface OpenClawResponse {
     text: string;
@@ -136,7 +137,7 @@ export const openClawService = {
                 mood: parsed.mood,
                 timestamp: Date.now(),
             });
-            store.setMood(parsed.mood);
+            store.setMood(parsed.mood as Mood);
             store.setIntensity(parsed.intensity);
 
             return parsed;

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useSoulStore } from '../store/soulStore'
+import type { Mood } from '../lib/constraints'
 
 const VALID_MOODS = ['calm', 'excited', 'thinking', 'listening'] as const
 
@@ -14,7 +15,7 @@ function applyCommand(cmd: ControlCommand) {
     switch (cmd.command) {
         case 'setMood':
             if (typeof cmd.value === 'string' && (VALID_MOODS as readonly string[]).includes(cmd.value))
-                store.setMood(cmd.value)
+                store.setMood(cmd.value as Mood)
             break
         case 'setIsThinking':
             if (typeof cmd.value === 'boolean')

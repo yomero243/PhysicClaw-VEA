@@ -100,13 +100,13 @@ export const useSoulStore = create<SoulState>()(
             isThinking: false,
             mood: 'calm',
             lastMessage: '',
-            intensity: 0.5,
-            activeCharacterId: 'happy-idle',
+            intensity: 0.5 as Intensity,
+            activeCharacterId: 'happy-idle' as CharacterId,
             setIsThinking: (thinking) => set({ isThinking: thinking }),
             setMood: (mood) => set({ mood }),
             setLastMessage: (msg) => set({ lastMessage: msg }),
-            setIntensity: (intensity) => set({ intensity }),
-            setActiveCharacterId: (id) => set({ activeCharacterId: id }),
+            setIntensity: (intensity) => set({ intensity: intensity as Intensity }),
+            setActiveCharacterId: (id) => set({ activeCharacterId: id as CharacterId }),
 
             chatMessages: [],
             addChatMessage: (msg) => set((state) => ({
@@ -128,7 +128,7 @@ export const useSoulStore = create<SoulState>()(
                         customCharacters: state.customCharacters.filter((c) => c.id !== id),
                         activeCharacterId:
                             state.activeCharacterId === id
-                                ? 'happy-idle'
+                                ? 'happy-idle' as CharacterId
                                 : state.activeCharacterId,
                         characterOverrides: remainingOverrides,
                     }

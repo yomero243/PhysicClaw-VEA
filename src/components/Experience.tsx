@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Environment, ContactShadows, Grid } from '@react-three/drei'
+import { OrbitControls, Environment, ContactShadows } from '@react-three/drei'
 import { DynamicCharacter } from './DynamicCharacter'
 import { CAMERA } from '../lib/constraints'
 

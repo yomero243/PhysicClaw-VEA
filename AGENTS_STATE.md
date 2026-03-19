@@ -85,16 +85,37 @@
 - Commit: `fix(chat): connect ChatInterface to openClawService — closes #8`
 
 ### TASK-04: EnergyShader refinement
-**Status:** PENDING  
-**Agent:** —  
-**Scope:** Review `src/shaders/EnergyShader.ts`, add proper TypeScript types, ensure it integrates cleanly with AugmentedEntity. Commit.  
+**Status:** ✅ DONE
+**Agent:** claude-main
+**Completed:** 2026-03-18
+**Scope:** Review `src/shaders/EnergyShader.ts`, add proper TypeScript types, ensure it integrates cleanly with AugmentedEntity. Commit.
 **Expected output:** Improved shader file, commit `feat(3d): refine EnergyShader types and integration`
+**Notes:**
+- Added `EnergyShaderUniforms` interface and `EnergyShaderMaterialType` type alias to `EnergyShader.ts`
+- Fixed `ThreeElements` declaration: added proper `// eslint-disable-line` comment (required by CLAUDE.md for R3F/Three.js interop `any`)
+- Updated `useEnergyUniforms` hook signature: `MutableRefObject<any>` → `MutableRefObject<EnergyShaderMaterialType | null>`
+- Updated `BaseEntity.materialRef` in `AugmentedEntity.tsx`: `useRef<any>` → `useRef<EnergyShaderMaterialType | null>`
+- Fixed `scene.traverse` in `ModelEntity`: replaced `child: any` with `(child as THREE.Mesh).isMesh` cast
+- Also fixed CDD-commit branded-type breakage across 6 files (Intensity/Mood/CharacterId casts): `soulStore.ts`, `AugmentedEntity.tsx`, `DynamicCharacter.tsx`, `useOpenClawControl.ts`, `openClawService.ts`, `ChatInterface.tsx`
+- Removed dangling `overrides={overrides}` prop bug in `DynamicCharacter.tsx` (undefined variable)
+- Removed unused `Grid` import in `Experience.tsx`
+- `npx tsc --noEmit` → exit 0, zero errors
 
 ### TASK-05: LoginPage & auth flow polish
-**Status:** PENDING  
-**Agent:** —  
-**Scope:** Review `src/components/LoginPage.tsx` and `src/auth/AuthProvider.tsx`. Ensure error states, loading states, and redirect flows are correct. Commit.  
+**Status:** ✅ DONE
+**Agent:** claude-main
+**Completed:** 2026-03-18
+**Scope:** Review `src/components/LoginPage.tsx` and `src/auth/AuthProvider.tsx`. Ensure error states, loading states, and redirect flows are correct. Commit.
 **Expected output:** Polished login flow, commit `feat(auth): polish login page and auth flow`
+**Notes:**
+- Added `disabled` prop to `CyberInput`: greyed styles + `cursor: not-allowed` when disabled
+- Passed `disabled={submitting}` to all inputs in `LoginView` and `RegisterView`
+- Disabled switch links (REQUEST ACCESS / SIGN IN) during form submission with opacity + cursor
+- Added `aria-busy` and `aria-disabled` to `SubmitButton`
+- Added `role="alert"` to `ErrorBadge` for screen reader announcements
+- Added `signingOut` state to sign-out button in `App.tsx`: disabled + "SIGNING OUT..." text during async signOut
+- `AuthProvider.tsx` was already correct: redirect, loading state, clearHistory on sign-out all working
+- `npx tsc --noEmit` → exit 0, zero errors
 
 ### TASK-06: openClawService integration test stubs
 **Status:** ✅ DONE
