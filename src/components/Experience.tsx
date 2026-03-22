@@ -2,13 +2,20 @@ import { Suspense, useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Environment, ContactShadows, Grid } from '@react-three/drei'
 import { DynamicCharacter } from './DynamicCharacter'
+import { RemoteAvatars } from './RemoteAvatars'
+import { useMultiplayer } from '../hooks/useMultiplayer'
+import { useSoulStore } from '../store/soulStore'
 import { CAMERA } from '../lib/constraints'
-
 
 /**
  * Experience — R3F Canvas wrapper.
  * Character selection is driven by soulStore.activeCharacterId.
+ *
+ * useMultiplayer is called here (outside Canvas) so React hooks work normally.
+ * remoteUsers is passed into the Canvas via RemoteAvatars.
  */
+
+const selectUserId = (s: ReturnType<typeof useSoulStore.getState>) => s.userId
 
 const FloorGrid = () => {
     const gridConfig = useMemo(() => ({
@@ -33,6 +40,14 @@ const FloorGrid = () => {
 }
 
 export const Experience = () => {
+    // userId is used as the scene identifier when available.
+    // In a full implementation, sceneId would come from a scene context/store.
+    const userId = useSoulStore(selectUserId)
+
+    // useMultiplayer must be called outside <Canvas> — React hooks cannot be
+    // used inside the R3F render tree.
+    const { remoteUsers } = useMultiplayer(userId ?? null)
+
     return (
         <Canvas camera={{ position: [0, 0, 5], fov: CAMERA.FOV }}>
             <color attach="background" args={['#0a0e14']} />
@@ -42,6 +57,11 @@ export const Experience = () => {
 
             <Suspense fallback={null}>
                 <DynamicCharacter />
+            </Suspense>
+
+            {/* Remote multiplayer avatars — rendered inside Canvas, no hooks */}
+            <Suspense fallback={null}>
+                <RemoteAvatars remoteUsers={remoteUsers} />
             </Suspense>
 
             <FloorGrid />

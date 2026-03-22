@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { CharacterConfig } from '../constants/characters'
-import type { Mood, Intensity, CharacterId } from '../lib/constraints'
+import type { Mood, Intensity, CharacterId, RigType } from '../lib/constraints'
 
 // ----------------------------------------------------------------
 // Types
@@ -70,6 +70,14 @@ interface SoulState {
     // Per-character overrides
     characterOverrides: Record<string, CharacterOverride>
     setCharacterOverride: (id: string, overrides: Partial<CharacterOverride>) => void
+
+    // Custom model URLs for uploaded GLBs (keyed by character id)
+    customModelUrls: Record<string, string>
+    setCustomModelUrl: (id: string, url: string) => void
+
+    // Rig type per character (keyed by character id)
+    characterRigTypes: Record<string, RigType>
+    setRigType: (id: string, type: RigType) => void
 
     // UI state for avatar panel
     activeCategoryId: string | null
@@ -167,6 +175,18 @@ export const useSoulStore = create<SoulState>()(
                     },
                 })),
 
+            customModelUrls: {},
+            setCustomModelUrl: (id, url) =>
+                set((state) => ({
+                    customModelUrls: { ...state.customModelUrls, [id]: url },
+                })),
+
+            characterRigTypes: {},
+            setRigType: (id, type) =>
+                set((state) => ({
+                    characterRigTypes: { ...state.characterRigTypes, [id]: type },
+                })),
+
             activeCategoryId: null,
             setActiveCategoryId: (id) =>
                 set((state) => ({
@@ -210,6 +230,8 @@ export const useSoulStore = create<SoulState>()(
                 customCharacters: state.customCharacters,
                 characterOverrides: state.characterOverrides,
                 visibleObjects: state.visibleObjects,
+                customModelUrls: state.customModelUrls,
+                characterRigTypes: state.characterRigTypes,
             }),
         }
     )

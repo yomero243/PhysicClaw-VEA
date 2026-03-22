@@ -11,6 +11,7 @@ import type {
     AvatarConfig,
     AvatarConfigInsert,
 } from '../types/database'
+import type { SessionUser } from '../types/multiplayer'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
@@ -259,5 +260,124 @@ export const realtimeApi = {
     /** Unsubscribe and remove a realtime channel. */
     unsubscribe(channel: RealtimeChannel): void {
         supabase.removeChannel(channel)
+    },
+}
+
+// ============================================================
+// sessionUsersApi
+// Manages the session_users table for multiplayer presence persistence.
+// ============================================================
+export const sessionUsersApi = {
+    /**
+     * Insert or update a session_users row for a user joining a session.
+     * Returns the upserted row.
+     */
+    async join(sessionId: string, userId: string, avatarId?: string): Promise<SessionUser> {
+        const { data, error } = await supabase
+            .from('session_users')
+            .upsert(
+                {
+                    session_id: sessionId,
+                    user_id: userId,
+                    avatar_id: avatarId ?? null,
+                    last_seen_at: new Date().toISOString(),
+                },
+                { onConflict: 'session_id,user_id' }
+            )
+            .select()
+            .single()
+        return assertData(data, error, 'sessionUsersApi.join') as SessionUser
+    },
+
+    /**
+     * Remove a user's presence row when they leave a session.
+     */
+    async leave(sessionId: string, userId: string): Promise<void> {
+        const { error } = await supabase
+            .from('session_users')
+            .delete()
+            .eq('session_id', sessionId)
+            .eq('user_id', userId)
+        if (error) throw new Error(`[Supabase/sessionUsersApi.leave] ${error.message}`)
+    },
+
+    /**
+     * List all users who were active in a session in the last 60 seconds.
+     */
+    async listActive(sessionId: string): Promise<SessionUser[]> {
+        const cutoff = new Date(Date.now() - 60_000).toISOString()
+        const { data, error } = await supabase
+            .from('session_users')
+            .select('*')
+            .eq('session_id', sessionId)
+            .gte('last_seen_at', cutoff)
+            .order('last_seen_at', { ascending: false })
+        if (error) throw new Error(`[Supabase/sessionUsersApi.listActive] ${error.message}`)
+        return (data ?? []) as SessionUser[]
+    },
+
+    /**
+     * Update the position of a session_user row and refresh last_seen_at.
+     */
+    async updatePosition(id: string, position: [number, number, number]): Promise<void> {
+        const { error } = await supabase
+            .from('session_users')
+            .update({
+                position,
+                last_seen_at: new Date().toISOString(),
+            })
+            .eq('id', id)
+        if (error) throw new Error(`[Supabase/sessionUsersApi.updatePosition] ${error.message}`)
+    },
+}
+
+// ============================================================
+// physicsEventsApi
+// Persists physics events emitted during a multiplayer session.
+// ============================================================
+
+interface PhysicsEventInsert {
+    scene_id: string
+    user_id: string
+    event_type: string
+    payload: Record<string, unknown>
+}
+
+interface PhysicsEventRow {
+    id: string
+    event_type: string
+    payload: Record<string, unknown>
+    created_at: string
+}
+
+export const physicsEventsApi = {
+    /**
+     * Persist a physics event for a scene.
+     */
+    async create(event: PhysicsEventInsert): Promise<void> {
+        const { error } = await supabase
+            .from('physics_events')
+            .insert({
+                scene_id: event.scene_id,
+                user_id: event.user_id,
+                event_type: event.event_type,
+                payload: event.payload,
+            })
+        if (error) throw new Error(`[Supabase/physicsEventsApi.create] ${error.message}`)
+    },
+
+    /**
+     * Fetch the most recent physics events for a scene.
+     * Defaults to the last 50 events ordered by creation time (newest first).
+     */
+    async listRecent(sceneId: string, limit = 50): Promise<PhysicsEventRow[]> {
+        const { data, error } = await supabase
+            .from('physics_events')
+            .select('id, event_type, payload, created_at')
+            .eq('scene_id', sceneId)
+            .order('created_at', { ascending: false })
+            .limit(limit)
+        if (error) throw new Error(`[Supabase/physicsEventsApi.listRecent] ${error.message}`)
+        return (data ?? []) as PhysicsEventRow[]
     },
 }
