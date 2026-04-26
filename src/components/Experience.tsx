@@ -4,7 +4,7 @@ import { OrbitControls, Environment, ContactShadows, Grid } from '@react-three/d
 import { DynamicCharacter } from './DynamicCharacter'
 import { RemoteAvatars } from './RemoteAvatars'
 import { useMultiplayer } from '../hooks/useMultiplayer'
-import { useSoulStore } from '../store/soulStore'
+import { useSoulStore, type SoulState } from '../store/soulStore'
 import { CAMERA } from '../lib/constraints'
 
 /**
@@ -15,7 +15,7 @@ import { CAMERA } from '../lib/constraints'
  * remoteUsers is passed into the Canvas via RemoteAvatars.
  */
 
-const selectUserId = (s: SoulState) => s.userId
+const selectUserId = (s: SoulState): string | null => s.userId
 
 const FloorGrid = () => {
     const gridConfig = useMemo(() => ({
@@ -39,14 +39,9 @@ const FloorGrid = () => {
     )
 }
 
-// Typing for selector
-interface SoulState {
-    userId: string | null
-}
-
 export const Experience = () => {
     // userId is used as the scene identifier when available.
-    const userId = useSoulStore(selectUserId as any)
+    const userId = useSoulStore(selectUserId)
 
     // useMultiplayer must be called outside <Canvas>
     const { remoteUsers } = useMultiplayer(userId ?? null)
