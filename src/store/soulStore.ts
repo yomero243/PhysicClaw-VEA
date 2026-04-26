@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { CharacterConfig } from '../constants/characters'
-import type { Mood, Intensity, CharacterId } from '../lib/constraints'
+import type { Mood, Intensity, CharacterId, RigType } from '../lib/constraints'
 
 // ----------------------------------------------------------------
 // Types
@@ -62,9 +62,22 @@ interface SoulState {
     addCustomCharacter: (config: CharacterConfig) => void
     removeCustomCharacter: (id: string) => void
 
+    // Visibility: which objects are shown in the scene (multi-object support)
+    visibleObjects: Record<string, boolean>
+    toggleObjectVisibility: (id: string) => void
+    setObjectVisible: (id: string, visible: boolean) => void
+
     // Per-character overrides
     characterOverrides: Record<string, CharacterOverride>
     setCharacterOverride: (id: string, overrides: Partial<CharacterOverride>) => void
+
+    // Custom model URLs for uploaded GLBs (keyed by character id)
+    customModelUrls: Record<string, string>
+    setCustomModelUrl: (id: string, url: string) => void
+
+    // Rig type per character (keyed by character id)
+    characterRigTypes: Record<string, RigType>
+    setRigType: (id: string, type: RigType) => void
 
     // UI state for avatar panel
     activeCategoryId: string | null
@@ -118,12 +131,14 @@ export const useSoulStore = create<SoulState>()(
             addCustomCharacter: (config) =>
                 set((state) => ({
                     customCharacters: [...state.customCharacters, config],
+                    visibleObjects: { ...state.visibleObjects, [config.id]: true },
                 })),
             removeCustomCharacter: (id) =>
                 set((state) => {
                     const char = state.customCharacters.find((c) => c.id === id)
                     if (char?.modelUrl) URL.revokeObjectURL(char.modelUrl)
                     const { [id]: _, ...remainingOverrides } = state.characterOverrides
+                    const { [id]: __, ...remainingVisibility } = state.visibleObjects
                     return {
                         customCharacters: state.customCharacters.filter((c) => c.id !== id),
                         activeCharacterId:
@@ -131,8 +146,25 @@ export const useSoulStore = create<SoulState>()(
                                 ? 'happy-idle' as CharacterId
                                 : state.activeCharacterId,
                         characterOverrides: remainingOverrides,
+                        visibleObjects: remainingVisibility,
                     }
                 }),
+
+            visibleObjects: { 'happy-idle': true },
+            toggleObjectVisibility: (id) =>
+                set((state) => ({
+                    visibleObjects: {
+                        ...state.visibleObjects,
+                        [id]: !state.visibleObjects[id],
+                    },
+                })),
+            setObjectVisible: (id, visible) =>
+                set((state) => ({
+                    visibleObjects: {
+                        ...state.visibleObjects,
+                        [id]: visible,
+                    },
+                })),
 
             characterOverrides: {},
             setCharacterOverride: (id, overrides) =>
@@ -141,6 +173,18 @@ export const useSoulStore = create<SoulState>()(
                         ...state.characterOverrides,
                         [id]: { ...state.characterOverrides[id], ...overrides },
                     },
+                })),
+
+            customModelUrls: {},
+            setCustomModelUrl: (id, url) =>
+                set((state) => ({
+                    customModelUrls: { ...state.customModelUrls, [id]: url },
+                })),
+
+            characterRigTypes: {},
+            setRigType: (id, type) =>
+                set((state) => ({
+                    characterRigTypes: { ...state.characterRigTypes, [id]: type },
                 })),
 
             activeCategoryId: null,
@@ -185,6 +229,9 @@ export const useSoulStore = create<SoulState>()(
                 apiToken: state.apiToken,
                 customCharacters: state.customCharacters,
                 characterOverrides: state.characterOverrides,
+                visibleObjects: state.visibleObjects,
+                customModelUrls: state.customModelUrls,
+                characterRigTypes: state.characterRigTypes,
             }),
         }
     )
