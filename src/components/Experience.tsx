@@ -4,7 +4,7 @@ import { OrbitControls, Environment, ContactShadows, Grid } from '@react-three/d
 import { DynamicCharacter } from './DynamicCharacter'
 import { RemoteAvatars } from './RemoteAvatars'
 import { useMultiplayer } from '../hooks/useMultiplayer'
-import { useSoulStore, type SoulState } from '../store/soulStore'
+import { useSoulStore } from '../store/soulStore'
 import { CAMERA } from '../lib/constraints'
 
 /**
