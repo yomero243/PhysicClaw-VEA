@@ -15,8 +15,6 @@ import { CAMERA } from '../lib/constraints'
  * remoteUsers is passed into the Canvas via RemoteAvatars.
  */
 
-const selectUserId = (s: SoulState): string | null => s.userId
-
 const FloorGrid = () => {
     const gridConfig = useMemo(() => ({
         cellSize: 0.5,
@@ -41,7 +39,7 @@ const FloorGrid = () => {
 
 export const Experience = () => {
     // userId is used as the scene identifier when available.
-    const userId = useSoulStore(selectUserId)
+    const userId = useSoulStore((state) => state.userId)
 
     // useMultiplayer must be called outside <Canvas>
     const { remoteUsers } = useMultiplayer(userId ?? null)
