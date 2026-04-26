@@ -39,7 +39,7 @@ export const MOOD_COLORS: Record<string, string> = {
     love: '#ff66cc',
 }
 
-interface SoulState {
+export interface SoulState {
     isThinking: boolean
     mood: Mood
     lastMessage: string
