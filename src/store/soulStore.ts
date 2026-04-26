@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { CharacterConfig } from '../constants/characters'
-import type { Mood, Intensity, CharacterId } from '../lib/constraints'
+import type { Intensity, CharacterId } from '../lib/constraints'
 
 // ----------------------------------------------------------------
 // Types
@@ -41,12 +41,12 @@ export const MOOD_COLORS: Record<string, string> = {
 
 interface SoulState {
     isThinking: boolean
-    mood: Mood
+    mood: string
     lastMessage: string
     intensity: Intensity
     activeCharacterId: CharacterId
     setIsThinking: (thinking: boolean) => void
-    setMood: (mood: Mood) => void
+    setMood: (mood: string) => void
     setLastMessage: (msg: string) => void
     setIntensity: (intensity: number) => void
     setActiveCharacterId: (id: string) => void
@@ -142,7 +142,11 @@ export const useSoulStore = create<SoulState>()(
                     }
                 }),
 
-            visibleObjects: { 'happy-idle': true },
+            visibleObjects: { 
+                'happy-idle': true,
+                'cyber-sentinel': true,
+                'logic-guardian': true 
+            },
             toggleObjectVisibility: (id) =>
                 set((state) => ({
                     visibleObjects: {
@@ -158,7 +162,10 @@ export const useSoulStore = create<SoulState>()(
                     },
                 })),
 
-            characterOverrides: {},
+            characterOverrides: {
+                'cyber-sentinel': { shaderColor: '#ff0033', intensity: 1.5 },
+                'logic-guardian': { shaderColor: '#ffcc00', intensity: 1.2 }
+            },
             setCharacterOverride: (id, overrides) =>
                 set((state) => ({
                     characterOverrides: {
@@ -197,7 +204,7 @@ export const useSoulStore = create<SoulState>()(
             // API settings
             apiBaseUrl: import.meta.env.VITE_OPENCLAW_API_URL || '',
             apiModel: import.meta.env.VITE_OPENCLAW_MODEL || 'claude-3-5-sonnet-20241022',
-            apiToken: import.meta.env.VITE_OPENCLAW_TOKEN || '',
+            apiToken: '',
             setApiConfig: (config) => set((state) => ({ ...state, ...config })),
         }),
         {
@@ -206,7 +213,6 @@ export const useSoulStore = create<SoulState>()(
             partialize: (state) => ({
                 apiBaseUrl: state.apiBaseUrl,
                 apiModel: state.apiModel,
-                apiToken: state.apiToken,
                 customCharacters: state.customCharacters,
                 characterOverrides: state.characterOverrides,
                 visibleObjects: state.visibleObjects,

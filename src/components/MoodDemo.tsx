@@ -63,7 +63,9 @@ function DemoSphere({ moodIndex }: DemoSphereProps) {
                     transparent
                     depthWrite={false}
                     side={THREE.BackSide}
-                    args={[{ uColor: initColor.clone(), uIntensity: 0.2, uTime: 0 }]}
+                    uColor={initColor.clone()}
+                    uIntensity={0.2}
+                    uTime={0}
                 />
             </Sphere>
 
@@ -74,7 +76,9 @@ function DemoSphere({ moodIndex }: DemoSphereProps) {
                     ref={mainRef}
                     attach="material"
                     transparent
-                    args={[{ uColor: initColor.clone(), uIntensity: 0.4, uTime: 0 }]}
+                    uColor={initColor.clone()}
+                    uIntensity={0.4}
+                    uTime={0}
                 />
             </Sphere>
         </group>

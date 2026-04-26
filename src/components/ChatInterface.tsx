@@ -197,21 +197,52 @@ export const ChatInterface = () => {
   const [inputText, setInputText] = useState('')
   const [isListening, setIsListening] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
   const recognitionRef = useRef<any>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const sendRef = useRef<(text: string) => void>(() => {})
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const {
-    lastMessage, setLastMessage,
-    isThinking,
-    mood, setMood, setIntensity,
-    activeCharacterId, setActiveCharacterId,
-    messages, addMessage,
-    userName,
-  } = useSoulStore()
+  const lastMessage = useSoulStore(s => s.lastMessage)
+  const setLastMessage = useSoulStore(s => s.setLastMessage)
+  const isThinking = useSoulStore(s => s.isThinking)
+  const mood = useSoulStore(s => s.mood)
+  const setMood = useSoulStore(s => s.setMood)
+  const setIntensity = useSoulStore(s => s.setIntensity)
+  const activeCharacterId = useSoulStore(s => s.activeCharacterId)
+  const setActiveCharacterId = useSoulStore(s => s.setActiveCharacterId)
+  const messages = useSoulStore(s => s.messages)
+  const addMessage = useSoulStore(s => s.addMessage)
+  const userName = useSoulStore(s => s.userName)
+  const apiBaseUrl = useSoulStore(s => s.apiBaseUrl)
+  const apiToken = useSoulStore(s => s.apiToken)
+
+  const isConfigured = !!(apiBaseUrl.trim() || apiToken.trim())
 
   const { signOut } = useAuth()
+
+  // ── Helpers ─────────────────────────────────────────────────────
+  const speakResponse = useCallback((text: string) => {
+    if (!('speechSynthesis' in window)) return
+    window.speechSynthesis.cancel()
+    const utterance = new SpeechSynthesisUtterance(text)
+    utterance.lang = 'es-ES'
+    utterance.rate = 1.0
+    utterance.pitch = 1.1
+    window.speechSynthesis.speak(utterance)
+  }, [])
+
+  const toggleListening = useCallback(() => {
+    if (isListening) {
+      recognitionRef.current?.stop()
+    } else {
+      try {
+        recognitionRef.current?.start()
+      } catch (e) {
+        console.error('Speech recognition error:', e)
+      }
+    }
+  }, [isListening])
 
   // ── Send handler ────────────────────────────────────────────────
   const handleSend = useCallback(async (text: string) => {
@@ -228,9 +259,15 @@ export const ChatInterface = () => {
     setMood((result.mood ?? 'calm') as Mood)
     setIntensity(result.intensity ?? 0.5)
     speakResponse(result.text)
-  }, [addMessage, setLastMessage, setMood, setIntensity, isThinking])
+  }, [addMessage, setLastMessage, setMood, setIntensity, isThinking, speakResponse])
 
   useEffect(() => { sendRef.current = handleSend }, [handleSend])
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [messages, isThinking])
 
   // ── Speech recognition ─────────────────────────────────────────
   useEffect(() => {
@@ -245,23 +282,6 @@ export const ChatInterface = () => {
     recognitionRef.current = recog
     return () => { try { recog.abort() } catch (_) {} }
   }, []) // eslint-disable-line
-
-  // ── Auto scroll ─────────────────────────────────────────────────
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, isThinking])
-
-  const toggleListening = () => {
-    const r = recognitionRef.current
-    if (!r) { alert('Speech Recognition no soportado.'); return }
-    isListening ? r.stop() : r.start()
-  }
-
-  const speakResponse = (text: string) => {
-    const u = new SpeechSynthesisUtterance(text)
-    u.lang = 'es-ES'
-    window.speechSynthesis.speak(u)
-  }
 
   // ── Render ──────────────────────────────────────────────────────
   return (
@@ -320,22 +340,36 @@ export const ChatInterface = () => {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              {/* User badge */}
-              {userName && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 9, color: 'rgba(0,212,255,0.5)', letterSpacing: 1 }}>
-                    {userName.toUpperCase()}
-                  </span>
-                  <button
-                    onClick={() => { openClawService.clearHistory(); signOut() }}
-                    title="Sign out"
-                    style={{
-                      background: 'none', border: 'none', color: '#2a4a6a',
-                      cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0,
-                    }}
-                  >×</button>
-                </div>
-              )}
+              {/* User badge - Guest mode */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 9, color: 'rgba(0,212,255,0.5)', letterSpacing: 1 }}>
+                  {userName?.toUpperCase() ?? 'GUEST'}
+                </span>
+              </div>
+
+              {/* Connection indicator */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                background: 'none',
+                border: '1px solid rgba(0,212,255,0.15)',
+                borderRadius: 3,
+                padding: '3px 8px',
+              }}>
+                <span style={{
+                  width: 5, height: 5, borderRadius: '50%',
+                  background: '#00ff88',
+                  boxShadow: '0 0 5px #00ff88',
+                  display: 'inline-block',
+                  flexShrink: 0,
+                }} />
+                <span style={{
+                  fontSize: 9, letterSpacing: 1,
+                  color: 'rgba(0,255,136,0.7)',
+                  fontFamily: '"Courier New", monospace',
+                }}>
+                  CORE::ON
+                </span>
+              </div>
 
               {/* Collapse toggle */}
               <button
@@ -389,7 +423,16 @@ export const ChatInterface = () => {
                   )}
 
                   {messages.map(msg => (
-                    <MessageBubble key={msg.id} msg={msg as ChatMsg} userName={userName} />
+                    <MessageBubble 
+                      key={msg.id} 
+                      msg={{ 
+                        id: msg.id ?? '', 
+                        role: msg.role as 'user' | 'assistant', 
+                        text: msg.text ?? (msg as any).content ?? '', 
+                        timestamp: msg.timestamp 
+                      }} 
+                      userName={userName} 
+                    />
                   ))}
 
                   {isThinking && <ThinkingBubble />}

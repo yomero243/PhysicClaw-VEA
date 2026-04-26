@@ -10,6 +10,8 @@ import '../shaders/EnergyShader'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
+const EMPTY_OVERRIDE = {}
+
 /**
  * Returns the effective THREE.Color for a character:
  * uses the per-character shader override if set, otherwise cyan default.
@@ -29,7 +31,7 @@ const FBXModel = ({ url, config }: { url: string; config: any }) => {
     const fbx = useFBX(url)
     const group = useRef<THREE.Group>(null)
     const { actions } = useAnimations(fbx.animations, group)
-    const { mood } = useSoulStore()
+    const mood = useSoulStore(s => s.mood)
 
     useEffect(() => {
         const actionNames = Object.keys(actions)
@@ -46,8 +48,7 @@ const FBXModel = ({ url, config }: { url: string; config: any }) => {
     }, [actions, mood, config])
 
     // Apply per-character override for scale / position
-    const { characterOverrides } = useSoulStore.getState()
-    const overrides = characterOverrides[config.id] || {}
+    const overrides = useSoulStore(s => s.characterOverrides[config.id]) || EMPTY_OVERRIDE
     const effectiveScale = overrides.scale ?? config.scale
     const effectivePositionY = overrides.positionY ?? config.position[1]
 
@@ -67,8 +68,10 @@ const GLBModel = ({ url, config }: { url: string; config: any }) => {
     const { scene, animations } = useGLTF(url)
     const group = useRef<THREE.Group>(null)
     const { actions } = useAnimations(animations, group)
-    const { mood, intensity, isThinking, characterOverrides } = useSoulStore()
-    const overrides = characterOverrides[config.id] || {}
+    const mood = useSoulStore(s => s.mood)
+    const intensity = useSoulStore(s => s.intensity)
+    const isThinking = useSoulStore(s => s.isThinking)
+    const overrides = useSoulStore(s => s.characterOverrides[config.id]) || EMPTY_OVERRIDE
 
     useEffect(() => {
         const actionNames = Object.keys(actions)
@@ -129,10 +132,13 @@ const GLBModel = ({ url, config }: { url: string; config: any }) => {
 // ── Base Entity (no model URL) ─────────────────────────────────────────────────
 
 const BaseEntity = ({ characterId }: { characterId: string }) => {
-
     const materialRef = useRef<any>(null)
-    const { intensity, isThinking, mood, characterOverrides } = useSoulStore()
-    const overrides = characterOverrides[characterId] || {}
+
+    const intensity = useSoulStore((s) => s.intensity)
+    const isThinking = useSoulStore((s) => s.isThinking)
+    const mood = useSoulStore((s) => s.mood)
+    const overrides = useSoulStore((s) => s.characterOverrides[characterId]) || EMPTY_OVERRIDE
+
     const shaderColor = useShaderColor(characterId)
 
     useFrame((_, delta) => {
@@ -148,7 +154,9 @@ const BaseEntity = ({ characterId }: { characterId: string }) => {
                 0.1,
             )
             // Live-update color when override changes
-            materialRef.current.uColor = shaderColor
+            if (materialRef.current.uniforms) {
+                materialRef.current.uniforms.uColor.value = shaderColor
+            }
 
         }
     })
@@ -162,7 +170,9 @@ const BaseEntity = ({ characterId }: { characterId: string }) => {
                 ref={materialRef}
                 attach="material"
                 transparent
-                args={[{ uColor: shaderColor, uIntensity: 0.5, uTime: 0 }]}
+                uColor={shaderColor}
+                uIntensity={0.5}
+                uTime={0}
             />
         </Sphere>
     )
@@ -184,10 +194,13 @@ const CharacterRenderer: React.FC<{ config: CharacterConfig }> = ({ config }) =>
 // ── DynamicCharacter — renders all visible objects ───────────────────────────
 
 export const DynamicCharacter: React.FC = () => {
-    const { customCharacters, visibleObjects } = useSoulStore()
-    const allChars = [...CHARACTERS, ...customCharacters]
+    const customCharacters = useSoulStore(s => s.customCharacters)
+    const visibleObjects = useSoulStore(s => s.visibleObjects)
 
-    const visibleChars = allChars.filter((c) => visibleObjects[c.id])
+    const visibleChars = useMemo(() => {
+        const allChars = [...CHARACTERS, ...customCharacters]
+        return allChars.filter((c) => visibleObjects[c.id])
+    }, [customCharacters, visibleObjects])
 
     return (
         <>
@@ -199,5 +212,6 @@ export const DynamicCharacter: React.FC = () => {
 }
 
 useFBX.preload('/HappyIdle.fbx')
-useGLTF.preload('/HappyIdle.glb') // Para cuando conviertas el archivo
+useGLTF.preload('/HappyIdle.glb')
+
 

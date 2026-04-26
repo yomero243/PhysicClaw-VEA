@@ -124,6 +124,7 @@ export function useScenePersistence(): UseScenePersistenceReturn {
     })
 
     const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+    const loadingAttemptRef = useRef<string | null>(null)
 
     // ---- Helpers ----
     const setError = (error: string | null) =>
@@ -132,55 +133,15 @@ export function useScenePersistence(): UseScenePersistenceReturn {
     const clearError = useCallback(() => setError(null), [])
 
     // ============================================================
-    // AUTH — login anónimo automático si no hay sesión
+    // AUTH — Bypass real auth for Guest Mode
     // ============================================================
     useEffect(() => {
-        let mounted = true
-
-        const initAuth = async () => {
-            try {
-                const { user } = await auth.getUser()
-
-                if (user && mounted) {
-                    setState(s => ({
-                        ...s,
-                        userId: user.id,
-                        isAuthenticated: true,
-                    }))
-                } else {
-                    // Auto login anónimo para experiencias sin registro
-                    const data = await auth.signInAnon()
-                    if (data.user && mounted) {
-                        setState(s => ({
-                            ...s,
-                            userId: data.user!.id,
-                            isAuthenticated: true,
-                        }))
-                    }
-                }
-            } catch (err) {
-                console.error('[useScenePersistence] Auth error:', err)
-                if (mounted) setError('Error de autenticación. Modo offline activo.')
-            }
-        }
-
-        initAuth()
-
-        // Listener de cambios de sesión
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            if (mounted) {
-                setState(s => ({
-                    ...s,
-                    userId: session?.user?.id ?? null,
-                    isAuthenticated: !!session?.user,
-                }))
-            }
-        })
-
-        return () => {
-            mounted = false
-            subscription.unsubscribe()
-        }
+        const GUEST_ID = '00000000-0000-0000-0000-000000000000'
+        setState(s => ({
+            ...s,
+            userId: GUEST_ID,
+            isAuthenticated: true,
+        }))
     }, [])
 
     // ============================================================
@@ -188,18 +149,23 @@ export function useScenePersistence(): UseScenePersistenceReturn {
     // ============================================================
     const loadDefaultScene = useCallback(async () => {
         const { userId } = state
-        if (!userId) return
+        if (!userId || loadingAttemptRef.current === userId) return
 
+        loadingAttemptRef.current = userId
         setState(s => ({ ...s, isLoadingScene: true, error: null }))
 
         try {
+            console.log('[useScenePersistence] Cargando escena para usuario:', userId)
             // Intentar cargar la escena por defecto
             let scene = await scenesApi.getDefault(userId)
 
             if (!scene) {
+                console.log('[useScenePersistence] No se encontró escena, creando una por defecto...')
                 // Crear escena por defecto si no existe
                 scene = await scenesApi.create(makeDefaultScene(userId))
             }
+
+            console.log('[useScenePersistence] Escena activa:', scene.id)
 
             // Cargar objetos de la escena
             const objects = await sceneObjectsApi.listForScene(scene.id)
@@ -225,6 +191,9 @@ export function useScenePersistence(): UseScenePersistenceReturn {
                 isLoadingScene: false,
                 error: 'No se pudo cargar la escena. Revisa la conexión con Supabase.',
             }))
+            // Reset attempt on error so it can be retried if needed, 
+            // but the useEffect condition should handle not looping.
+            loadingAttemptRef.current = null 
         }
     }, [state.userId])
 
@@ -496,10 +465,10 @@ export function useScenePersistence(): UseScenePersistenceReturn {
 
     // Auto-cargar escena cuando el usuario se autentica
     useEffect(() => {
-        if (state.isAuthenticated && state.userId && !state.currentScene && !state.isLoadingScene) {
+        if (state.userId && !state.currentScene && !state.isLoadingScene) {
             loadDefaultScene()
         }
-    }, [state.isAuthenticated, state.userId])
+    }, [state.userId, state.currentScene, state.isLoadingScene, loadDefaultScene])
 
     // ============================================================
     return {

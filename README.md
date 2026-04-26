@@ -125,7 +125,8 @@ npm run preview   # serves the build locally to verify
 2. **Configure environment variables** (create a `.env` file in the project root):
     ```env
     VITE_OPENCLAW_API_URL=http://127.0.0.1:18789
-    VITE_OPENCLAW_TOKEN=your_token_here
+    # Do NOT set VITE_OPENCLAW_TOKEN in production. LLM tokens must remain server-side (Edge Function env).
+    # For production, set OPENCLAW_SECRET_TOKEN in your Edge Function and use supabase.functions.invoke('chat').
     VITE_OPENCLAW_MODEL=google/gemini-2.5-flash
     ```
     If `VITE_OPENCLAW_API_URL` is not set, requests go through the built-in Vite proxy (`/v1` -> `http://127.0.0.1:18789`).
@@ -287,18 +288,18 @@ feature/*        → develop          lint · types      preview deploy
 
 ```env
 # Frontend (Vite — public, secured by RLS)
-VITE_SUPABASE_URL         = https://xxxx.supabase.co
-VITE_SUPABASE_ANON_KEY    = eyJ...
-VITE_OPENCLAW_API_URL     = https://your-vm.azure.com:18789
+VITE_SUPABASE_URL         = https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY    = your-anon-key
+VITE_OPENCLAW_API_URL     = https://your-api-gateway.com
 
 # Edge Functions (private — never exposed to the client)
-OPENCLAW_SECRET_TOKEN     = sk-...
-SUPABASE_SERVICE_ROLE_KEY = eyJ...
+OPENCLAW_SECRET_TOKEN     = your-secret-token
+SUPABASE_SERVICE_ROLE_KEY = your-service-role-key
 
 # CI/CD (GitHub Actions secrets)
-VERCEL_TOKEN              = ...
-SUPABASE_ACCESS_TOKEN     = ...
-SUPABASE_PROJECT_ID       = ...
+VERCEL_TOKEN              = your-vercel-token
+SUPABASE_ACCESS_TOKEN     = your-supabase-access-token
+SUPABASE_PROJECT_ID       = your-project-id
 ```
 
 ### Team Roles

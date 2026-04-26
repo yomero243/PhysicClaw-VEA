@@ -33,6 +33,22 @@ export const CHARACTERS: CharacterConfig[] = [
         scale: 1,
         position: [0, 0, 0],
     },
+    {
+        id: 'cyber-sentinel' as CharacterId,
+        name: 'Cyber Sentinel',
+        modelUrl: '', // Uses base sphere
+        type: 'glb',
+        scale: 1.2,
+        position: [-2, 0, 0],
+    },
+    {
+        id: 'logic-guardian' as CharacterId,
+        name: 'Logic Guardian',
+        modelUrl: '', // Uses base sphere
+        type: 'glb',
+        scale: 1.2,
+        position: [2, 0, 0],
+    },
 ]
 
 export const REGISTERED_CHARACTER_IDS = CHARACTERS.map(c => c.id) as readonly CharacterId[]

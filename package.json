@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "prebuild": "npm run verify-env",
+    "verify-env": "node ./scripts/verify-env.js",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"
