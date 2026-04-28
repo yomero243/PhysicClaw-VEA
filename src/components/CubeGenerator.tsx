@@ -24,11 +24,12 @@ export const CubeGenerator: React.FC = () => {
 
     const cubeData = {
       object_type: 'prop' as ObjectType,
+      character_id: null,
       label: `Cubo_${Date.now()}`,
       model_url: null,
       position: randomPos,
       rotation: [0, 0, 0] as [number, number, number],
-      scale: [0.5, 0.5, 0.5] as [number, number, number], // Usamos 'scale' para compatibilidad total
+      scale_v: [0.5, 0.5, 0.5] as [number, number, number],
       metadata: {
         color: `#${Math.floor(Math.random()*16777215).toString(16)}`,
         shape: 'cube',

@@ -4,7 +4,6 @@ import { OrbitControls, Environment, ContactShadows, Grid } from '@react-three/d
 import { DynamicCharacter } from './DynamicCharacter'
 import { CAMERA } from '../lib/constraints'
 import { useScenePersistence } from '../hooks/useScenePersistence'
-import * as THREE from 'three'
 
 /**
  * CameraController — Maneja la posición inicial de la cámara solo una vez.

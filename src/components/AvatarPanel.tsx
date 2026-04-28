@@ -149,7 +149,7 @@ function SaveButton({ onClick, disabled, saving }: { onClick: () => void; disabl
 // ─── Main Component ───────────────────────────────────────────────
 export const AvatarPanel = () => {
   const {
-    isAuthenticated, currentScene, avatarConfig, isLoadingScene, error,
+    currentScene, avatarConfig, isLoadingScene, error,
     saveSceneSettings, saveAvatarConfig, clearError,
   } = useScenePersistence()
 
@@ -172,7 +172,6 @@ export const AvatarPanel = () => {
   const [botUrl, setBotUrl] = useState(apiBaseUrl)
   const [botToken, setBotToken] = useState(apiToken)
   const [botModel, setBotModel] = useState(apiModel)
-  const [testing, setTesting] = useState(false)
 
   const [colors, setColors] = useState<ColorConfig>(DEFAULT_COLORS)
   const [shaders, setShaders] = useState<ShaderConfig>(DEFAULT_SHADERS)

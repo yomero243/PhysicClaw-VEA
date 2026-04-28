@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSoulStore } from '../store/soulStore'
 import type { Mood } from '../lib/constraints'
-import { useAuth } from '../auth/AuthProvider'
 import { CHARACTERS } from '../constants/characters'
 import { openClawService } from '../services/openClawService'
 
@@ -197,7 +196,6 @@ export const ChatInterface = () => {
   const [inputText, setInputText] = useState('')
   const [isListening, setIsListening] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
-  const [showSettings, setShowSettings] = useState(false)
   const recognitionRef = useRef<any>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const sendRef = useRef<(text: string) => void>(() => {})
@@ -216,10 +214,6 @@ export const ChatInterface = () => {
   const userName = useSoulStore(s => s.userName)
   const apiBaseUrl = useSoulStore(s => s.apiBaseUrl)
   const apiToken = useSoulStore(s => s.apiToken)
-
-  const isConfigured = !!(apiBaseUrl.trim() || apiToken.trim())
-
-  const { signOut } = useAuth()
 
   // ── Helpers ─────────────────────────────────────────────────────
   const speakResponse = useCallback((text: string) => {
