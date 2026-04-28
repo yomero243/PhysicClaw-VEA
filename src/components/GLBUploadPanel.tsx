@@ -7,7 +7,7 @@ import { MODEL_UPLOAD, type RigType } from '../lib/constraints'
 import type { CharacterId } from '../lib/constraints'
 import type { CharacterConfig } from '../constants/characters'
 import { CHARACTERS } from '../constants/characters'
-import { useGLBUpload } from '../hooks/useGLBUpload'
+import { supabase } from '../lib/supabase'
 
 // ─── Helpers ─────────────────────────────────────────────────
 
@@ -33,17 +33,13 @@ export const GLBUploadPanel = () => {
     const [scale, setScale] = useState(1)
     const [posY, setPosY] = useState(-1)
     const [rigType, setRigType] = useState<RigType>('mixamo')
+    const [uploading, setUploading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState<string | null>(null)
     const fileRef = useRef<HTMLInputElement>(null)
 
-    const { uploadGLB, progress, isUploading, error: uploadError, reset: resetUpload } = useGLBUpload()
-
-    const { addCustomCharacter, setCustomModelUrl, setRigType: setStoreRigType, customCharacters, removeCustomCharacter, visibleObjects, toggleObjectVisibility } = useSoulStore()
+    const { addCustomCharacter, customCharacters, removeCustomCharacter, visibleObjects, toggleObjectVisibility } = useSoulStore()
     const userId = useSoulStore((s) => s.userId)
-
-    // Mirror upload hook error into local error state
-    const uploading = isUploading
     const allObjects = [...CHARACTERS, ...customCharacters]
 
     const clearFlash = () => { setError(null); setSuccess(null) }
@@ -79,18 +75,24 @@ export const GLBUploadPanel = () => {
     const handleAdd = async () => {
         if (!model) return
         clearFlash()
-        resetUpload()
+        setUploading(true)
 
         try {
             let modelUrl = model.objectUrl
 
-            // Upload to Supabase Storage if authenticated — uses the useGLBUpload hook
+            // Upload to Supabase Storage if authenticated
             if (userId) {
-                try {
-                    modelUrl = await uploadGLB(model.file, userId)
-                } catch (uploadErr) {
+                const filePath = `${userId}/${Date.now()}_${model.file.name}`
+                const { error: uploadErr } = await supabase.storage
+                    .from('models')
+                    .upload(filePath, model.file, { contentType: 'model/gltf-binary' })
+
+                if (uploadErr) {
                     // Fallback to local blob URL if storage upload fails
-                    console.warn('[GLBUpload] Storage upload failed, using local blob:', uploadErr instanceof Error ? uploadErr.message : uploadErr)
+                    console.warn('[GLBUpload] Storage upload failed, using local blob:', uploadErr.message)
+                } else {
+                    const { data: urlData } = supabase.storage.from('models').getPublicUrl(filePath)
+                    modelUrl = urlData.publicUrl
                 }
             }
 
@@ -107,10 +109,6 @@ export const GLBUploadPanel = () => {
 
             addCustomCharacter(config)
 
-            // Persist the public model URL and rig type in soulStore
-            setCustomModelUrl(id, modelUrl)
-            setStoreRigType(id, rigType)
-
             // Reset form
             setModel(null)
             setModelName('')
@@ -120,6 +118,8 @@ export const GLBUploadPanel = () => {
             setTimeout(() => setSuccess(null), 2500)
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Upload failed')
+        } finally {
+            setUploading(false)
         }
     }
 
@@ -368,35 +368,6 @@ export const GLBUploadPanel = () => {
                                 </div>
                             </div>
 
-                            {/* Upload progress bar — shown only while uploading */}
-                            {isUploading && (
-                                <div style={{ marginBottom: 12 }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                                        <span style={{ fontSize: 9, letterSpacing: 2, color: 'rgba(0,255,136,0.4)' }}>UPLOADING</span>
-                                        <span style={{ fontSize: 10, color: '#00ff88' }}>{progress}%</span>
-                                    </div>
-                                    <div style={{ position: 'relative', height: 3, background: 'rgba(0,255,136,0.1)', borderRadius: 2 }}>
-                                        <div style={{
-                                            position: 'absolute', left: 0, top: 0, height: '100%', borderRadius: 2,
-                                            width: `${progress}%`,
-                                            background: 'linear-gradient(to right, rgba(0,255,136,0.4), #00ff88)',
-                                            transition: 'width 0.3s ease',
-                                        }} />
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Upload hook error (distinct from local validation errors) */}
-                            {uploadError && !isUploading && (
-                                <div style={{
-                                    padding: '5px 8px', marginBottom: 10, borderRadius: 3,
-                                    background: 'rgba(255,160,0,0.08)', border: '1px solid rgba(255,160,0,0.2)',
-                                    color: '#ffaa44', fontSize: 9, letterSpacing: 1,
-                                }}>
-                                    Storage upload failed — using local URL
-                                </div>
-                            )}
-
                             {/* Add button */}
                             <button
                                 onClick={handleAdd}
@@ -411,7 +382,7 @@ export const GLBUploadPanel = () => {
                                     transition: 'all 0.15s',
                                     boxShadow: uploading || !modelName.trim() ? 'none' : '0 0 10px rgba(0,255,136,0.15)',
                                 }}>
-                                {uploading ? 'UPLOADING...' : 'ADD TO SCENE'}
+                                {uploading ? 'LOADING...' : 'ADD TO SCENE'}
                             </button>
                         </>
                     )}

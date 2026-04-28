@@ -1,0 +1,19 @@
+version: 2
+updates:
+  # Mantener las dependencias de npm actualizadas
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      security-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "security"
+
+  # Mantener las GitHub Actions actualizadas (para evitar avisos de Node.js viejo)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

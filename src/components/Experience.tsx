@@ -1,19 +1,85 @@
-import { Suspense, useMemo } from 'react'
-import { Canvas } from '@react-three/fiber'
+import { Suspense, useMemo, useEffect } from 'react'
+import { Canvas, useThree } from '@react-three/fiber'
 import { OrbitControls, Environment, ContactShadows, Grid } from '@react-three/drei'
 import { DynamicCharacter } from './DynamicCharacter'
-import { RemoteAvatars } from './RemoteAvatars'
-import { useMultiplayer } from '../hooks/useMultiplayer'
-import { useSoulStore } from '../store/soulStore'
 import { CAMERA } from '../lib/constraints'
+import { useScenePersistence } from '../hooks/useScenePersistence'
+import * as THREE from 'three'
 
 /**
- * Experience — R3F Canvas wrapper.
- * Character selection is driven by soulStore.activeCharacterId.
- *
- * useMultiplayer is called here (outside Canvas) so React hooks work normally.
- * remoteUsers is passed into the Canvas via RemoteAvatars.
+ * CameraController — Maneja la posición inicial de la cámara solo una vez.
+ * Esto evita que la cámara "salte" o se resetee al moverla.
  */
+const CameraController = () => {
+    const { currentScene } = useScenePersistence()
+    const { camera } = useThree()
+
+    useEffect(() => {
+        if (currentScene?.camera_position) {
+            const pos = currentScene.camera_position
+            // Solo establecemos la posición si es la primera vez o si la escena cambia radicalmente
+            // Pero NO cada vez que el componente se renderiza por un mensaje o mood
+            camera.position.set(pos[0], pos[1], pos[2])
+            camera.lookAt(0, 0, 0)
+        }
+    }, [currentScene?.id, camera]) // Solo reacciona si el ID de la escena cambia
+
+    return null
+}
+
+/**
+ * Renderiza los objetos guardados en la BD que sean primitivos (como cubos).
+ */
+const SceneObjects = () => {
+    const { sceneObjects } = useScenePersistence()
+
+    // Helper para normalizar posición/rotación/escala (acepta array o objeto {x,y,z})
+    const toVec = (data: any): [number, number, number] => {
+        if (Array.isArray(data) && data.length === 3) return data as [number, number, number]
+        if (data && typeof data === 'object') {
+            return [data.x ?? 0, data.y ?? 0, data.z ?? 0]
+        }
+        return [0, 0, 0]
+    }
+
+    useEffect(() => {
+        if (sceneObjects.length > 0) {
+            console.log('[SceneObjects] Objetos detectados en BD:', sceneObjects)
+        }
+    }, [sceneObjects])
+
+    return (
+        <>
+            {sceneObjects.map((obj) => {
+                // Verificamos si es un cubo (metadata.shape o metadata.is_primitive)
+                const isCube = obj.metadata?.shape === 'cube' || (obj.metadata as any)?.is_primitive
+                
+                if (isCube && obj.is_visible !== false) {
+                    const pos = toVec(obj.position)
+                    const rot = toVec(obj.rotation)
+                    const scl = toVec(obj.scale_v || (obj as any).scale)
+
+                    return (
+                        <mesh 
+                            key={obj.id} 
+                            position={pos} 
+                            rotation={rot} 
+                            scale={scl}
+                        >
+                            <boxGeometry args={[1, 1, 1]} />
+                            <meshStandardMaterial 
+                                color={(obj.metadata?.color as string) || '#00d4ff'} 
+                                metalness={0.5}
+                                roughness={0.2}
+                            />
+                        </mesh>
+                    )
+                }
+                return null
+            })}
+        </>
+    )
+}
 
 const FloorGrid = () => {
     const gridConfig = useMemo(() => ({
@@ -38,26 +104,17 @@ const FloorGrid = () => {
 }
 
 export const Experience = () => {
-    // userId is used as the scene identifier when available.
-    const userId = useSoulStore((state) => state.userId)
-
-    // useMultiplayer must be called outside <Canvas>
-    const { remoteUsers } = useMultiplayer(userId ?? null)
-
     return (
-        <Canvas camera={{ position: [0, 0, 5], fov: CAMERA.FOV }}>
+        <Canvas camera={{ fov: CAMERA.FOV }}>
             <color attach="background" args={['#0a0e14']} />
+            <CameraController />
 
             <ambientLight intensity={0.5} />
             <pointLight position={[10, 10, 10]} intensity={1} />
 
             <Suspense fallback={null}>
                 <DynamicCharacter />
-            </Suspense>
-
-            {/* Remote multiplayer avatars */}
-            <Suspense fallback={null}>
-                <RemoteAvatars remoteUsers={remoteUsers} />
+                <SceneObjects />
             </Suspense>
 
             <FloorGrid />

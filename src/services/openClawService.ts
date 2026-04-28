@@ -1,4 +1,5 @@
 import { useSoulStore } from '../store/soulStore';
+import { supabase } from '../lib/supabase';
 import type { Mood } from '../lib/constraints';
 
 export interface OpenClawResponse {
@@ -83,40 +84,52 @@ export const openClawService = {
         conversationHistory.push({ role: 'user', content: text });
 
         try {
-            const baseUrl = store.apiBaseUrl.trim().replace(/\/$/, '')
+            const requestBody = {
+                model: store.apiModel,
+                messages: [
+                    { role: 'system', content: SYSTEM_PROMPT },
+                    ...conversationHistory,
+                ],
+                stream: false,
+            };
 
-            // When apiBaseUrl is empty, use a relative path so the Vite dev-server
-            // proxy (or any reverse proxy in production) can forward the request to
-            // the local OpenClaw / LLM API. When a custom URL is set, the request
-            // goes directly to that origin — ensure that server allows CORS from
-            // your frontend origin, or configure a proxy in vite.config.ts.
-            const endpoint = baseUrl
-                ? `${baseUrl}/v1/chat/completions`
-                : '/v1/chat/completions'
+            let data: { choices?: Array<{ message?: { content?: string } }> };
 
-            const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-            if (store.apiToken) {
-                headers['Authorization'] = `Bearer ${store.apiToken}`
+            if (store.apiToken && !import.meta.env.PROD) {
+                // Development-only: allow direct client API token for local testing.
+                const baseUrl = store.apiBaseUrl.trim().replace(/\/$/, '');
+                const endpoint = baseUrl
+                    ? `${baseUrl}/v1/chat/completions`
+                    : '/v1/chat/completions';
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${store.apiToken}`,
+                    },
+                    body: JSON.stringify(requestBody),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`LLM API responded with HTTP ${response.status}`);
+                }
+                data = await response.json();
+            } else {
+                if (store.apiToken && import.meta.env.PROD) {
+                    // Warn if a client token exists in production environment.
+                    console.warn('[OpenClawService] Client-provided API token detected in production. Requests will be routed via Edge Function to avoid exposing secrets.');
+                }
+                // Secure default: route through Supabase Edge Function.
+                const { data: fnData, error: fnError } = await supabase.functions.invoke('chat', {
+                    body: requestBody,
+                });
+
+                if (fnError) {
+                    throw new Error(`Edge Function error: ${fnError.message}`);
+                }
+                data = fnData;
             }
-
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({
-                    model: store.apiModel,
-                    messages: [
-                        { role: 'system', content: SYSTEM_PROMPT },
-                        ...conversationHistory,
-                    ],
-                    stream: false,
-                }),
-            });
-
-            if (!response.ok) {
-                throw new Error(`OpenClaw API responded with HTTP ${response.status}`);
-            }
-
-            const data = await response.json();
             const rawReply: string = data.choices?.[0]?.message?.content ?? '';
 
             // Parse the structured response

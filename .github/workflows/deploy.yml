@@ -1,8 +1,13 @@
 name: Deploy to Vercel
 
-on:
-  push:
-    branches: [main]
+# Disabled — Vercel handles deploys directly via Git integration
+# on:
+#   push:
+#     branches: [main]
+on: workflow_dispatch
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   deploy:
@@ -17,7 +22,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - name: Install dependencies

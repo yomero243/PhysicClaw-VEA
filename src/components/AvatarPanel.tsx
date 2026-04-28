@@ -19,7 +19,15 @@ const DEFAULT_SHADERS: ShaderConfig = { wireframeOpacity: 0.3, glowIntensity: 1.
 
 const ENVS = ['apartment','city','dawn','forest','lobby','night','park','studio','sunset','warehouse']
 
-type Tab = 'avatar' | 'scene' | 'shader'
+type Tab = 'avatar' | 'scene' | 'shader' | 'bot'
+
+const PRESET_MODELS = [
+  'claude-3-5-sonnet-20241022',
+  'claude-3-opus-20240229',
+  'gpt-4o',
+  'gpt-4o-mini',
+  'gpt-3.5-turbo',
+]
 
 // ─── Small atoms ──────────────────────────────────────────────────
 
@@ -145,12 +153,26 @@ export const AvatarPanel = () => {
     saveSceneSettings, saveAvatarConfig, clearError,
   } = useScenePersistence()
 
-  const { activeCharacterId, setActiveCharacterId, mood, intensity } = useSoulStore()
+  // Selectores granulares para evitar re-renders de todo el panel
+  const activeCharacterId = useSoulStore(s => s.activeCharacterId)
+  const setActiveCharacterId = useSoulStore(s => s.setActiveCharacterId)
+  const mood = useSoulStore(s => s.mood)
+  const intensity = useSoulStore(s => s.intensity)
+  const apiBaseUrl = useSoulStore(s => s.apiBaseUrl)
+  const apiToken = useSoulStore(s => s.apiToken)
+  const apiModel = useSoulStore(s => s.apiModel)
+  const setApiConfig = useSoulStore(s => s.setApiConfig)
 
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<Tab>('avatar')
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState<{ text: string; ok: boolean } | null>(null)
+
+  // Bot states
+  const [botUrl, setBotUrl] = useState(apiBaseUrl)
+  const [botToken, setBotToken] = useState(apiToken)
+  const [botModel, setBotModel] = useState(apiModel)
+  const [testing, setTesting] = useState(false)
 
   const [colors, setColors] = useState<ColorConfig>(DEFAULT_COLORS)
   const [shaders, setShaders] = useState<ShaderConfig>(DEFAULT_SHADERS)
@@ -196,6 +218,9 @@ export const AvatarPanel = () => {
       if (tab === 'scene') {
         await saveSceneSettings({ name: sceneName, environment: sceneEnv, background_color: bgColor, ambient_intensity: ambientIntensity })
         flash('SCENE SAVED', true)
+      } else if (tab === 'bot') {
+        setApiConfig({ apiBaseUrl: botUrl, apiToken: botToken, apiModel: botModel })
+        flash('BOT CONFIG SAVED', true)
       } else {
         await saveAvatarConfig({ character_id: null, config_name: 'Mi Avatar', custom_colors: colors, shader_params: shaders, is_active: true })
         flash('AVATAR SAVED', true)
@@ -272,11 +297,6 @@ export const AvatarPanel = () => {
             <span style={{ fontSize: 11, letterSpacing: 3, color: '#00d4ff', fontWeight: 700 }}>
               VEA<span style={{ color: 'rgba(0,212,255,0.3)' }}>::PANEL</span>
             </span>
-            <span style={{
-              width: 6, height: 6, borderRadius: '50%', display: 'inline-block',
-              background: isAuthenticated ? '#00ff88' : '#ff4444',
-              boxShadow: `0 0 6px ${isAuthenticated ? '#00ff88' : '#ff4444'}`,
-            }} />
           </div>
           <button onClick={() => setOpen(false)}
             style={{ background: 'none', border: 'none', color: '#2a5a7a', cursor: 'pointer', fontSize: 14, lineHeight: 1 }}>
@@ -321,7 +341,7 @@ export const AvatarPanel = () => {
 
         {/* ── Tabs ── */}
         <div style={{ display: 'flex', borderBottom: '1px solid rgba(0,212,255,0.08)' }}>
-          {(['avatar', 'scene', 'shader'] as Tab[]).map(t => (
+          {(['avatar', 'scene', 'shader', 'bot'] as Tab[]).map(t => (
             <button key={t} onClick={() => setTab(t)}
               style={{
                 flex: 1, padding: '9px 0',
@@ -333,7 +353,7 @@ export const AvatarPanel = () => {
                 fontFamily: '"Courier New", monospace',
                 transition: 'all 0.15s',
               }}>
-              {t === 'avatar' ? 'AVATAR' : t === 'scene' ? 'SCENE' : 'SHADER'}
+              {t.toUpperCase()}
             </button>
           ))}
         </div>
@@ -432,6 +452,31 @@ export const AvatarPanel = () => {
               }} />
             </>
           )}
+
+          {/* BOT TAB */}
+          {tab === 'bot' && (
+            <>
+              <PanelLabel>CLAWBOT CONFIG</PanelLabel>
+              <div style={{ fontSize: 10, color: '#2a6a8a', marginBottom: 12, lineHeight: 1.4 }}>
+                Route conversations through our secure server or use your own API key.
+              </div>
+
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 9, letterSpacing: 2, color: '#2a6a8a', marginBottom: 5 }}>API BASE URL</div>
+                <CyberInput value={botUrl} onChange={setBotUrl} placeholder="https://api.openclaw.ai" />
+              </div>
+
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 9, letterSpacing: 2, color: '#2a6a8a', marginBottom: 5 }}>API TOKEN (OPTIONAL)</div>
+                <CyberInput value={botToken} onChange={setBotToken} placeholder="Your API key" />
+              </div>
+
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 9, letterSpacing: 2, color: '#2a6a8a', marginBottom: 5 }}>MODEL</div>
+                <CyberSelect value={botModel} options={PRESET_MODELS} onChange={setBotModel} />
+              </div>
+            </>
+          )}
         </div>
 
         {/* ── Footer ── */}
@@ -446,10 +491,10 @@ export const AvatarPanel = () => {
             </span>
           ) : (
             <span style={{ fontSize: 9, letterSpacing: 1, color: '#1a4a6a' }}>
-              {isAuthenticated ? '● ONLINE' : '● OFFLINE'}
+              ● SESSION ACTIVE
             </span>
           )}
-          <SaveButton onClick={handleSave} disabled={saving || !isAuthenticated} saving={saving} />
+          <SaveButton onClick={handleSave} disabled={saving} saving={saving} />
         </div>
 
         {/* bottom accent */}

@@ -83,11 +83,9 @@ const BaseEntity = () => {
                 ref={materialRef}
                 attach="material"
                 transparent
-                args={[{
-                    uColor: new THREE.Color('#00ffff'),
-                    uIntensity: 0.5,
-                    uTime: 0
-                }]}
+                uColor={new THREE.Color('#00ffff')}
+                uIntensity={0.5}
+                uTime={0}
             />
         </Sphere>
     )
