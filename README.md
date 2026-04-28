@@ -20,71 +20,16 @@
 
 Follow these steps to get PhysicClaw-VEA running locally from scratch.
 
-### 1. Create a Supabase project
-
-1. Go to [https://supabase.com](https://supabase.com) and sign in (or create a free account).
-2. Click **New project**, choose an organization, give the project a name, set a strong database password, and select a region close to you.
-3. Wait ~2 minutes for the project to provision.
-
-### 2. Obtain your Supabase credentials
-
-Once the project is ready:
-
-1. Open your project dashboard and go to **Settings → API**.
-2. Copy the following values:
-   - **Project URL** → this is your `VITE_SUPABASE_URL`  
-     Example: `https://abcdefghijklmnop.supabase.co`
-   - **Project API Keys → `anon` `public`** → this is your `VITE_SUPABASE_ANON_KEY`  
-     > ⚠️ The `anon` key is safe to expose in the frontend. Row Level Security (RLS) policies in `supabase/migrations/002_rls_policies.sql` restrict data access per user.
-
-### 3. Configure environment variables
+### 1. Configure environment variables
 
 ```bash
 # From the project root
 cp .env.example .env
 ```
 
-Open `.env` and fill in at minimum:
+Adjust the variables as needed (see `.env.example` for the full list with descriptions).
 
-```env
-VITE_SUPABASE_URL=https://your-project-id.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-```
-
-Adjust the other variables as needed (see `.env.example` for the full list with descriptions).
-
-### 4. Run database migrations
-
-Install the [Supabase CLI](https://supabase.com/docs/guides/cli) if you haven't already:
-
-```bash
-npm install -g supabase
-# or via brew:  brew install supabase/tap/supabase
-```
-
-Link the CLI to your remote project (run once):
-
-```bash
-supabase login          # opens browser for auth
-supabase link --project-ref <your-project-id>
-# Project ID is visible in Settings → General
-```
-
-Push all migrations in `supabase/migrations/` to the remote database:
-
-```bash
-supabase db push
-```
-
-This applies, in order:
-- `001_v2_schema.sql` — core tables (scenes, objects_3d, messages, agents…)
-- `002_rls_policies.sql` — Row Level Security policies tied to `auth.uid()`
-
-> **Local development alternative**: You can run a local Supabase stack with  
-> `supabase start` (requires Docker). Set `VITE_SUPABASE_URL=http://localhost:54321`  
-> and use the local anon key printed by `supabase start`.
-
-### 5. Install dependencies and start the project
+### 2. Install dependencies and start the project
 
 ```bash
 # Install Node dependencies
@@ -125,8 +70,7 @@ npm run preview   # serves the build locally to verify
 2. **Configure environment variables** (create a `.env` file in the project root):
     ```env
     VITE_OPENCLAW_API_URL=http://127.0.0.1:18789
-    # Do NOT set VITE_OPENCLAW_TOKEN in production. LLM tokens must remain server-side (Edge Function env).
-    # For production, set OPENCLAW_SECRET_TOKEN in your Edge Function and use supabase.functions.invoke('chat').
+    # Do NOT set VITE_OPENCLAW_TOKEN in production.
     VITE_OPENCLAW_MODEL=google/gemini-2.5-flash
     ```
     If `VITE_OPENCLAW_API_URL` is not set, requests go through the built-in Vite proxy (`/v1` -> `http://127.0.0.1:18789`).
@@ -200,8 +144,8 @@ The following schema describes the planned evolution of PhysicClaw-VEA into a **
 │                                                                 │
 │  ┌──────────────────┐  ┌────────────────┐  ┌────────────────┐  │
 │  │  Web App (R3F)   │  │  Auth Session  │  │  Voice / TTS   │  │
-│  │  React 19        │  │  JWT · Supabase│  │  Web Speech API│  │
-│  │  Three.js WebGPU │  │  @supabase/js  │  │  es-ES native  │  │
+│  │  React 19        │  │  JWT           │  │  Web Speech API│  │
+│  │  Three.js WebGPU │  │                │  │  es-ES native  │  │
 │  └──────────────────┘  └────────────────┘  └────────────────┘  │
 └───────────────────────────────┬─────────────────────────────────┘
                                 ▼
@@ -209,9 +153,9 @@ The following schema describes the planned evolution of PhysicClaw-VEA into a **
 │  LAYER 01 · HOSTING & CDN · STATIC ASSETS                      │
 │                                                                 │
 │  ┌──────────────────────────┐  ┌────────────────────────────┐  │
-│  │  Vercel / Netlify        │  │  Supabase Storage          │  │
+│  │  Vercel / Netlify        │  │  Cloud Storage             │  │
 │  │  Vite bundle · Edge CDN  │  │  GLB · FBX · Textures      │  │
-│  │  Auto CI/CD from GitHub  │  │  RLS per user              │  │
+│  │  Auto CI/CD from GitHub  │  │                            │  │
 │  └──────────────────────────┘  └────────────────────────────┘  │
 └───────────────────────────────┬─────────────────────────────────┘
                                 ▼
@@ -219,9 +163,9 @@ The following schema describes the planned evolution of PhysicClaw-VEA into a **
 │  LAYER 02 · API LAYER · GRAPHQL + REST                         │
 │                                                                 │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
-│  │  pg_graphql  │  │ Supabase Auth│  │  Supabase Realtime   │  │
+│  │  pg_graphql  │  │ Auth         │  │  Realtime            │  │
 │  │  /graphql/v1 │  │  JWT · OAuth │  │  WebSocket · Live    │  │
-│  │  RLS via JWT │  │  Magic Link  │  │  multi-user scene    │  │
+│  │              │  │  Magic Link  │  │  multi-user scene    │  │
 │  └──────────────┘  └──────────────┘  └──────────────────────┘  │
 │  ┌──────────────────────────────────────────────────────────┐   │
 │  │  OpenClaw Gateway (Azure VM)                             │   │
@@ -234,7 +178,7 @@ The following schema describes the planned evolution of PhysicClaw-VEA into a **
 │                                                                 │
 │  ┌──────────────────────┐  ┌───────────────┐  ┌─────────────┐  │
 │  │  Edge Functions      │  │  DB Webhooks  │  │  Azure VM   │  │
-│  │  Deno · TypeScript   │  │  pg_net       │  │  OpenClaw   │  │
+│  │  Deno · TypeScript   │  │               │  │  OpenClaw   │  │
 │  │  upload-model        │  │  INSERT/UPDATE│  │  port       │  │
 │  │  chat-proxy          │  │  triggers     │  │  18789      │  │
 │  └──────────────────────┘  └───────────────┘  └─────────────┘  │
@@ -245,8 +189,8 @@ The following schema describes the planned evolution of PhysicClaw-VEA into a **
 │                                                                 │
 │  ┌────────────────────┐  ┌───────────────┐  ┌───────────────┐  │
 │  │  PostgreSQL 15     │  │  Storage      │  │  Row Level    │  │
-│  │  Supabase Managed  │  │  Buckets      │  │  Security     │  │
-│  │  scenes            │  │  models/      │  │  auth.uid()   │  │
+│  │                    │  │  Buckets      │  │  Security     │  │
+│  │  scenes            │  │  models/      │  │               │  │
 │  │  objects_3d        │  │  textures/    │  │  per table    │  │
 │  │  agents · messages │  │  S3-compat    │  │               │  │
 │  └────────────────────┘  └───────────────┘  └───────────────┘  │
@@ -258,8 +202,8 @@ The following schema describes the planned evolution of PhysicClaw-VEA into a **
 │  ┌──────────────┐  ┌─────────────────────┐  ┌──────────────┐  │
 │  │  GitHub      │  │  GitHub Actions     │  │  Monitoring  │  │
 │  │  main → prod │  │  lint · types       │  │  Sentry      │  │
-│  │  develop→stg │  │  supabase db push   │  │  Vercel Anlt │  │
-│  │  feature/*   │  │  vercel deploy      │  │  Supabase DB │  │
+│  │  develop→stg │  │                    │  │  Vercel Anlt │  │
+│  │  feature/*   │  │  vercel deploy      │  │              │  │
 │  └──────────────┘  └─────────────────────┘  └──────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -272,34 +216,28 @@ feature/*        → develop          lint · types      preview deploy
                                     build
 
 [Staging]  →  [Code Review]  →  [DB Migration]  →  [Production]
-                 → main             supabase          vercel deploy
-                                    db push
+                 → main                               vercel deploy
 ```
 
 ### Environments
 
 | Environment | URL | Database | Branch |
 |-------------|-----|----------|--------|
-| **LOCAL** | `localhost:5173` | Supabase local CLI | `feature/*` |
-| **STAGING** | `preview.vercel.app` | Supabase staging project | `develop` |
-| **PRODUCTION** | `physiclaw.app` | Supabase prod project | `main` |
+| **LOCAL** | `localhost:5173` | Local DB | `feature/*` |
+| **STAGING** | `preview.vercel.app` | Staging project | `develop` |
+| **PRODUCTION** | `physiclaw.app` | Prod project | `main` |
 
 ### Environment Variables per Environment
 
 ```env
-# Frontend (Vite — public, secured by RLS)
-VITE_SUPABASE_URL         = https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY    = your-anon-key
+# Frontend (Vite — public)
 VITE_OPENCLAW_API_URL     = https://your-api-gateway.com
 
 # Edge Functions (private — never exposed to the client)
 OPENCLAW_SECRET_TOKEN     = your-secret-token
-SUPABASE_SERVICE_ROLE_KEY = your-service-role-key
 
 # CI/CD (GitHub Actions secrets)
 VERCEL_TOKEN              = your-vercel-token
-SUPABASE_ACCESS_TOKEN     = your-supabase-access-token
-SUPABASE_PROJECT_ID       = your-project-id
 ```
 
 ### Team Roles
@@ -307,7 +245,7 @@ SUPABASE_PROJECT_ID       = your-project-id
 | Role | Responsibilities |
 |------|-----------------|
 | **Frontend / 3D** (1–2 devs) | R3F scenes, TSL shaders, Zustand soulStore, TransformControls UX, DynamicCharacter, Chat UI / voice |
-| **Backend / Data** (1 dev) | PostgreSQL schema + RLS, Supabase migrations, Edge Functions (Deno), Storage policies, GraphQL queries/mutations |
+| **Backend / Data** (1 dev) | PostgreSQL schema + RLS, Edge Functions (Deno), Storage policies, GraphQL queries/mutations |
 | **AI / Integration** (1 dev) | OpenClaw gateway config, per-user system prompts, conversation history, mood → shader mapping, alternative LLM models |
 | **DevOps** (1 dev part-time) | GitHub Actions pipelines, Vercel/Netlify config, environment variables, monitoring & alerts, Azure VM deploy |
 
@@ -316,8 +254,8 @@ SUPABASE_PROJECT_ID       = your-project-id
 | Phase | Goal | Key Technologies |
 |-------|------|-----------------|
 | **v1.x** *(current)* | Single-user local app with reactive VEA, AI chat and FBX/GLB support | React 19, R3F, Zustand, OpenClaw |
-| **v2.0** | Multi-user authentication + cloud scene persistence | Supabase Auth (JWT), PostgreSQL, RLS |
-| **v2.5** | Real-time collaborative scenes (multiple simultaneous users) | Supabase Realtime, WebSocket, Presence |
-| **v3.0** | Full deployment with automated CI/CD, staging and production | GitHub Actions, Vercel, supabase db push |
+| **v2.0** | Multi-user authentication + cloud scene persistence | Auth (JWT), PostgreSQL, RLS |
+| **v2.5** | Real-time collaborative scenes (multiple simultaneous users) | Realtime, WebSocket, Presence |
+| **v3.0** | Full deployment with automated CI/CD, staging and production | GitHub Actions, Vercel |
 | **v3.5** | Agent marketplace: per-user system prompts, models and avatars | Edge Functions, Storage buckets, pg_graphql |
 | **v4.0** | WebGPU renderer + TSL shaders for advanced effects on modern hardware | Three.js WebGPU, TSL, Chrome/Edge 113+ |
