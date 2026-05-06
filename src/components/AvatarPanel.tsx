@@ -54,7 +54,7 @@ const CyberSlider = memo(function CyberSlider({
       </div>
       <div style={{ position: 'relative', height: 3, background: 'rgba(0,212,255,0.1)', borderRadius: 2 }}>
         <div style={{
-          position: absolute, left: 0, top: 0, height: '100%', borderRadius: 2,
+          position: 'absolute', left: 0, top: 0, height: '100%', borderRadius: 2,
           width: `${((value - min) / (max - min)) * 100}%`,
           background: 'linear-gradient(to right, rgba(0,212,255,0.4), #00d4ff)',
         }} />

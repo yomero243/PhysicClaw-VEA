@@ -34,11 +34,9 @@ const SceneObjects = memo(function SceneObjects() {
 
     // Helper para normalizar posición/rotación/escala (acepta array o objeto {x,y,z})
     const toVec = (data: [number, number, number] | { x: number; y: number; z: number } | null | undefined): [number, number, number] => {
-        if (Array.isArray(data) && data.length === 3) return data as [number, number, number]
-        if (data && typeof data === 'object') {
-            return [data.x ?? 0, data.y ?? 0, data.z ?? 0]
-        }
-        return [0, 0, 0]
+        if (!data) return [0, 0, 0]
+        if (Array.isArray(data)) return data.length === 3 ? data : [0, 0, 0]
+        return [data.x ?? 0, data.y ?? 0, data.z ?? 0]
     }
 
     useEffect(function logSceneObjects() {
