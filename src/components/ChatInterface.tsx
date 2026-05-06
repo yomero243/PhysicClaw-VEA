@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, memo } from 'react'
 import { useSoulStore } from '../store/soulStore'
 import type { Mood } from '../lib/constraints'
 import { CHARACTERS } from '../constants/characters'
@@ -18,7 +18,7 @@ interface ChatMsg {
 
 // ─── Sub-components ───────────────────────────────────────────────
 
-function MoodDot({ mood, isThinking, isListening }: { mood: string; isThinking: boolean; isListening: boolean }) {
+const MoodDot = memo(function MoodDot({ mood, isThinking, isListening }: { mood: string; isThinking: boolean; isListening: boolean }) {
   const color = isThinking ? '#b060ff' : isListening ? '#ff4444' : '#00d4ff'
   const label = isThinking ? 'PROCESSING' : isListening ? 'LISTENING' : mood.toUpperCase()
   return (
@@ -34,9 +34,9 @@ function MoodDot({ mood, isThinking, isListening }: { mood: string; isThinking: 
       </span>
     </div>
   )
-}
+})
 
-function CharacterTabs({
+const CharacterTabs = memo(function CharacterTabs({
   characters,
   activeId,
   onSelect,
@@ -73,9 +73,9 @@ function CharacterTabs({
       })}
     </div>
   )
-}
+})
 
-function MessageBubble({ msg, userName }: { msg: ChatMsg; userName: string | null }) {
+const MessageBubble = memo(function MessageBubble({ msg, userName }: { msg: ChatMsg; userName: string | null }) {
   const isUser = msg.role === 'user'
   return (
     <div style={{
@@ -118,9 +118,9 @@ function MessageBubble({ msg, userName }: { msg: ChatMsg; userName: string | nul
       </div>
     </div>
   )
-}
+})
 
-function ThinkingBubble() {
+const ThinkingBubble = memo(function ThinkingBubble() {
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start' }}>
       <div style={{
@@ -142,9 +142,9 @@ function ThinkingBubble() {
       </div>
     </div>
   )
-}
+})
 
-function SendButton({ onClick, disabled }: { onClick: () => void; disabled: boolean }) {
+const SendButton = memo(function SendButton({ onClick, disabled }: { onClick: () => void; disabled: boolean }) {
   return (
     <button
       onClick={onClick}
@@ -170,9 +170,9 @@ function SendButton({ onClick, disabled }: { onClick: () => void; disabled: bool
       SEND
     </button>
   )
-}
+})
 
-function MicButton({ isListening, onClick }: { isListening: boolean; onClick: () => void }) {
+const MicButton = memo(function MicButton({ isListening, onClick }: { isListening: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
@@ -189,7 +189,7 @@ function MicButton({ isListening, onClick }: { isListening: boolean; onClick: ()
       {isListening ? '⬛' : '🎙'}
     </button>
   )
-}
+})
 
 // ─── Main Component ───────────────────────────────────────────────
 export const ChatInterface = () => {
@@ -201,6 +201,7 @@ export const ChatInterface = () => {
   const sendRef = useRef<(text: string) => void>(() => {})
   const inputRef = useRef<HTMLInputElement>(null)
 
+  // Selective store subscriptions to avoid unnecessary re-renders
   const lastMessage = useSoulStore(s => s.lastMessage)
   const setLastMessage = useSoulStore(s => s.setLastMessage)
   const isThinking = useSoulStore(s => s.isThinking)
@@ -212,8 +213,6 @@ export const ChatInterface = () => {
   const messages = useSoulStore(s => s.messages)
   const addMessage = useSoulStore(s => s.addMessage)
   const userName = useSoulStore(s => s.userName)
-  const apiBaseUrl = useSoulStore(s => s.apiBaseUrl)
-  const apiToken = useSoulStore(s => s.apiToken)
 
   // ── Helpers ─────────────────────────────────────────────────────
   const speakResponse = useCallback((text: string) => {
@@ -255,16 +254,16 @@ export const ChatInterface = () => {
     speakResponse(result.text)
   }, [addMessage, setLastMessage, setMood, setIntensity, isThinking, speakResponse])
 
-  useEffect(() => { sendRef.current = handleSend }, [handleSend])
+  useEffect(function syncSendRef() { sendRef.current = handleSend }, [handleSend])
 
-  useEffect(() => {
+  useEffect(function scrollToBottom() {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
     }
   }, [messages, isThinking])
 
   // ── Speech recognition ─────────────────────────────────────────
-  useEffect(() => {
+  useEffect(function setupSpeechRecognition() {
     if (!SpeechRecognition) return
     const recog = new SpeechRecognition()
     recog.continuous = false
@@ -274,8 +273,8 @@ export const ChatInterface = () => {
     recog.onend = () => { setIsListening(false); setMood('calm'); setIntensity(0.5) }
     recog.onresult = (e: any) => sendRef.current(e.results[0][0].transcript)
     recognitionRef.current = recog
-    return () => { try { recog.abort() } catch (_) {} }
-  }, []) // eslint-disable-line
+    return function cleanupSpeechRecognition() { try { recog.abort() } catch (_) {} }
+  }, [setMood, setIntensity]) 
 
   // ── Render ──────────────────────────────────────────────────────
   return (

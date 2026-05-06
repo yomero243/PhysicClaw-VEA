@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useMemo, Suspense } from 'react'
+import React, { useRef, useEffect, useMemo, Suspense, memo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useGLTF, useAnimations, Sphere } from '@react-three/drei'
 import * as THREE from 'three'
@@ -10,7 +10,10 @@ import '../shaders/EnergyShader' // Ensure side effects run
 // Helper to manage shader uniforms updates based on store
 // --------------------------------------------------------
 const useEnergyUniforms = (materialRef: React.MutableRefObject<EnergyShaderMaterialType | null>) => {
-    const { intensity, isThinking, mood } = useSoulStore()
+    // Select specific values to avoid unnecessary re-renders of the component using this hook
+    const intensity = useSoulStore((s) => s.intensity)
+    const isThinking = useSoulStore((s) => s.isThinking)
+    const mood = useSoulStore((s) => s.mood)
 
     useFrame((_, delta) => {
         if (materialRef.current) {
@@ -33,13 +36,13 @@ const useEnergyUniforms = (materialRef: React.MutableRefObject<EnergyShaderMater
 // --------------------------------------------------------
 // Component for GLB loaded model
 // --------------------------------------------------------
-const ModelEntity = ({ url }: { url: string }) => {
+const ModelEntity = memo(function ModelEntity({ url }: { url: string }) {
     const group = useRef<THREE.Group>(null)
     const { scene, animations } = useGLTF(url)
     const { actions } = useAnimations(animations, group)
 
     // Play Idle animation
-    useEffect(() => {
+    useEffect(function playIdleAnimation() {
         if (actions) {
             const actionNames = Object.keys(actions)
             if (actionNames.length > 0) {
@@ -56,7 +59,7 @@ const ModelEntity = ({ url }: { url: string }) => {
     const materialRef = useRef(material)
     useEnergyUniforms(materialRef)
 
-    useEffect(() => {
+    useEffect(function applyMaterialToMeshes() {
         scene.traverse((child) => {
             if ((child as THREE.Mesh).isMesh) {
                 (child as THREE.Mesh).material = material
@@ -65,12 +68,12 @@ const ModelEntity = ({ url }: { url: string }) => {
     }, [scene, material])
 
     return <primitive object={scene} ref={group} />
-}
+})
 
 // --------------------------------------------------------
 // Component for Base Geometry (Fallback)
 // --------------------------------------------------------
-const BaseEntity = () => {
+const BaseEntity = memo(function BaseEntity() {
     const mesh = useRef<THREE.Mesh>(null)
     const materialRef = useRef<EnergyShaderMaterialType | null>(null)
 
@@ -89,15 +92,15 @@ const BaseEntity = () => {
             />
         </Sphere>
     )
-}
+})
 
 // --------------------------------------------------------
 // Main AugmentedEntity Component
 // --------------------------------------------------------
-export const AugmentedEntity = ({ modelUrl }: { modelUrl?: string }) => {
+export const AugmentedEntity = memo(function AugmentedEntity({ modelUrl }: { modelUrl?: string }) {
     return (
         <Suspense fallback={<BaseEntity />}>
             {modelUrl ? <ModelEntity url={modelUrl} /> : <BaseEntity />}
         </Suspense>
     )
-}
+})

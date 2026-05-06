@@ -1,7 +1,7 @@
 // ============================================================
 // PhysicClaw-VEA — AvatarPanel (Cyber Redesign)
 // ============================================================
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, memo } from 'react'
 import { useScenePersistence } from '../hooks/useScenePersistence'
 import { CHARACTERS } from '../constants/characters'
 import { useSoulStore } from '../store/soulStore'
@@ -31,19 +31,19 @@ const PRESET_MODELS = [
 
 // ─── Small atoms ──────────────────────────────────────────────────
 
-function PanelLabel({ children }: { children: React.ReactNode }) {
+const PanelLabel = memo(function PanelLabel({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ fontSize: 9, letterSpacing: 3, color: 'rgba(0,212,255,0.4)', marginBottom: 10, fontFamily: '"Courier New", monospace' }}>
       {children}
     </div>
   )
-}
+})
 
-function Divider() {
+const Divider = memo(function Divider() {
   return <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(0,212,255,0.15), transparent)', margin: '14px 0' }} />
-}
+})
 
-function CyberSlider({
+const CyberSlider = memo(function CyberSlider({
   label, value, min, max, step, onChange,
 }: { label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void }) {
   return (
@@ -54,7 +54,7 @@ function CyberSlider({
       </div>
       <div style={{ position: 'relative', height: 3, background: 'rgba(0,212,255,0.1)', borderRadius: 2 }}>
         <div style={{
-          position: 'absolute', left: 0, top: 0, height: '100%', borderRadius: 2,
+          position: absolute, left: 0, top: 0, height: '100%', borderRadius: 2,
           width: `${((value - min) / (max - min)) * 100}%`,
           background: 'linear-gradient(to right, rgba(0,212,255,0.4), #00d4ff)',
         }} />
@@ -68,9 +68,9 @@ function CyberSlider({
       </div>
     </div>
   )
-}
+})
 
-function ColorRow({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+const ColorRow = memo(function ColorRow({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
       <div style={{ position: 'relative', width: 28, height: 28, flexShrink: 0 }}>
@@ -88,9 +88,9 @@ function ColorRow({ label, value, onChange }: { label: string; value: string; on
       <span style={{ fontSize: 10, color: '#2a5a7a', fontFamily: '"Courier New", monospace' }}>{value.toUpperCase()}</span>
     </div>
   )
-}
+})
 
-function CyberSelect({ value, options, onChange }: { value: string; options: string[]; onChange: (v: string) => void }) {
+const CyberSelect = memo(function CyberSelect({ value, options, onChange }: { value: string; options: string[]; onChange: (v: string) => void }) {
   return (
     <div style={{ position: 'relative' }}>
       <select value={value} onChange={e => onChange(e.target.value)}
@@ -108,9 +108,9 @@ function CyberSelect({ value, options, onChange }: { value: string; options: str
       <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: 'rgba(0,212,255,0.4)', pointerEvents: 'none', fontSize: 10 }}>▾</span>
     </div>
   )
-}
+})
 
-function CyberInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+const CyberInput = memo(function CyberInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
   const [focused, setFocused] = useState(false)
   return (
     <input
@@ -127,9 +127,9 @@ function CyberInput({ value, onChange, placeholder }: { value: string; onChange:
       }}
     />
   )
-}
+})
 
-function SaveButton({ onClick, disabled, saving }: { onClick: () => void; disabled: boolean; saving: boolean }) {
+const SaveButton = memo(function SaveButton({ onClick, disabled, saving }: { onClick: () => void; disabled: boolean; saving: boolean }) {
   return (
     <button onClick={onClick} disabled={disabled}
       style={{
@@ -144,7 +144,7 @@ function SaveButton({ onClick, disabled, saving }: { onClick: () => void; disabl
       {saving ? 'SAVING...' : 'SAVE'}
     </button>
   )
-}
+})
 
 // ─── Main Component ───────────────────────────────────────────────
 export const AvatarPanel = () => {
@@ -180,7 +180,7 @@ export const AvatarPanel = () => {
   const [bgColor, setBgColor] = useState('#111111')
   const [ambientIntensity, setAmbientIntensity] = useState(0.5)
 
-  useEffect(() => {
+  useEffect(function syncAvatarConfig() {
     if (avatarConfig) {
       setColors({
         primary:   avatarConfig.custom_colors?.primary   ?? DEFAULT_COLORS.primary,
@@ -197,7 +197,7 @@ export const AvatarPanel = () => {
     }
   }, [avatarConfig])
 
-  useEffect(() => {
+  useEffect(function syncCurrentScene() {
     if (currentScene) {
       setSceneName(currentScene.name)
       setSceneEnv(currentScene.environment)

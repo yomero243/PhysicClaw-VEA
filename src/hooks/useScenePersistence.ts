@@ -134,7 +134,7 @@ export function useScenePersistence(): UseScenePersistenceReturn {
     // ============================================================
     // AUTH — Bypass real auth for Guest Mode
     // ============================================================
-    useEffect(() => {
+    useEffect(function bypassAuthForGuest() {
         const GUEST_ID = '00000000-0000-0000-0000-000000000000'
         setState(s => ({
             ...s,
@@ -454,8 +454,8 @@ export function useScenePersistence(): UseScenePersistenceReturn {
     }, [])
 
     // Cleanup al desmontar
-    useEffect(() => {
-        return () => {
+    useEffect(function cleanupRealtimeSubscription() {
+        return function unsubscribeFromScene() {
             if (channelRef.current) {
                 realtimeApi.unsubscribe(channelRef.current)
             }
@@ -463,7 +463,7 @@ export function useScenePersistence(): UseScenePersistenceReturn {
     }, [])
 
     // Auto-cargar escena cuando el usuario se autentica
-    useEffect(() => {
+    useEffect(function autoLoadSceneOnAuth() {
         if (state.userId && !state.currentScene && !state.isLoadingScene) {
             loadDefaultScene()
         }

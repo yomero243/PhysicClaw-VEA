@@ -17,7 +17,7 @@ function AppContent() {
     const setUserId = useSoulStore((s) => s.setUserId)
     useOpenClawControl()
 
-    useEffect(() => {
+    useEffect(function syncUserId() {
         setUserId(user?.id ?? 'guest-user')
     }, [user, setUserId])
 

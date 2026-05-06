@@ -1,4 +1,4 @@
-import { Suspense, useMemo, useEffect } from 'react'
+import { Suspense, useMemo, useEffect, memo } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import { OrbitControls, Environment, ContactShadows, Grid } from '@react-three/drei'
 import { DynamicCharacter } from './DynamicCharacter'
@@ -13,7 +13,7 @@ const CameraController = () => {
     const { currentScene } = useScenePersistence()
     const { camera } = useThree()
 
-    useEffect(() => {
+    useEffect(function syncCameraPosition() {
         if (currentScene?.camera_position) {
             const pos = currentScene.camera_position
             // Solo establecemos la posición si es la primera vez o si la escena cambia radicalmente
@@ -29,11 +29,11 @@ const CameraController = () => {
 /**
  * Renderiza los objetos guardados en la BD que sean primitivos (como cubos).
  */
-const SceneObjects = () => {
+const SceneObjects = memo(function SceneObjects() {
     const { sceneObjects } = useScenePersistence()
 
     // Helper para normalizar posición/rotación/escala (acepta array o objeto {x,y,z})
-    const toVec = (data: any): [number, number, number] => {
+    const toVec = (data: [number, number, number] | { x: number; y: number; z: number } | null | undefined): [number, number, number] => {
         if (Array.isArray(data) && data.length === 3) return data as [number, number, number]
         if (data && typeof data === 'object') {
             return [data.x ?? 0, data.y ?? 0, data.z ?? 0]
@@ -41,7 +41,7 @@ const SceneObjects = () => {
         return [0, 0, 0]
     }
 
-    useEffect(() => {
+    useEffect(function logSceneObjects() {
         if (sceneObjects.length > 0) {
             console.log('[SceneObjects] Objetos detectados en BD:', sceneObjects)
         }
@@ -54,9 +54,9 @@ const SceneObjects = () => {
                 const isCube = obj.metadata?.shape === 'cube' || (obj.metadata as any)?.is_primitive
                 
                 if (isCube && obj.is_visible !== false) {
-                    const pos = toVec(obj.position)
-                    const rot = toVec(obj.rotation)
-                    const scl = toVec(obj.scale_v || (obj as any).scale)
+                    const pos = toVec(obj.position as any)
+                    const rot = toVec(obj.rotation as any)
+                    const scl = toVec((obj.scale_v || (obj as any).scale) as any)
 
                     return (
                         <mesh 
@@ -78,7 +78,7 @@ const SceneObjects = () => {
             })}
         </>
     )
-}
+})
 
 const FloorGrid = () => {
     const gridConfig = useMemo(() => ({
