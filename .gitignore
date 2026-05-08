@@ -31,3 +31,8 @@ dist-ssr
 
 # OpenClaw control file
 openclaw-control.json
+
+# Agent & Review states
+AGENTS_STATE.md
+CLAUDE.md
+REVIEW.md
