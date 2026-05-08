@@ -33,9 +33,9 @@ const SceneObjects = memo(function SceneObjects() {
     const { sceneObjects } = useScenePersistence()
 
     // Helper para normalizar posición/rotación/escala (acepta array o objeto {x,y,z})
-    const toVec = (data: [number, number, number] | { x: number; y: number; z: number } | null | undefined): [number, number, number] => {
+    const toVec = (data: any): [number, number, number] => {
         if (!data) return [0, 0, 0]
-        if (Array.isArray(data)) return data.length === 3 ? data : [0, 0, 0]
+        if (Array.isArray(data)) return [data[0] ?? 0, data[1] ?? 0, data[2] ?? 0]
         return [data.x ?? 0, data.y ?? 0, data.z ?? 0]
     }
 

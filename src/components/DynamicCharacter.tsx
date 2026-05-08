@@ -6,11 +6,12 @@ import { useSoulStore } from '../store/soulStore'
 import { CHARACTERS, type CharacterConfig } from '../constants/characters'
 import { EnergyShaderMaterial } from '../shaders/EnergyShader'
 import '../shaders/EnergyShader'
+import type { CharacterOverride } from '../store/soulStore'
 
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-const EMPTY_OVERRIDE = {}
+const EMPTY_OVERRIDE: CharacterOverride = {}
 
 /**
  * Returns the effective THREE.Color for a character:
