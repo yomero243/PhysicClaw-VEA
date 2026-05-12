@@ -23,9 +23,6 @@ export function usePresence(sceneId: string | null): {
     const presenceRef = useRef<PresenceSystem | null>(null)
     if (!presenceRef.current) presenceRef.current = new PresenceSystem()
 
-    // Keep setter ref stable to avoid re-registering the callback.
-    const setPresentUsersRef = useRef(setPresentUsers)
-    setPresentUsersRef.current = setPresentUsers
 
     useEffect(() => {
         if (!sceneId || !userId) return
@@ -33,7 +30,7 @@ export function usePresence(sceneId: string | null): {
         const presence = presenceRef.current!
 
         presence.onPresenceChange((users) => {
-            setPresentUsersRef.current(users)
+            setPresentUsers(users)
             setIsConnected(true)
         })
 
@@ -42,7 +39,7 @@ export function usePresence(sceneId: string | null): {
         return () => {
             // Cleanup: leave channel and reset state.
             presence.leave()
-            setPresentUsersRef.current([])
+            setPresentUsers([])
             setIsConnected(false)
         }
         // avatarId excluded intentionally — rejoining on avatar change would

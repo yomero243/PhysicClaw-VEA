@@ -155,22 +155,21 @@ export function useScenePersistence(): UseScenePersistenceReturn {
 
         try {
             console.log('[useScenePersistence] Cargando escena para usuario:', userId)
-            // Intentar cargar la escena por defecto
-            let scene = await scenesApi.getDefault(userId)
-
-            if (!scene) {
-                console.log('[useScenePersistence] No se encontró escena, creando una por defecto...')
-                // Crear escena por defecto si no existe
-                scene = await scenesApi.create(makeDefaultScene(userId))
-            }
-
+            
+            const [sceneResult, avatarConfig] = await Promise.all([
+                scenesApi.getDefault(userId).then(async (sc) => {
+                    if (sc) return sc;
+                    console.log('[useScenePersistence] No se encontró escena, creando una por defecto...')
+                    return await scenesApi.create(makeDefaultScene(userId));
+                }),
+                avatarConfigsApi.getActive(userId)
+            ]);
+            
+            const scene = sceneResult;
             console.log('[useScenePersistence] Escena activa:', scene.id)
 
             // Cargar objetos de la escena
             const objects = await sceneObjectsApi.listForScene(scene.id)
-
-            // Cargar config de avatar activa
-            const avatarConfig = await avatarConfigsApi.getActive(userId)
 
             setState(s => ({
                 ...s,

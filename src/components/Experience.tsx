@@ -6,6 +6,16 @@ import { CAMERA } from '../lib/constraints'
 import { useScenePersistence } from '../hooks/useScenePersistence'
 
 /**
+ * Arrays estáticos para evitar recreación de memoria en cada render (Performance R3F)
+ */
+const GRID_POSITION: [number, number, number] = [0, -1.01, 0]
+const GRID_ARGS: [number, number] = [20, 20]
+const BG_ARGS: [string] = ['#0a0e14']
+const LIGHT_POS: [number, number, number] = [10, 10, 10]
+const CONTACT_SHADOWS_POS: [number, number, number] = [0, -1, 0]
+const BOX_ARGS: [number, number, number] = [1, 1, 1]
+
+/**
  * CameraController — Maneja la posición inicial de la cámara solo una vez.
  * Esto evita que la cámara "salte" o se resetee al moverla.
  */
@@ -63,7 +73,7 @@ const SceneObjects = memo(function SceneObjects() {
                             rotation={rot} 
                             scale={scl}
                         >
-                            <boxGeometry args={[1, 1, 1]} />
+                            <boxGeometry args={BOX_ARGS} />
                             <meshStandardMaterial 
                                 color={(obj.metadata?.color as string) || '#00d4ff'} 
                                 metalness={0.5}
@@ -93,8 +103,8 @@ const FloorGrid = () => {
 
     return (
         <Grid
-            position={[0, -1.01, 0]}
-            args={[20, 20]}
+            position={GRID_POSITION}
+            args={GRID_ARGS}
             {...gridConfig}
         />
     )
@@ -103,11 +113,11 @@ const FloorGrid = () => {
 export const Experience = () => {
     return (
         <Canvas camera={{ fov: CAMERA.FOV }}>
-            <color attach="background" args={['#0a0e14']} />
+            <color attach="background" args={BG_ARGS} />
             <CameraController />
 
             <ambientLight intensity={0.5} />
-            <pointLight position={[10, 10, 10]} intensity={1} />
+            <pointLight position={LIGHT_POS} intensity={1} />
 
             <Suspense fallback={null}>
                 <DynamicCharacter />
@@ -117,7 +127,7 @@ export const Experience = () => {
             <FloorGrid />
 
             <ContactShadows
-                position={[0, -1, 0]}
+                position={CONTACT_SHADOWS_POS}
                 resolution={1024}
                 scale={10}
                 blur={2.5}

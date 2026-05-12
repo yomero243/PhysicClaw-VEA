@@ -32,10 +32,6 @@ export function useMultiplayer(sceneId: string | null): {
     if (!presenceRef.current) presenceRef.current = new PresenceSystem()
     if (!clientRef.current) clientRef.current = new SessionClient()
 
-    // Register presence callback once, update closure via ref so it always
-    // sees the latest setter without re-registering.
-    const setRemoteUsersRef = useRef(setRemoteUsers)
-    setRemoteUsersRef.current = setRemoteUsers
 
     useEffect(() => {
         if (!sceneId || !userId) return
@@ -47,7 +43,7 @@ export function useMultiplayer(sceneId: string | null): {
         presence.onPresenceChange((users) => {
             // Exclude the local user from the remote list.
             const remote = users.filter((u) => u.user_id !== userId)
-            setRemoteUsersRef.current(remote)
+            setRemoteUsers(remote)
         })
 
         // Join presence channel and connect broadcast channel.
@@ -58,7 +54,7 @@ export function useMultiplayer(sceneId: string | null): {
         // positions in our local state.
         const handleAvatarMove = (event: PhysicsEvent) => {
             if (!event.userId || !event.position) return
-            setRemoteUsersRef.current((prev) =>
+            setRemoteUsers((prev) =>
                 prev.map((u) =>
                     u.user_id === event.userId
                         ? {
@@ -78,7 +74,7 @@ export function useMultiplayer(sceneId: string | null): {
             client.off('avatar_move', handleAvatarMove)
             presence.leave()
             client.disconnect()
-            setRemoteUsersRef.current([])
+            setRemoteUsers([])
         }
         // avatarId intentionally excluded — presence.join re-tracks position,
         // not avatar identity. A separate effect can call track() if needed.

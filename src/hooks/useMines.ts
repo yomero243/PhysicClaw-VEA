@@ -88,17 +88,21 @@ export function useMines({
 
   // ── 3. Detección de proximidad (R3F frame loop) ────────────────
   //    Solo activo si se pasa playerRef
-  const _tmpVec = useRef(new THREE.Vector3())
+  const _tmpVecPlayer = useRef(new THREE.Vector3())
+  const _tmpVecMine = useRef(new THREE.Vector3())
 
   useFrame(() => {
     if (!playerRef?.current || armedMines.length === 0) return
 
-    const playerPos = _tmpVec.current
+    const playerPos = _tmpVecPlayer.current
     playerRef.current.getWorldPosition(playerPos)
+
+    const minePos = _tmpVecMine.current
 
     for (const mine of armedMines) {
       const [mx, my, mz] = mine.position
-      const dist = playerPos.distanceTo(new THREE.Vector3(mx, my, mz))
+      minePos.set(mx, my, mz)
+      const dist = playerPos.distanceTo(minePos)
 
       if (dist < mine.radius) {
         // Optimistic trigger → explode

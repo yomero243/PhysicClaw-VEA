@@ -212,5 +212,4 @@ export const DynamicCharacter: React.FC = () => {
     )
 }
 
-useFBX.preload('/HappyIdle.fbx')
-useGLTF.preload('/HappyIdle.glb')
+
