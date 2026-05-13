@@ -118,7 +118,7 @@ export const sceneObjectsApi = {
     /** List all objects for a given scene, ordered by created_at. */
     async listForScene(sceneId: string): Promise<SceneObject[]> {
         const { data, error } = await supabase
-            .from('objects_3d')
+            .from('scene_objects')
             .select('*')
             .eq('scene_id', sceneId)
             .order('created_at', { ascending: true })
@@ -129,7 +129,7 @@ export const sceneObjectsApi = {
     /** Upsert a scene object (insert or update on conflict). Returns the saved record. */
     async upsert(obj: SceneObjectInsert): Promise<SceneObject> {
         const { data, error } = await supabase
-            .from('objects_3d')
+            .from('scene_objects')
             .upsert(obj, { onConflict: 'id' })
             .select()
             .single()
@@ -139,7 +139,7 @@ export const sceneObjectsApi = {
     /** Update specific fields of a scene object and return the updated record. */
     async update(id: string, updates: Record<string, unknown>): Promise<SceneObject> {
         const { data, error } = await supabase
-            .from('objects_3d')
+            .from('scene_objects')
             .update(updates)
             .eq('id', id)
             .select()
@@ -150,7 +150,7 @@ export const sceneObjectsApi = {
     /** Delete a scene object by ID. */
     async delete(id: string): Promise<void> {
         const { error } = await supabase
-            .from('objects_3d')
+            .from('scene_objects')
             .delete()
             .eq('id', id)
         if (error) throw new Error(`[Supabase/sceneObjectsApi.delete] ${error.message}`)
@@ -237,14 +237,17 @@ export const realtimeApi = {
         sceneId: string,
         callback: (payload: unknown) => void
     ): RealtimeChannel {
+        // Añadimos un sufijo único al nombre del canal para evitar colisiones 
+        // entre múltiples componentes que se suscriban a la misma escena.
+        const subscriptionId = Math.random().toString(36).slice(2, 6)
         const channel = supabase
-            .channel(`scene-objects:${sceneId}`)
+            .channel(`scene-objects:${sceneId}:${subscriptionId}`)
             .on(
                 'postgres_changes',
                 {
                     event: '*',
                     schema: 'public',
-                    table: 'objects_3d',
+                    table: 'scene_objects',
                     filter: `scene_id=eq.${sceneId}`,
                 },
                 callback

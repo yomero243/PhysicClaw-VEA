@@ -15,6 +15,7 @@ import {
     sessionsApi,
     messagesApi,
     avatarConfigsApi,
+    auth,
 } from '../lib/supabase'
 import { realtimeApi, supabase } from '../lib/supabase'
 import type {
@@ -135,12 +136,32 @@ export function useScenePersistence(): UseScenePersistenceReturn {
     // AUTH — Bypass real auth for Guest Mode
     // ============================================================
     useEffect(function bypassAuthForGuest() {
-        const GUEST_ID = '00000000-0000-0000-0000-000000000000'
-        setState(s => ({
-            ...s,
-            userId: GUEST_ID,
-            isAuthenticated: true,
-        }))
+        // En lugar de un ID hardcodeado que falla en las Foreign Keys,
+        // realizamos un login anónimo real en Supabase para obtener un UUID válido.
+        const initGuestAuth = async () => {
+            try {
+                const { user } = await auth.signInAnon()
+                if (user) {
+                    setState(s => ({
+                        ...s,
+                        userId: user.id,
+                        isAuthenticated: true,
+                    }))
+                    console.log('[useScenePersistence] Sesión anónima iniciada:', user.id)
+                }
+            } catch (err) {
+                console.error('[useScenePersistence] Error en login anónimo:', err)
+                // Fallback solo si falla el login
+                const GUEST_ID = '00000000-0000-0000-0000-000000000000'
+                setState(s => ({
+                    ...s,
+                    userId: GUEST_ID,
+                    isAuthenticated: true,
+                }))
+            }
+        }
+        
+        initGuestAuth()
     }, [])
 
     // ============================================================
