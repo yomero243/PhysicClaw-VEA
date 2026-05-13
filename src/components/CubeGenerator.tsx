@@ -3,10 +3,11 @@ import { useScenePersistence } from '../hooks/useScenePersistence'
 import type { ObjectType } from '../types/database'
 
 /**
- * CubeGenerator — Botón para crear un cubo y persistirlo en la BD.
+ * CubeGenerator — Botón para crear un cubo y persistirlo en la BD,
+ * y otro para borrar todos los cubos existentes.
  */
 export const CubeGenerator: React.FC = () => {
-  const { upsertObject, userId, currentScene } = useScenePersistence()
+  const { upsertObject, removeObject, sceneObjects, userId, currentScene } = useScenePersistence()
 
   const createCube = useCallback(async () => {
     if (!userId || !currentScene) {
@@ -46,29 +47,63 @@ export const CubeGenerator: React.FC = () => {
     
   }, [userId, currentScene, upsertObject])
 
+  const deleteCubes = useCallback(async () => {
+    const cubes = sceneObjects.filter(
+      (obj) => (obj.metadata as any)?.shape === 'cube' || (obj.metadata as any)?.is_primitive
+    )
+    console.log(`Borrando ${cubes.length} cubos...`)
+    for (const cube of cubes) {
+      await removeObject(cube.id)
+    }
+  }, [sceneObjects, removeObject])
+
+  const buttonStyle: React.CSSProperties = {
+    padding: '10px 15px',
+    background: 'rgba(0, 212, 255, 0.2)',
+    border: '1px solid #00d4ff',
+    borderRadius: '4px',
+    color: '#00d4ff',
+    fontFamily: '"Courier New", monospace',
+    fontSize: '12px',
+    cursor: 'pointer',
+    boxShadow: '0 0 10px rgba(0, 212, 255, 0.2)',
+    transition: 'all 0.2s',
+    width: '100%'
+  }
+
   return (
-    <button
-      onClick={createCube}
-      style={{
-        position: 'absolute',
-        top: 80,
-        right: 20,
-        zIndex: 100,
-        padding: '10px 15px',
-        background: 'rgba(0, 212, 255, 0.2)',
-        border: '1px solid #00d4ff',
-        borderRadius: '4px',
-        color: '#00d4ff',
-        fontFamily: '"Courier New", monospace',
-        fontSize: '12px',
-        cursor: 'pointer',
-        boxShadow: '0 0 10px rgba(0, 212, 255, 0.2)',
-        transition: 'all 0.2s'
-      }}
-      onMouseOver={(e) => e.currentTarget.style.background = 'rgba(0, 212, 255, 0.4)'}
-      onMouseOut={(e) => e.currentTarget.style.background = 'rgba(0, 212, 255, 0.2)'}
-    >
-      + CREAR CUBO (BD)
-    </button>
+    <div style={{
+      position: 'absolute',
+      top: 80,
+      right: 20,
+      zIndex: 100,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '10px'
+    }}>
+      <button
+        onClick={createCube}
+        style={buttonStyle}
+        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(0, 212, 255, 0.4)'}
+        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(0, 212, 255, 0.2)'}
+      >
+        + CREAR CUBO (BD)
+      </button>
+      
+      <button
+        onClick={deleteCubes}
+        style={{
+          ...buttonStyle,
+          background: 'rgba(255, 50, 50, 0.2)',
+          border: '1px solid #ff3232',
+          color: '#ff3232',
+          boxShadow: '0 0 10px rgba(255, 50, 50, 0.2)',
+        }}
+        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 50, 50, 0.4)'}
+        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255, 50, 50, 0.2)'}
+      >
+        - BORRAR CUBOS
+      </button>
+    </div>
   )
 }
