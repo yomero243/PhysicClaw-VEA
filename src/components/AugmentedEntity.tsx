@@ -81,7 +81,6 @@ const BaseEntity = memo(function BaseEntity() {
 
     return (
         <Sphere ref={mesh} args={[1, 64, 64]}>
-            {/* @ts-ignore */}
             <energyShaderMaterial
                 ref={materialRef}
                 attach="material"

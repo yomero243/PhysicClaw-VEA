@@ -4,6 +4,7 @@ export interface CharacterConfig {
     id: CharacterId
     name: string
     modelUrl: string
+    storagePath?: string
     type: 'fbx' | 'glb'
     scale: number
     position: [number, number, number]

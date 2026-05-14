@@ -50,6 +50,7 @@ export const MODEL_UPLOAD = {
     ACCEPTED_TYPES: ['.glb'] as const,
     MAX_BYTES: 50 * 1024 * 1024, // 50 MB
     RIG_TYPES: ['mixamo', 'rpm', 'vrm', 'standard'] as const,
+    SIGNED_URL_SECONDS: 60 * 60,
 } as const
 
 export type RigType = typeof MODEL_UPLOAD.RIG_TYPES[number]

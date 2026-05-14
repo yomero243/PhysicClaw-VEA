@@ -3,7 +3,7 @@
 // src/hooks/useMines.ts
 //
 // Conecta mineStore con:
-//   1. useScenePersistence  → carga inicial de sceneObjects
+//   1. useSceneStore        → carga inicial de sceneObjects
 //   2. Supabase realtime    → suscripción live a cambios de minas
 //   3. Detección de proximidad → triggerea minas cercanas al jugador
 // ============================================================
@@ -34,6 +34,7 @@ export function useMines({
     useMineStore()
   const armedMines = useMineStore(selectArmedMines)
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  const triggeringIdsRef = useRef<Set<string>>(new Set())
 
   // ── 1. Carga inicial desde sceneObjects ───────────────────────
   useEffect(() => {
@@ -105,11 +106,19 @@ export function useMines({
       const dist = playerPos.distanceTo(minePos)
 
       if (dist < mine.radius) {
+        if (triggeringIdsRef.current.has(mine.id)) continue
+        triggeringIdsRef.current.add(mine.id)
+
         // Optimistic trigger → explode
-        triggerMine(mine.id).then(() => {
-          explodeMine(mine.id)
-          onExplode?.(mine.id, mine.position)
-        })
+        triggerMine(mine.id)
+          .then(() => {
+            explodeMine(mine.id)
+            onExplode?.(mine.id, mine.position)
+          })
+          .catch((err) => {
+            console.error('[useMines] triggerMine error:', err)
+            triggeringIdsRef.current.delete(mine.id)
+          })
       }
     }
   })

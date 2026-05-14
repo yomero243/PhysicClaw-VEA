@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react'
-import { useScenePersistence } from '../hooks/useScenePersistence'
+import { useSceneStore } from '../store/sceneStore'
 import { supabase } from '../lib/supabase'
 import type { ObjectType } from '../types/database'
 
@@ -8,7 +8,7 @@ import type { ObjectType } from '../types/database'
  * y otro para borrar todos los cubos existentes.
  */
 export const CubeGenerator: React.FC = () => {
-  const { upsertObject, removeObject, sceneObjects, userId, currentScene } = useScenePersistence()
+  const { upsertObject, removeObject, sceneObjects, userId, currentScene } = useSceneStore()
 
   const createCube = useCallback(async () => {
     if (!userId || !currentScene) {

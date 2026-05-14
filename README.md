@@ -240,6 +240,18 @@ OPENCLAW_SECRET_TOKEN     = your-secret-token
 VERCEL_TOKEN              = your-vercel-token
 ```
 
+Use `.env.example` as the single local template. Staging and production values should be configured directly in Vercel, Supabase, and GitHub Secrets.
+
+Builds run `npm run verify-env` before bundling. Any variable with a secret-like name under `VITE_*` is blocked unless it is explicitly allowlisted, because `VITE_*` values are shipped to the browser.
+
+### Current Hardening Notes
+
+- Chat requests use `supabase/functions/chat` so `OPENCLAW_SECRET_TOKEN` stays server-side.
+- Multiplayer RLS is tightened by `supabase/migrations/006_security_hardening.sql`; users can only read/write physics events for scenes they own or have joined.
+- Uploaded GLB models are hardened by `supabase/migrations/007_private_model_storage.sql`; the `models` bucket is private and the client renders models through short-lived signed URLs.
+- The Vite `/api/control` endpoint is a development bridge. Production control should use an authenticated server or Edge Function endpoint.
+- CI runs install, TypeScript, ESLint, Vitest, environment verification, and production build on `main`, `develop`, and PRs.
+
 ### Team Roles
 
 | Role | Responsibilities |

@@ -71,6 +71,22 @@ Deno.serve(async (req: Request) => {
 
   const defaultModel = Deno.env.get("OPENCLAW_MODEL") ?? "claude-3-5-sonnet-20241022";
 
+  // --- Security: Allowed models allowlist ---
+  const ALLOWED_MODELS = [
+    "claude-3-5-sonnet-20241022",
+    "claude-3-5-sonnet-20240620",
+    "claude-3-haiku-20240307",
+    "claude-3-opus-20240229",
+    "gpt-4o",
+    "gpt-4o-mini",
+    "gpt-4-turbo",
+    "gpt-3.5-turbo",
+    "gemini-1.5-pro",
+    "gemini-1.5-flash",
+    "gemini-2.0-flash",
+    "google/gemini-2.5-flash",
+  ];
+
   // --- Parse and validate request body ---
   let body: ChatRequestBody;
   try {
@@ -84,9 +100,44 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: "messages array is required and must not be empty" }, 400);
   }
 
-  const model = typeof body.model === "string" && body.model.length > 0
-    ? body.model
-    : defaultModel;
+  if (messages.length > 50) {
+    return jsonResponse({ error: "messages array exceeds the limit of 50 items" }, 400);
+  }
+
+  const allowedRoles = new Set(["system", "user", "assistant"]);
+  const sanitizedMessages = [];
+  for (const message of messages) {
+    if (!message || typeof message !== "object") {
+      return jsonResponse({ error: "Each message must be an object" }, 400);
+    }
+
+    const role = typeof message.role === "string" ? message.role.trim() : "";
+    const content = typeof message.content === "string" ? message.content.trim() : "";
+
+    if (!allowedRoles.has(role)) {
+      return jsonResponse({ error: `Invalid message role: ${role || "empty"}` }, 400);
+    }
+
+    if (!content || content.length > 8000) {
+      return jsonResponse({ error: "Message content is required and must be 8000 characters or fewer" }, 400);
+    }
+
+    sanitizedMessages.push({ role, content });
+  }
+
+  const requestedModel =
+    typeof body.model === "string" && body.model.trim().length > 0
+      ? body.model.trim()
+      : defaultModel;
+  if (!ALLOWED_MODELS.includes(requestedModel)) {
+    console.warn(`Blocked request for unallowed model: ${requestedModel} from user ${user.id}`);
+    return jsonResponse({ 
+      error: "Model not allowed", 
+      allowed_models: ALLOWED_MODELS 
+    }, 400);
+  }
+
+  const model = requestedModel;
 
   // --- Forward to LLM API ---
   const llmUrl = `${openClawApiUrl}/v1/chat/completions`;
@@ -101,7 +152,7 @@ Deno.serve(async (req: Request) => {
       },
       body: JSON.stringify({
         model,
-        messages,
+        messages: sanitizedMessages,
         stream: false,
       }),
     });

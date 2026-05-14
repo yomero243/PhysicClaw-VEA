@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback, memo } from 'react'
+import { useSceneStore } from '../store/sceneStore'
 import { useSoulStore } from '../store/soulStore'
-import type { Mood } from '../lib/constraints'
-import { CHARACTERS } from '../constants/characters'
 import { openClawService } from '../services/openClawService'
+import { CHARACTERS } from '../constants/characters'
+import type { MessageRole, MoodType } from '../types/database'
 
 // Polyfill for SpeechRecognition
 const SpeechRecognition =
@@ -11,9 +12,9 @@ const SpeechRecognition =
 // ─── Types ────────────────────────────────────────────────────────
 interface ChatMsg {
   id: string
-  role: 'user' | 'assistant'
+  role: MessageRole
   text: string
-  timestamp: number
+  timestamp: string | number
 }
 
 // ─── Sub-components ───────────────────────────────────────────────
@@ -210,9 +211,11 @@ export const ChatInterface = () => {
   const setIntensity = useSoulStore(s => s.setIntensity)
   const activeCharacterId = useSoulStore(s => s.activeCharacterId)
   const setActiveCharacterId = useSoulStore(s => s.setActiveCharacterId)
-  const messages = useSoulStore(s => s.messages)
-  const addMessage = useSoulStore(s => s.addMessage)
   const userName = useSoulStore(s => s.userName)
+  
+  // Scene store for persistent messages
+  const messages = useSceneStore(s => s.messages)
+  const saveMessage = useSceneStore(s => s.saveMessage)
 
   // ── Helpers ─────────────────────────────────────────────────────
   const speakResponse = useCallback((text: string) => {
@@ -241,18 +244,24 @@ export const ChatInterface = () => {
   const handleSend = useCallback(async (text: string) => {
     if (!text.trim() || isThinking) return
     const trimmed = text.trim()
-    addMessage({ role: 'user', text: trimmed })
+    
+    // Optimistic UI + Persistence
+    await saveMessage(trimmed, 'user')
+    
     setLastMessage(trimmed)
     setMood('thinking')
     setIntensity(1.0)
     setInputText('')
 
     const result = await openClawService.sendMessage(trimmed)
-    addMessage({ role: 'assistant', text: result.text })
-    setMood((result.mood ?? 'calm') as Mood)
+    
+    // Persistent assistant response
+    await saveMessage(result.text, 'assistant', result.mood as MoodType, result.intensity)
+    
+    setMood((result.mood ?? 'calm') as MoodType)
     setIntensity(result.intensity ?? 0.5)
     speakResponse(result.text)
-  }, [addMessage, setLastMessage, setMood, setIntensity, isThinking, speakResponse])
+  }, [saveMessage, setLastMessage, setMood, setIntensity, isThinking, speakResponse])
 
   useEffect(function syncSendRef() { sendRef.current = handleSend }, [handleSend])
 
@@ -273,7 +282,13 @@ export const ChatInterface = () => {
     recog.onend = () => { setIsListening(false); setMood('calm'); setIntensity(0.5) }
     recog.onresult = (e: any) => sendRef.current(e.results[0][0].transcript)
     recognitionRef.current = recog
-    return function cleanupSpeechRecognition() { try { recog.abort() } catch (_) {} }
+    return function cleanupSpeechRecognition() {
+      try {
+        recog.abort()
+      } catch (_) {
+        return
+      }
+    }
   }, [setMood, setIntensity]) 
 
   // ── Render ──────────────────────────────────────────────────────
@@ -419,10 +434,10 @@ export const ChatInterface = () => {
                     <MessageBubble 
                       key={msg.id} 
                       msg={{ 
-                        id: msg.id ?? '', 
-                        role: msg.role as 'user' | 'assistant', 
-                        text: msg.text ?? (msg as any).content ?? '', 
-                        timestamp: msg.timestamp 
+                        id: msg.id, 
+                        role: msg.role, 
+                        text: msg.content, 
+                        timestamp: msg.created_at 
                       }} 
                       userName={userName} 
                     />

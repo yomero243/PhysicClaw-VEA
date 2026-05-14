@@ -17,6 +17,16 @@ function formatBytes(bytes: number): string {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
+function sanitizeStorageFileName(name: string): string {
+    const safeName = name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 96)
+    return safeName.toLowerCase().endsWith('.glb') ? safeName : `${safeName || 'model'}.glb`
+}
+
+function makeCustomCharacterId(): CharacterId {
+    const suffix = crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`
+    return `custom-${suffix}` as CharacterId
+}
+
 interface UploadedModel {
     file: File
     objectUrl: string
@@ -38,7 +48,14 @@ export const GLBUploadPanel = () => {
     const [success, setSuccess] = useState<string | null>(null)
     const fileRef = useRef<HTMLInputElement>(null)
 
-    const { addCustomCharacter, customCharacters, removeCustomCharacter, visibleObjects, toggleObjectVisibility } = useSoulStore()
+    const {
+        addCustomCharacter,
+        customCharacters,
+        removeCustomCharacter,
+        visibleObjects,
+        toggleObjectVisibility,
+        setCustomModelUrl,
+    } = useSoulStore()
     const userId = useSoulStore((s) => s.userId)
     const allObjects = [...CHARACTERS, ...customCharacters]
 
@@ -79,28 +96,37 @@ export const GLBUploadPanel = () => {
 
         try {
             let modelUrl = model.objectUrl
+            let storagePath: string | undefined
 
             // Upload to Supabase Storage if authenticated
             if (userId) {
-                const filePath = `${userId}/${Date.now()}_${model.file.name}`
+                const filePath = `${userId}/${crypto.randomUUID()}_${sanitizeStorageFileName(model.file.name)}`
                 const { error: uploadErr } = await supabase.storage
                     .from('models')
                     .upload(filePath, model.file, { contentType: 'model/gltf-binary' })
 
                 if (uploadErr) {
-                    // Fallback to local blob URL if storage upload fails
                     console.warn('[GLBUpload] Storage upload failed, using local blob:', uploadErr.message)
                 } else {
-                    const { data: urlData } = supabase.storage.from('models').getPublicUrl(filePath)
-                    modelUrl = urlData.publicUrl
+                    const { data: signedData, error: signedErr } = await supabase.storage
+                        .from('models')
+                        .createSignedUrl(filePath, MODEL_UPLOAD.SIGNED_URL_SECONDS)
+
+                    if (signedErr || !signedData?.signedUrl) {
+                        throw new Error(signedErr?.message ?? 'Could not create signed model URL')
+                    }
+
+                    modelUrl = signedData.signedUrl
+                    storagePath = filePath
                 }
             }
 
-            const id = `custom-${Date.now()}` as CharacterId
+            const id = makeCustomCharacterId()
             const config: CharacterConfig = {
                 id,
                 name: modelName || model.name,
                 modelUrl,
+                storagePath,
                 type: 'glb',
                 scale,
                 position: [0, posY, 0.5],
@@ -108,13 +134,17 @@ export const GLBUploadPanel = () => {
             }
 
             addCustomCharacter(config)
+            if (storagePath) {
+                setCustomModelUrl(id, modelUrl)
+                URL.revokeObjectURL(model.objectUrl)
+            }
 
             // Reset form
             setModel(null)
             setModelName('')
             setScale(1)
             setPosY(-1)
-            setSuccess('Model loaded!')
+            setSuccess(storagePath ? 'Model uploaded!' : 'Model loaded locally (not persisted)')
             setTimeout(() => setSuccess(null), 2500)
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Upload failed')

@@ -173,7 +173,6 @@ export default defineConfig({
             include: ['src/**/*.ts', 'src/**/*.tsx'],
             exclude: [/node_modules/],
             apply: 'build', // Only obfuscate on production build
-            debugger: true,
             options: {
                 compact: true,
                 controlFlowFlattening: true,
@@ -186,6 +185,34 @@ export default defineConfig({
             }
         })
     ],
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (!id.includes('node_modules')) return undefined
+                    if (
+                        id.includes('/three/') ||
+                        id.includes('\\three\\') ||
+                        id.includes('@react-three') ||
+                        id.includes('three-stdlib')
+                    ) {
+                        return 'vendor-3d'
+                    }
+                    if (id.includes('@supabase')) return 'vendor-supabase'
+                    if (
+                        id.includes('/react/') ||
+                        id.includes('\\react\\') ||
+                        id.includes('react-dom') ||
+                        id.includes('zustand')
+                    ) {
+                        return 'vendor-react'
+                    }
+                    return undefined
+                },
+            },
+        },
+        chunkSizeWarningLimit: 1200,
+    },
     server: {
         host: '127.0.0.1',
         port: VITE_PORT,

@@ -4,9 +4,19 @@
 // ============================================================
 
 export type ModelType = 'fbx' | 'glb'
-export type MoodType = 'calm' | 'excited' | 'thinking' | 'listening' | 'sad' | 'happy'
+export type MoodType =
+    | 'calm'
+    | 'excited'
+    | 'thinking'
+    | 'listening'
+    | 'sad'
+    | 'happy'
+    | 'angry'
+    | 'surprised'
+    | 'curious'
+    | 'love'
 export type ObjectType = 'character' | 'prop' | 'light' | 'camera'
-export type MessageRole = 'user' | 'agent' | 'system'
+export type MessageRole = 'user' | 'assistant' | 'agent' | 'system'
 export type QualityPreset = 'low' | 'medium' | 'high' | 'ultra'
 
 // ---- characters ----
@@ -105,7 +115,7 @@ export type SessionInsert = Omit<Session, 'id' | 'started_at'>
 // ---- messages ----
 export interface Message {
     id: string
-    session_id: string
+    session_id: string | null
     user_id: string
     agent_id: string | null
     role: MessageRole

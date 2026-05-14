@@ -2,7 +2,7 @@
 // PhysicClaw-VEA — AvatarPanel (Cyber Redesign)
 // ============================================================
 import React, { useState, useEffect, memo } from 'react'
-import { useScenePersistence } from '../hooks/useScenePersistence'
+import { useSceneStore } from '../store/sceneStore'
 import { CHARACTERS } from '../constants/characters'
 import { useSoulStore } from '../store/soulStore'
 
@@ -151,7 +151,7 @@ export const AvatarPanel = () => {
   const {
     currentScene, avatarConfig, isLoadingScene, error,
     saveSceneSettings, saveAvatarConfig, clearError,
-  } = useScenePersistence()
+  } = useSceneStore()
 
   // Selectores granulares para evitar re-renders de todo el panel
   const activeCharacterId = useSoulStore(s => s.activeCharacterId)

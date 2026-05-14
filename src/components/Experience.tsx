@@ -3,7 +3,7 @@ import { Canvas, useThree } from '@react-three/fiber'
 import { OrbitControls, Environment, ContactShadows, Grid } from '@react-three/drei'
 import { DynamicCharacter } from './DynamicCharacter'
 import { CAMERA } from '../lib/constraints'
-import { useScenePersistence } from '../hooks/useScenePersistence'
+import { useSceneStore } from '../store/sceneStore'
 
 /**
  * Arrays estáticos para evitar recreación de memoria en cada render (Performance R3F)
@@ -20,7 +20,7 @@ const BOX_ARGS: [number, number, number] = [1, 1, 1]
  * Esto evita que la cámara "salte" o se resetee al moverla.
  */
 const CameraController = () => {
-    const { currentScene } = useScenePersistence()
+    const currentScene = useSceneStore(s => s.currentScene)
     const { camera } = useThree()
 
     useEffect(function syncCameraPosition() {
@@ -40,7 +40,7 @@ const CameraController = () => {
  * Renderiza los objetos guardados en la BD que sean primitivos (como cubos).
  */
 const SceneObjects = memo(function SceneObjects() {
-    const { sceneObjects } = useScenePersistence()
+    const sceneObjects = useSceneStore(s => s.sceneObjects)
 
     // Helper para normalizar posición/rotación/escala (acepta array o objeto {x,y,z})
     const toVec = (data: any): [number, number, number] => {

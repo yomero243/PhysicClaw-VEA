@@ -42,22 +42,22 @@ export const supabase = createClient(
 export const auth = {
     /** Returns the currently logged-in user (null if none). */
     async getUser() {
-        try {
-            const { data } = await supabase.auth.getUser()
-            return data
-        } catch {
-            return { user: { id: 'guest-user' } as any }
+        const { data, error } = await supabase.auth.getUser()
+        if (error) {
+            console.error('[Supabase/auth.getUser] Error:', error.message)
+            return { user: null }
         }
+        return data
     },
 
     /** Sign in anonymously (Supabase anonymous auth). */
     async signInAnon() {
-        try {
-            const { data } = await supabase.auth.signInAnonymously()
-            return data
-        } catch {
-            return { user: { id: 'guest-user' } as any, session: {} as any }
+        const { data, error } = await supabase.auth.signInAnonymously()
+        if (error) {
+            console.error('[Supabase/auth.signInAnon] Error:', error.message)
+            throw error
         }
+        return data
     },
 }
 

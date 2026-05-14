@@ -5,21 +5,27 @@ import { CubeGenerator } from './components/CubeGenerator'
 import { AvatarPanel } from './components/AvatarPanel'
 import { GLBUploadPanel } from './components/GLBUploadPanel'
 import { MoodDemo } from './components/MoodDemo'
-import { AuthProvider, useAuth } from './auth'
+import { AuthProvider } from './auth'
 import { useOpenClawControl } from './hooks/useOpenClawControl'
 import { useSoulStore } from './store/soulStore'
+import { useSceneStore } from './store/sceneStore'
 
 // Public demo — accessible at /?demo without authentication
 const isDemoMode = new URLSearchParams(window.location.search).has('demo')
 
 function AppContent() {
-    const { user } = useAuth()
     const setUserId = useSoulStore((s) => s.setUserId)
+    const initialize = useSceneStore((s) => s.initialize)
+    const userId = useSceneStore((s) => s.userId)
     useOpenClawControl()
 
+    useEffect(function initStore() {
+        initialize()
+    }, [initialize])
+
     useEffect(function syncUserId() {
-        setUserId(user?.id ?? 'guest-user')
-    }, [user, setUserId])
+        if (userId) setUserId(userId)
+    }, [userId, setUserId])
 
     return (
         <div style={{

@@ -5,6 +5,7 @@
 // ============================================================
 import { useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { MODEL_UPLOAD } from '../lib/constraints'
 
 export interface UseGLBUploadReturn {
     uploadGLB: (file: File, userId: string) => Promise<string>
@@ -31,7 +32,8 @@ export function useGLBUpload(): UseGLBUploadReturn {
         setProgress(0)
 
         try {
-            const filePath = `${userId}/${Date.now()}_${file.name}`
+            const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 96)
+            const filePath = `${userId}/${crypto.randomUUID()}_${safeName || 'model.glb'}`
 
             // Supabase Storage JS SDK v2 does not expose upload-progress callbacks;
             // we simulate 50% before the request and 100% on completion.
@@ -50,16 +52,20 @@ export function useGLBUpload(): UseGLBUploadReturn {
 
             setProgress(90)
 
-            const { data: urlData } = supabase.storage
+            const { data: urlData, error: signedUrlErr } = await supabase.storage
                 .from('models')
-                .getPublicUrl(filePath)
+                .createSignedUrl(filePath, MODEL_UPLOAD.SIGNED_URL_SECONDS)
+
+            if (signedUrlErr || !urlData?.signedUrl) {
+                throw new Error(signedUrlErr?.message ?? 'Could not create signed model URL')
+            }
 
             setProgress(100)
-            return urlData.publicUrl
+            return urlData.signedUrl
         } catch (err) {
             const msg = err instanceof Error ? err.message : 'Upload failed'
             setError(msg)
-            throw new Error(msg)
+            throw Object.assign(new Error(msg), { cause: err })
         } finally {
             setIsUploading(false)
         }

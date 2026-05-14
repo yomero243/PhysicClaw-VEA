@@ -56,7 +56,6 @@ function DemoSphere({ moodIndex }: DemoSphereProps) {
         <group>
             {/* Outer halo — back-face so it glows around the main sphere */}
             <Sphere args={[1.6, 64, 64]}>
-                {/* @ts-ignore */}
                 <demoShaderMaterial
                     ref={haloRef}
                     attach="material"
@@ -71,7 +70,6 @@ function DemoSphere({ moodIndex }: DemoSphereProps) {
 
             {/* Main energy sphere */}
             <Sphere args={[1, 128, 128]}>
-                {/* @ts-ignore */}
                 <demoShaderMaterial
                     ref={mainRef}
                     attach="material"

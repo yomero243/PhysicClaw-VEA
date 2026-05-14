@@ -25,6 +25,31 @@ export interface ChatMessage {
     timestamp: number
 }
 
+const BUILT_IN_CHARACTER_IDS = new Set([
+    'happy-idle',
+    'base-sphere',
+    'cyber-sentinel',
+    'logic-guardian',
+])
+
+function isTransientModelUrl(url: string): boolean {
+    return url.startsWith('blob:') || url.startsWith('data:') || url.includes('/storage/v1/object/sign/')
+}
+
+function filterRecord<T>(record: Record<string, T>, allowedIds: Set<string>): Record<string, T> {
+    return Object.fromEntries(
+        Object.entries(record).filter(([id]) => allowedIds.has(id)),
+    )
+}
+
+function toPersistableCustomCharacter(config: CharacterConfig): CharacterConfig | null {
+    if (config.storagePath) {
+        return { ...config, modelUrl: '' }
+    }
+    if (!config.modelUrl || isTransientModelUrl(config.modelUrl)) return null
+    return config
+}
+
 // Mood → color mapping for automatic avatar color changes
 export const MOOD_COLORS: Record<string, string> = {
     calm: '#00ffff',
@@ -136,7 +161,7 @@ export const useSoulStore = create<SoulState>()(
             removeCustomCharacter: (id) =>
                 set((state) => {
                     const char = state.customCharacters.find((c) => c.id === id)
-                    if (char?.modelUrl) URL.revokeObjectURL(char.modelUrl)
+                    if (char?.modelUrl?.startsWith('blob:')) URL.revokeObjectURL(char.modelUrl)
                     const { [id]: _, ...remainingOverrides } = state.characterOverrides
                     const { [id]: __, ...remainingVisibility } = state.visibleObjects
                     return {
@@ -230,13 +255,23 @@ export const useSoulStore = create<SoulState>()(
         {
             name: 'physicclaw-storage',
             // session-only fields excluded — only persist api config + customizations
-            partialize: (state) => ({
-                apiBaseUrl: state.apiBaseUrl,
-                apiModel: state.apiModel,
-                customCharacters: state.customCharacters,
-                characterOverrides: state.characterOverrides,
-                visibleObjects: state.visibleObjects,
-            }),
+            partialize: (state) => {
+                const customCharacters = state.customCharacters
+                    .map(toPersistableCustomCharacter)
+                    .filter((config): config is CharacterConfig => config !== null)
+                const allowedIds = new Set([
+                    ...BUILT_IN_CHARACTER_IDS,
+                    ...customCharacters.map((config) => config.id),
+                ])
+
+                return {
+                    apiBaseUrl: state.apiBaseUrl,
+                    apiModel: state.apiModel,
+                    customCharacters,
+                    characterOverrides: filterRecord(state.characterOverrides, allowedIds),
+                    visibleObjects: filterRecord(state.visibleObjects, allowedIds),
+                }
+            },
         }
     )
 )

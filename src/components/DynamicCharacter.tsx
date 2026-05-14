@@ -7,6 +7,8 @@ import { CHARACTERS, type CharacterConfig } from '../constants/characters'
 import { EnergyShaderMaterial } from '../shaders/EnergyShader'
 import '../shaders/EnergyShader'
 import type { CharacterOverride } from '../store/soulStore'
+import { supabase } from '../lib/supabase'
+import { MODEL_UPLOAD } from '../lib/constraints'
 
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -21,7 +23,6 @@ function useShaderColor(characterId: string): THREE.Color {
     const overrides = useSoulStore((s) => s.characterOverrides[characterId])
     return useMemo(
         () => new THREE.Color(overrides?.shaderColor ?? '#00ffff'),
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         [overrides?.shaderColor],
     )
 }
@@ -166,7 +167,6 @@ const BaseEntity = ({ characterId }: { characterId: string }) => {
 
     return (
         <Sphere args={[1, 64, 64]} scale={scale}>
-            {/* @ts-ignore */}
             <energyShaderMaterial
                 ref={materialRef}
                 attach="material"
@@ -196,12 +196,42 @@ const CharacterRenderer: React.FC<{ config: CharacterConfig }> = ({ config }) =>
 
 export const DynamicCharacter: React.FC = () => {
     const customCharacters = useSoulStore(s => s.customCharacters)
+    const customModelUrls = useSoulStore(s => s.customModelUrls)
+    const setCustomModelUrl = useSoulStore(s => s.setCustomModelUrl)
     const visibleObjects = useSoulStore(s => s.visibleObjects)
 
+    useEffect(function refreshSignedModelUrls() {
+        let cancelled = false
+
+        async function refresh() {
+            await Promise.all(customCharacters.map(async (config) => {
+                if (!config.storagePath || customModelUrls[config.id]) return
+
+                const { data, error } = await supabase.storage
+                    .from('models')
+                    .createSignedUrl(config.storagePath, MODEL_UPLOAD.SIGNED_URL_SECONDS)
+
+                if (!cancelled && !error && data?.signedUrl) {
+                    setCustomModelUrl(config.id, data.signedUrl)
+                }
+            }))
+        }
+
+        refresh()
+
+        return function cancelSignedUrlRefresh() {
+            cancelled = true
+        }
+    }, [customCharacters, customModelUrls, setCustomModelUrl])
+
     const visibleChars = useMemo(() => {
-        const allChars = [...CHARACTERS, ...customCharacters]
+        const customChars = customCharacters.map((config) => ({
+            ...config,
+            modelUrl: customModelUrls[config.id] ?? config.modelUrl,
+        }))
+        const allChars = [...CHARACTERS, ...customChars]
         return allChars.filter((c) => visibleObjects[c.id])
-    }, [customCharacters, visibleObjects])
+    }, [customCharacters, customModelUrls, visibleObjects])
 
     return (
         <>
