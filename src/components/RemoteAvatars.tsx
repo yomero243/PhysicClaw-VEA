@@ -113,18 +113,29 @@ function PlaceholderAvatar() {
 function RemoteAvatar({ user }: RemoteAvatarProps) {
     const groupRef = useRef<THREE.Group>(null)
 
-    // Target position stored in a ref — state updates inside useFrame are forbidden.
+    // Store initial position and rotation to prevent React re-renders from resetting current values
+    const initialPosition = useRef<[number, number, number]>(user.position)
+    const initialRotation = useRef<[number, number, number]>(user.rotation)
+
+    // Target position and rotation stored in refs — state updates inside useFrame are forbidden.
     const targetPositionRef = useRef<THREE.Vector3>(
         new THREE.Vector3(...user.position)
     )
+    const targetRotationYRef = useRef<number>(user.rotation?.[1] ?? 0)
 
     // Keep target up-to-date when the user prop changes (React re-render path).
     targetPositionRef.current.set(...user.position)
+    targetRotationYRef.current = user.rotation?.[1] ?? 0
 
-    // Interpolate position each frame without touching React state.
+    // Interpolate position and Y rotation each frame without touching React state.
     useFrame((_state, delta) => {
         if (!groupRef.current) return
         groupRef.current.position.lerp(targetPositionRef.current, 1 - Math.exp(-10 * delta))
+        groupRef.current.rotation.y = THREE.MathUtils.lerp(
+            groupRef.current.rotation.y,
+            targetRotationYRef.current,
+            1 - Math.exp(-10 * delta)
+        )
     })
 
     // Choose avatar mesh based on avatarId.
@@ -143,7 +154,11 @@ function RemoteAvatar({ user }: RemoteAvatarProps) {
     const labelText = user.user_id.slice(0, 6)
 
     return (
-        <group ref={groupRef} position={user.position}>
+        <group 
+            ref={groupRef} 
+            position={initialPosition.current} 
+            rotation={[0, initialRotation.current[1], 0]}
+        >
             {renderAvatar()}
             {/* Floating label above the avatar — uses @react-three/drei Text */}
             <Text

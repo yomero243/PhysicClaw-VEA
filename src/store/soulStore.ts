@@ -19,8 +19,7 @@ export interface CharacterOverride {
 export interface ChatMessage {
     id?: string
     role: 'user' | 'assistant'
-    content?: string    // used by openClawService / chatMessages
-    text?: string       // used by ChatInterface / messages
+    content: string
     mood?: string
     timestamp: number
 }
@@ -114,17 +113,15 @@ export interface SoulState {
     userName: string | null
     setUserName: (name: string | null) => void
 
-    // Session chat history (used by ChatInterface)
-    messages: ChatMessage[]
-    addMessage: (msg: Omit<ChatMessage, 'id' | 'timestamp'>) => void
-    clearMessages: () => void
-
-
     // API Connection Settings
     apiBaseUrl: string
     apiModel: string
     apiToken: string
     setApiConfig: (config: Partial<{ apiBaseUrl: string; apiModel: string; apiToken: string }>) => void
+
+    // Performance Settings
+    lowPerformanceMode: boolean
+    setLowPerformanceMode: (enabled: boolean) => void
 }
 
 // ----------------------------------------------------------------
@@ -231,26 +228,15 @@ export const useSoulStore = create<SoulState>()(
             userName: null,
             setUserName: (name) => set({ userName: name }),
 
-            // Session chat history (ChatInterface local display)
-            messages: [],
-            addMessage: (msg) =>
-                set((state) => ({
-                    messages: [
-                        ...state.messages,
-                        {
-                            ...msg,
-                            id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-                            timestamp: Date.now(),
-                        },
-                    ],
-                })),
-            clearMessages: () => set({ messages: [] }),
-
             // API settings
             apiBaseUrl: import.meta.env.VITE_OPENCLAW_API_URL || '',
             apiModel: import.meta.env.VITE_OPENCLAW_MODEL || 'claude-3-5-sonnet-20241022',
             apiToken: '',
             setApiConfig: (config) => set((state) => ({ ...state, ...config })),
+
+            // Performance Settings
+            lowPerformanceMode: typeof window !== 'undefined' && (/Mobi|Android|iPhone/i.test(navigator.userAgent) || window.innerWidth < 768),
+            setLowPerformanceMode: (enabled) => set({ lowPerformanceMode: enabled }),
         }),
         {
             name: 'physicclaw-storage',
@@ -270,6 +256,7 @@ export const useSoulStore = create<SoulState>()(
                     customCharacters,
                     characterOverrides: filterRecord(state.characterOverrides, allowedIds),
                     visibleObjects: filterRecord(state.visibleObjects, allowedIds),
+                    lowPerformanceMode: state.lowPerformanceMode,
                 }
             },
         }

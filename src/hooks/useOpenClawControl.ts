@@ -1,42 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { useSoulStore } from '../store/soulStore'
-import type { Mood } from '../lib/constraints'
-
-const VALID_MOODS = ['calm', 'excited', 'thinking', 'listening'] as const
-
-interface ControlCommand {
-    command: string
-    value: unknown
-    id?: string
-}
-
-function applyCommand(cmd: ControlCommand) {
-    const store = useSoulStore.getState()
-    switch (cmd.command) {
-        case 'setMood':
-            if (typeof cmd.value === 'string' && (VALID_MOODS as readonly string[]).includes(cmd.value))
-                store.setMood(cmd.value as Mood)
-            break
-        case 'setIsThinking':
-            if (typeof cmd.value === 'boolean')
-                store.setIsThinking(cmd.value)
-            break
-        case 'setIntensity':
-            if (typeof cmd.value === 'number' && cmd.value >= 0 && cmd.value <= 2)
-                store.setIntensity(cmd.value)
-            break
-        case 'setLastMessage':
-            if (typeof cmd.value === 'string' && cmd.value.length <= 500)
-                store.setLastMessage(cmd.value)
-            break
-        case 'setActiveCharacterId':
-            if (typeof cmd.value === 'string' && cmd.value.length > 0 && cmd.value.length <= 64)
-                store.setActiveCharacterId(cmd.value)
-            break
-        default:
-            console.warn('[OpenClawControl] Unknown command:', cmd.command)
-    }
-}
+import { applyCommand, parseControlCommand } from '../lib/clawControl'
 
 /**
  * useOpenClawControl
@@ -59,7 +22,10 @@ export function useOpenClawControl() {
     useEffect(() => {
         // ── Dev mode: Vite HMR custom events ──────────────────────────────────
         if (import.meta.hot) {
-            const handler = (data: ControlCommand) => applyCommand(data)
+            const handler = (data: unknown) => {
+                const cmd = parseControlCommand(data)
+                if (cmd) applyCommand(cmd)
+            }
             import.meta.hot.on('openclaw-command', handler)
             return () => {
                 import.meta.hot?.off('openclaw-command', handler)
@@ -74,8 +40,9 @@ export function useOpenClawControl() {
                 const res = await fetch('/openclaw-control.json', { cache: 'no-store' })
                 if (!res.ok) return
 
-                const cmd = await res.json() as ControlCommand
-                if (!cmd.command) return // empty / no-op payload
+                const raw = await res.json()
+                const cmd = parseControlCommand(raw)
+                if (!cmd) return // empty, no-op, or invalid payload
 
                 // Dedup: skip if already processed
                 const cmdId = cmd.id ?? JSON.stringify(cmd)

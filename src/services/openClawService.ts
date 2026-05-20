@@ -38,7 +38,69 @@ Respond in the same language the user writes in.`;
 
 // Conversation history for context (capped to prevent unbounded growth)
 const MAX_HISTORY_MESSAGES = 40;
+const HISTORY_STORAGE_VERSION = 'v1';
+const HISTORY_STORAGE_PREFIX = `openclaw-history:${HISTORY_STORAGE_VERSION}`;
 const conversationHistory: Array<{ role: string; content: string }> = [];
+let hydratedHistoryUserId: string | null = null;
+
+function getHistoryStorageKey(userId: string | null | undefined): string {
+    return `${HISTORY_STORAGE_PREFIX}:${userId ?? 'anonymous'}`;
+}
+
+function canUseLocalStorage(): boolean {
+    return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
+}
+
+function readStoredHistory(userId: string | null | undefined): Array<{ role: string; content: string }> {
+    if (!canUseLocalStorage()) return [];
+
+    try {
+        const raw = window.localStorage.getItem(getHistoryStorageKey(userId));
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+
+        return parsed
+            .filter((item): item is { role: string; content: string } =>
+                item &&
+                typeof item.role === 'string' &&
+                typeof item.content === 'string'
+            )
+            .slice(-MAX_HISTORY_MESSAGES);
+    } catch {
+        return [];
+    }
+}
+
+function persistHistory(userId: string | null | undefined): void {
+    if (!canUseLocalStorage()) return;
+
+    try {
+        window.localStorage.setItem(
+            getHistoryStorageKey(userId),
+            JSON.stringify(conversationHistory.slice(-MAX_HISTORY_MESSAGES)),
+        );
+    } catch {
+        // Browser storage can fail in private mode or quota pressure.
+    }
+}
+
+function hydrateHistory(userId: string | null | undefined): void {
+    const keyUserId = userId ?? 'anonymous';
+    if (hydratedHistoryUserId === keyUserId) return;
+
+    conversationHistory.length = 0;
+    conversationHistory.push(...readStoredHistory(userId));
+    hydratedHistoryUserId = keyUserId;
+}
+
+function appendHistory(userId: string | null | undefined, message: { role: string; content: string }): void {
+    conversationHistory.push(message);
+    while (conversationHistory.length > MAX_HISTORY_MESSAGES) {
+        conversationHistory.shift();
+    }
+    persistHistory(userId);
+}
 
 /**
  * Parse Claude's response to extract structured mood data.
@@ -69,6 +131,8 @@ function parseResponse(raw: string): OpenClawResponse {
 export const openClawService = {
     async sendMessage(text: string): Promise<OpenClawResponse> {
         const store = useSoulStore.getState();
+        const userId = store.userId ?? null;
+        hydrateHistory(userId);
 
         store.setIsThinking(true);
         store.setMood('thinking');
@@ -81,7 +145,7 @@ export const openClawService = {
             timestamp: Date.now(),
         });
 
-        conversationHistory.push({ role: 'user', content: text });
+        appendHistory(userId, { role: 'user', content: text });
 
         try {
             const requestBody = {
@@ -136,12 +200,7 @@ export const openClawService = {
             const parsed = parseResponse(rawReply);
 
             // Store the raw text for conversation history
-            conversationHistory.push({ role: 'assistant', content: rawReply });
-
-            // Trim history to prevent unbounded growth
-            while (conversationHistory.length > MAX_HISTORY_MESSAGES) {
-                conversationHistory.shift();
-            }
+            appendHistory(userId, { role: 'assistant', content: rawReply });
 
             // Add assistant message to store and apply mood/intensity to avatar
             store.addChatMessage({
@@ -157,6 +216,7 @@ export const openClawService = {
         } catch (err) {
             // Remove the failed user message so the model context stays consistent
             conversationHistory.pop();
+            persistHistory(userId);
             console.error('[OpenClawService] sendMessage failed:', err);
             const errorResponse: OpenClawResponse = {
                 text: 'Lo siento, hubo un error al conectar con OpenClaw.',
@@ -183,7 +243,12 @@ export const openClawService = {
      * different user sessions within the same browser tab.
      */
     clearHistory() {
+        const userId = useSoulStore.getState().userId ?? null;
         conversationHistory.length = 0;
+        hydratedHistoryUserId = userId ?? 'anonymous';
+        if (canUseLocalStorage()) {
+            window.localStorage.removeItem(getHistoryStorageKey(userId));
+        }
         useSoulStore.getState().clearChatMessages();
     },
 
@@ -192,6 +257,7 @@ export const openClawService = {
      * Useful for debugging or displaying the full chat log.
      */
     getHistory(): ReadonlyArray<{ role: string; content: string }> {
+        hydrateHistory(useSoulStore.getState().userId ?? null);
         return [...conversationHistory];
     },
 };

@@ -10,7 +10,6 @@ import type { CharacterOverride } from '../store/soulStore'
 import { supabase } from '../lib/supabase'
 import { MODEL_UPLOAD } from '../lib/constraints'
 
-
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const EMPTY_OVERRIDE: CharacterOverride = {}
@@ -34,6 +33,10 @@ const FBXModel = ({ url, config }: { url: string; config: any }) => {
     const group = useRef<THREE.Group>(null)
     const { actions } = useAnimations(fbx.animations, group)
     const mood = useSoulStore(s => s.mood)
+    const lowPerformanceMode = useSoulStore(s => s.lowPerformanceMode)
+
+    // Clone the FBX model to prevent polluting the cached asset
+    const clonedFbx = useMemo(() => fbx.clone(true), [fbx])
 
     useEffect(() => {
         const actionNames = Object.keys(actions)
@@ -49,6 +52,16 @@ const FBXModel = ({ url, config }: { url: string; config: any }) => {
         }
     }, [actions, mood, config])
 
+    // Apply castShadow and receiveShadow dynamically based on performance mode
+    useEffect(() => {
+        clonedFbx.traverse((child: any) => {
+            if (child.isMesh) {
+                child.castShadow = !lowPerformanceMode
+                child.receiveShadow = !lowPerformanceMode
+            }
+        })
+    }, [clonedFbx, lowPerformanceMode])
+
     // Apply per-character override for scale / position
     const overrides = useSoulStore(s => s.characterOverrides[config.id]) || EMPTY_OVERRIDE
     const effectiveScale = overrides.scale ?? config.scale
@@ -56,7 +69,7 @@ const FBXModel = ({ url, config }: { url: string; config: any }) => {
 
     return (
         <primitive
-            object={fbx}
+            object={clonedFbx}
             ref={group}
             scale={effectiveScale}
             position={[config.position[0], effectivePositionY, config.position[2]]}
@@ -73,7 +86,11 @@ const GLBModel = ({ url, config }: { url: string; config: any }) => {
     const mood = useSoulStore(s => s.mood)
     const intensity = useSoulStore(s => s.intensity)
     const isThinking = useSoulStore(s => s.isThinking)
+    const lowPerformanceMode = useSoulStore(s => s.lowPerformanceMode)
     const overrides = useSoulStore(s => s.characterOverrides[config.id]) || EMPTY_OVERRIDE
+
+    // Clone the scene to avoid modifying the cached shared gltf scene
+    const clonedScene = useMemo(() => scene.clone(true), [scene])
 
     useEffect(() => {
         const actionNames = Object.keys(actions)
@@ -90,13 +107,32 @@ const GLBModel = ({ url, config }: { url: string; config: any }) => {
     }, [actions, mood, config])
 
     const shaderColor = useShaderColor(config.id)
-    // Reconstruct material when shader color changes
+    
+    // Store the material ref for GPU cleanup
+    const materialRef = useRef<any>(null)
+
+    // Reconstruct material when shader color changes and dispose the old one
     const material = useMemo(() => {
         const mat = new EnergyShaderMaterial()
         mat.uniforms.uColor.value = shaderColor
+        
+        if (materialRef.current) {
+            materialRef.current.dispose()
+        }
+        materialRef.current = mat
+        
         return mat
     }, [shaderColor])
 
+    // Cleanup material on unmount
+    useEffect(() => {
+        return () => {
+            if (materialRef.current) {
+                materialRef.current.dispose()
+                materialRef.current = null
+            }
+        }
+    }, [])
 
     useFrame((_, delta) => {
         if (material) {
@@ -106,24 +142,44 @@ const GLBModel = ({ url, config }: { url: string; config: any }) => {
             if (isThinking) target += 0.8
             if (mood === 'excited') target += 0.5
             material.uIntensity = THREE.MathUtils.lerp(material.uIntensity, target, 0.1)
-
         }
     })
 
+    // Apply material shader to the cloned scene (or restore originals)
     useEffect(() => {
-        // Only apply EnergyShader when explicitly opted in (default: keep original materials)
         if (!overrides.useEnergyShader) return
-        scene.traverse((child: any) => {
-            if (child.isMesh) child.material = material
+
+        const originalMaterials = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>()
+        clonedScene.traverse((child: any) => {
+            if (child.isMesh) {
+                originalMaterials.set(child, child.material)
+                child.material = material
+            }
         })
-    }, [scene, material, overrides.useEnergyShader])
+
+        return () => {
+            originalMaterials.forEach((origMat, mesh) => {
+                mesh.material = origMat
+            })
+        }
+    }, [clonedScene, material, overrides.useEnergyShader])
+
+    // Apply castShadow and receiveShadow dynamically based on performance mode
+    useEffect(() => {
+        clonedScene.traverse((child: any) => {
+            if (child.isMesh) {
+                child.castShadow = !lowPerformanceMode
+                child.receiveShadow = !lowPerformanceMode
+            }
+        })
+    }, [clonedScene, lowPerformanceMode])
 
     const effectiveScale = overrides.scale ?? config.scale
     const effectivePositionY = overrides.positionY ?? config.position[1]
 
     return (
         <primitive
-            object={scene}
+            object={clonedScene}
             ref={group}
             scale={effectiveScale}
             position={[config.position[0], effectivePositionY, config.position[2]]}
@@ -139,6 +195,7 @@ const BaseEntity = ({ characterId }: { characterId: string }) => {
     const intensity = useSoulStore((s) => s.intensity)
     const isThinking = useSoulStore((s) => s.isThinking)
     const mood = useSoulStore((s) => s.mood)
+    const lowPerformanceMode = useSoulStore((s) => s.lowPerformanceMode)
     const overrides = useSoulStore((s) => s.characterOverrides[characterId]) || EMPTY_OVERRIDE
 
     const shaderColor = useShaderColor(characterId)
@@ -159,14 +216,18 @@ const BaseEntity = ({ characterId }: { characterId: string }) => {
             if (materialRef.current.uniforms) {
                 materialRef.current.uniforms.uColor.value = shaderColor
             }
-
         }
     })
 
     const scale = overrides.scale ?? 1
 
     return (
-        <Sphere args={[1, 64, 64]} scale={scale}>
+        <Sphere 
+            args={[1, 64, 64]} 
+            scale={scale}
+            castShadow={!lowPerformanceMode}
+            receiveShadow={!lowPerformanceMode}
+        >
             <energyShaderMaterial
                 ref={materialRef}
                 attach="material"
@@ -178,7 +239,6 @@ const BaseEntity = ({ characterId }: { characterId: string }) => {
         </Sphere>
     )
 }
-
 
 // ── Single character renderer ─────────────────────────────────────────────────
 
@@ -241,5 +301,3 @@ export const DynamicCharacter: React.FC = () => {
         </>
     )
 }
-
-
