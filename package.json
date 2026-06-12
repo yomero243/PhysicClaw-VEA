@@ -30,7 +30,7 @@
     "supabase": "^2.98.2",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.59.3",
-    "vite": "^7.3.3",
+    "vite": "^8.0.16",
     "vite-plugin-javascript-obfuscator": "^3.1.0",
     "vitest": "^4.1.5"
   },
