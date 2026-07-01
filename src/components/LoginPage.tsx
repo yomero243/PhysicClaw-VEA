@@ -24,14 +24,14 @@ function GridCanvas() {
 
       // Deep background
       const bg = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.8)
-      bg.addColorStop(0, '#050d1a')
+      bg.addColorStop(0, '#0A0B0A')
       bg.addColorStop(1, '#020609')
       ctx.fillStyle = bg
       ctx.fillRect(0, 0, W, H)
 
       // Grid lines
       const STEP = 60
-      ctx.strokeStyle = 'rgba(0,180,255,0.06)'
+      ctx.strokeStyle = 'rgba(140,255,176,0.06)'
       ctx.lineWidth = 1
       for (let x = 0; x < W; x += STEP) {
         ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke()
@@ -43,9 +43,9 @@ function GridCanvas() {
       // Scan line
       const scanY = (H * ((t * 0.4) % 1))
       const scanGrad = ctx.createLinearGradient(0, scanY - 60, 0, scanY + 60)
-      scanGrad.addColorStop(0, 'rgba(0,212,255,0)')
-      scanGrad.addColorStop(0.5, 'rgba(0,212,255,0.04)')
-      scanGrad.addColorStop(1, 'rgba(0,212,255,0)')
+      scanGrad.addColorStop(0, 'rgba(140,255,176,0)')
+      scanGrad.addColorStop(0.5, 'rgba(140,255,176,0.04)')
+      scanGrad.addColorStop(1, 'rgba(140,255,176,0)')
       ctx.fillStyle = scanGrad
       ctx.fillRect(0, scanY - 60, W, 120)
 
@@ -59,13 +59,13 @@ function GridCanvas() {
         const pulse = 0.4 + 0.6 * Math.sin(t * 1.5 + i)
         ctx.beginPath()
         ctx.arc(nx, ny, 2, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(0,212,255,${pulse * 0.5})`
+        ctx.fillStyle = `rgba(140,255,176,${pulse * 0.5})`
         ctx.fill()
         // line to center
         ctx.beginPath()
         ctx.moveTo(nx, ny)
         ctx.lineTo(W / 2, H / 2)
-        ctx.strokeStyle = `rgba(0,212,255,${pulse * 0.06})`
+        ctx.strokeStyle = `rgba(140,255,176,${pulse * 0.06})`
         ctx.lineWidth = 1
         ctx.stroke()
       }
@@ -103,16 +103,16 @@ function CyberInput({
         style={{
           width: '100%',
           padding: '12px 14px',
-          background: disabled ? 'rgba(0,10,20,0.4)' : 'rgba(0,20,40,0.6)',
-          border: `1px solid ${focused && !disabled ? '#00d4ff' : 'rgba(0,180,255,0.2)'}`,
+          background: disabled ? 'rgba(18,21,15,0.42)' : 'rgba(18,21,15,0.68)',
+          border: `1px solid ${focused && !disabled ? '#8CFFB0' : 'rgba(140,255,176,0.2)'}`,
           borderRadius: 4,
-          color: disabled ? 'rgba(100,140,180,0.5)' : '#e2f0ff',
+          color: disabled ? 'rgba(169,184,154,0.5)' : '#EAF3DF',
           fontSize: 14,
           fontFamily: '"Courier New", monospace',
           outline: 'none',
           boxSizing: 'border-box',
           transition: 'border-color 0.2s',
-          boxShadow: focused && !disabled ? '0 0 12px rgba(0,212,255,0.2)' : 'none',
+          boxShadow: focused && !disabled ? '0 0 12px rgba(140,255,176,0.2)' : 'none',
           cursor: disabled ? 'not-allowed' : 'text',
         }}
       />
@@ -120,15 +120,15 @@ function CyberInput({
       <span style={{
         position: 'absolute', top: -1, left: -1,
         width: 8, height: 8,
-        borderTop: `2px solid ${focused ? '#00d4ff' : 'rgba(0,212,255,0.4)'}`,
-        borderLeft: `2px solid ${focused ? '#00d4ff' : 'rgba(0,212,255,0.4)'}`,
+        borderTop: `2px solid ${focused ? '#8CFFB0' : 'rgba(140,255,176,0.4)'}`,
+        borderLeft: `2px solid ${focused ? '#8CFFB0' : 'rgba(140,255,176,0.4)'}`,
         transition: 'border-color 0.2s',
       }} />
       <span style={{
         position: 'absolute', bottom: -1, right: -1,
         width: 8, height: 8,
-        borderBottom: `2px solid ${focused ? '#00d4ff' : 'rgba(0,212,255,0.4)'}`,
-        borderRight: `2px solid ${focused ? '#00d4ff' : 'rgba(0,212,255,0.4)'}`,
+        borderBottom: `2px solid ${focused ? '#8CFFB0' : 'rgba(140,255,176,0.4)'}`,
+        borderRight: `2px solid ${focused ? '#8CFFB0' : 'rgba(140,255,176,0.4)'}`,
         transition: 'border-color 0.2s',
       }} />
     </div>
@@ -173,7 +173,7 @@ function LoginView({ onSwitch }: { onSwitch: () => void }) {
       <SubmitButton submitting={submitting} label="AUTHENTICATE" />
 
       <div style={{ textAlign: 'center' }}>
-        <span style={{ color: '#4a6a8a', fontSize: 12 }}>No credentials? </span>
+        <span style={{ color: '#A9B89A', fontSize: 12 }}>No credentials? </span>
         <button type="button" onClick={onSwitch} disabled={submitting} style={{ ...linkBtn, opacity: submitting ? 0.4 : 0.85, cursor: submitting ? 'not-allowed' : 'pointer' }}>
           REQUEST ACCESS
         </button>
@@ -214,16 +214,16 @@ function RegisterView({ onSwitch }: { onSwitch: () => void }) {
         <Logo />
         <div style={{
           width: 64, height: 64, borderRadius: '50%',
-          border: '2px solid #00d4ff',
+          border: '2px solid #8CFFB0',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 0 24px rgba(0,212,255,0.4)',
+          boxShadow: '0 0 24px rgba(140,255,176,0.4)',
           fontSize: 28,
         }}>✓</div>
         <div>
-          <div style={{ color: '#00d4ff', fontSize: 16, fontWeight: 700, letterSpacing: 2, marginBottom: 8 }}>
+          <div style={{ color: '#8CFFB0', fontSize: 16, fontWeight: 700, letterSpacing: 2, marginBottom: 8 }}>
             ACCESS GRANTED
           </div>
-          <div style={{ color: '#4a6a8a', fontSize: 12, lineHeight: 1.6 }}>
+          <div style={{ color: '#A9B89A', fontSize: 12, lineHeight: 1.6 }}>
             Check your email to confirm your account,<br />then sign in.
           </div>
         </div>
@@ -251,7 +251,7 @@ function RegisterView({ onSwitch }: { onSwitch: () => void }) {
       <SubmitButton submitting={submitting} label="CREATE ACCOUNT" />
 
       <div style={{ textAlign: 'center' }}>
-        <span style={{ color: '#4a6a8a', fontSize: 12 }}>Already have access? </span>
+        <span style={{ color: '#A9B89A', fontSize: 12 }}>Already have access? </span>
         <button type="button" onClick={onSwitch} disabled={submitting} style={{ ...linkBtn, opacity: submitting ? 0.4 : 0.85, cursor: submitting ? 'not-allowed' : 'pointer' }}>
           SIGN IN
         </button>
@@ -265,8 +265,8 @@ function Logo() {
   return (
     <div style={{ textAlign: 'center', marginBottom: 4 }}>
       <div style={{
-        fontSize: 28, fontWeight: 900, letterSpacing: 4, color: '#00d4ff',
-        textShadow: '0 0 20px rgba(0,212,255,0.6), 0 0 40px rgba(0,212,255,0.2)',
+        fontSize: 28, fontWeight: 900, letterSpacing: 4, color: '#8CFFB0',
+        textShadow: '0 0 20px rgba(140,255,176,0.6), 0 0 40px rgba(140,255,176,0.2)',
         fontFamily: '"Courier New", monospace',
       }}>
         PHYSIC<span style={{ color: '#fff' }}>CLAW</span>
@@ -281,9 +281,9 @@ function Logo() {
 function Divider() {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(0,212,255,0.3))' }} />
-      <div style={{ width: 4, height: 4, background: '#00d4ff', transform: 'rotate(45deg)', opacity: 0.6 }} />
-      <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(0,212,255,0.3))' }} />
+      <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(140,255,176,0.3))' }} />
+      <div style={{ width: 4, height: 4, background: '#8CFFB0', transform: 'rotate(45deg)', opacity: 0.6 }} />
+      <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(140,255,176,0.3))' }} />
     </div>
   )
 }
@@ -292,10 +292,10 @@ function ErrorBadge({ msg }: { msg: string }) {
   return (
     <div role="alert" style={{
       padding: '8px 12px',
-      background: 'rgba(255,50,50,0.1)',
-      border: '1px solid rgba(255,80,80,0.3)',
+      background: 'rgba(255,122,92,0.1)',
+      border: '1px solid rgba(255,122,92,0.3)',
       borderRadius: 4,
-      color: '#ff6060',
+      color: '#FF7A5C',
       fontSize: 12,
       fontFamily: '"Courier New", monospace',
     }}>
@@ -314,10 +314,10 @@ function SubmitButton({ submitting, label }: { submitting: boolean; label: strin
       style={{
         padding: '12px 0',
         background: submitting
-          ? 'rgba(0,100,140,0.4)'
-          : 'linear-gradient(135deg, rgba(0,212,255,0.15), rgba(0,212,255,0.05))',
-        color: submitting ? '#4a8aa0' : '#00d4ff',
-        border: `1px solid ${submitting ? 'rgba(0,212,255,0.2)' : '#00d4ff'}`,
+          ? 'rgba(93,122,65,0.35)'
+          : 'linear-gradient(135deg, rgba(140,255,176,0.15), rgba(140,255,176,0.05))',
+        color: submitting ? '#A9B89A' : '#8CFFB0',
+        border: `1px solid ${submitting ? 'rgba(140,255,176,0.2)' : '#8CFFB0'}`,
         borderRadius: 4,
         fontSize: 13,
         fontFamily: '"Courier New", monospace',
@@ -325,7 +325,7 @@ function SubmitButton({ submitting, label }: { submitting: boolean; label: strin
         letterSpacing: 3,
         cursor: submitting ? 'wait' : 'pointer',
         transition: 'all 0.2s',
-        boxShadow: submitting ? 'none' : '0 0 16px rgba(0,212,255,0.2)',
+        boxShadow: submitting ? 'none' : '0 0 16px rgba(140,255,176,0.2)',
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -345,8 +345,8 @@ function Spinner() {
       display: 'inline-block',
       width: 12,
       height: 12,
-      border: '2px solid rgba(0,212,255,0.2)',
-      borderTopColor: '#00d4ff',
+      border: '2px solid rgba(140,255,176,0.2)',
+      borderTopColor: '#8CFFB0',
       borderRadius: '50%',
       animation: 'spin 0.7s linear infinite',
     }} />
@@ -362,10 +362,10 @@ export function LoginPage() {
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-        input::placeholder { color: rgba(100,160,200,0.4); }
+        input::placeholder { color: rgba(169,184,154,0.4); }
         input:-webkit-autofill {
-          -webkit-box-shadow: 0 0 0 1000px #050d1a inset !important;
-          -webkit-text-fill-color: #e2f0ff !important;
+          -webkit-box-shadow: 0 0 0 1000px #0A0B0A inset !important;
+          -webkit-text-fill-color: #EAF3DF !important;
         }
       `}</style>
 
@@ -382,27 +382,27 @@ export function LoginPage() {
       }}>
         <div style={{
           width: '100%', maxWidth: 400,
-          background: 'rgba(4,12,24,0.85)',
+          background: 'rgba(18,21,15,0.88)',
           backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(0,212,255,0.2)',
+          border: '1px solid rgba(140,255,176,0.2)',
           borderRadius: 8,
-          boxShadow: '0 0 60px rgba(0,212,255,0.08), 0 24px 60px rgba(0,0,0,0.6)',
+          boxShadow: '0 0 60px rgba(140,255,176,0.08), 0 24px 60px rgba(0,0,0,0.6)',
           position: 'relative',
           animation: 'fadeIn 0.4s ease',
         }}>
           {/* top accent bar */}
           <div style={{
             height: 2,
-            background: 'linear-gradient(to right, transparent, #00d4ff, transparent)',
+            background: 'linear-gradient(to right, transparent, #8CFFB0, transparent)',
             borderRadius: '8px 8px 0 0',
           }} />
 
           {/* corner ornaments */}
           {[
-            { top: 8, left: 8, bt: '2px solid #00d4ff', bl: '2px solid #00d4ff', br: 'none', bb: 'none' },
-            { top: 8, right: 8, bt: '2px solid #00d4ff', br: '2px solid #00d4ff', bl: 'none', bb: 'none' },
-            { bottom: 8, left: 8, bb: '2px solid rgba(0,212,255,0.4)', bl: '2px solid rgba(0,212,255,0.4)', bt: 'none', br: 'none' },
-            { bottom: 8, right: 8, bb: '2px solid rgba(0,212,255,0.4)', br: '2px solid rgba(0,212,255,0.4)', bt: 'none', bl: 'none' },
+            { top: 8, left: 8, bt: '2px solid #8CFFB0', bl: '2px solid #8CFFB0', br: 'none', bb: 'none' },
+            { top: 8, right: 8, bt: '2px solid #8CFFB0', br: '2px solid #8CFFB0', bl: 'none', bb: 'none' },
+            { bottom: 8, left: 8, bb: '2px solid rgba(140,255,176,0.4)', bl: '2px solid rgba(140,255,176,0.4)', bt: 'none', br: 'none' },
+            { bottom: 8, right: 8, bb: '2px solid rgba(140,255,176,0.4)', br: '2px solid rgba(140,255,176,0.4)', bt: 'none', bl: 'none' },
           ].map((s, i) => (
             <span key={i} style={{
               position: 'absolute', width: 12, height: 12,
@@ -420,7 +420,7 @@ export function LoginPage() {
           {/* bottom accent */}
           <div style={{
             height: 1,
-            background: 'linear-gradient(to right, transparent, rgba(0,212,255,0.15), transparent)',
+            background: 'linear-gradient(to right, transparent, rgba(140,255,176,0.15), transparent)',
             borderRadius: '0 0 8px 8px',
           }} />
         </div>
@@ -447,7 +447,7 @@ const labelStyle: React.CSSProperties = {
 const linkBtn: React.CSSProperties = {
   background: 'none',
   border: 'none',
-  color: '#00d4ff',
+  color: '#8CFFB0',
   fontSize: 12,
   fontFamily: '"Courier New", monospace',
   cursor: 'pointer',

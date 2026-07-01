@@ -104,7 +104,7 @@ function Overlay({ moodIndex, onSelect }: OverlayProps) {
         }}>
             {/* ── Top: branding ── */}
             <div style={{ textAlign: 'center' }}>
-                <div style={{ color: '#00d4ff', fontSize: 11, letterSpacing: 6, textTransform: 'uppercase', opacity: 0.5 }}>
+                <div style={{ color: '#8CFFB0', fontSize: 11, letterSpacing: 6, textTransform: 'uppercase', opacity: 0.5 }}>
                     PhysicClaw
                 </div>
                 <div style={{ color: '#ffffff', fontSize: 32, letterSpacing: 4, fontWeight: 'bold', marginTop: 6 }}>

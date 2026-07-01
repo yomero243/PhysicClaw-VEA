@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { PresenceSystem } from '../multiplayer/presenceSystem'
 import { SessionClient } from '../multiplayer/sessionClient'
+import { isFiniteVec3, sanitizeVec3 } from '../multiplayer/validation'
 import { useSoulStore } from '../store/soulStore'
 import type { SessionUser, PhysicsEvent } from '../types/multiplayer'
 
@@ -53,14 +54,16 @@ export function useMultiplayer(sceneId: string | null): {
         // Listen for avatar_move events from remote users and update their
         // positions in our local state.
         const handleAvatarMove = (event: PhysicsEvent) => {
-            if (!event.userId || !event.position) return
+            // Broadcast events come from other clients — reject malformed
+            // transforms (NaN/Infinity/wrong shape) before applying them.
+            if (typeof event.userId !== 'string' || !isFiniteVec3(event.position)) return
             setRemoteUsers((prev) =>
                 prev.map((u) =>
                     u.user_id === event.userId
                         ? {
                               ...u,
-                              position: event.position!,
-                              rotation: event.rotation ?? u.rotation,
+                              position: sanitizeVec3(event.position, u.position),
+                              rotation: sanitizeVec3(event.rotation, u.rotation),
                           }
                         : u
                 )
@@ -81,6 +84,10 @@ export function useMultiplayer(sceneId: string | null): {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [sceneId, userId])
 
+    useEffect(() => {
+        presenceRef.current?.updateAvatar(avatarId)
+    }, [avatarId])
+
     // Stable emit function — throttles avatar_move to 10fps.
     const emit = useCallback((event: PhysicsEvent) => {
         const client = clientRef.current
@@ -90,6 +97,10 @@ export function useMultiplayer(sceneId: string | null): {
             const now = performance.now()
             if (now - lastAvatarMoveTsRef.current < AVATAR_MOVE_THROTTLE_MS) return
             lastAvatarMoveTsRef.current = now
+
+            if (event.position) {
+                presenceRef.current?.updateTransform(event.position, event.rotation)
+            }
         }
 
         client.emit(event)

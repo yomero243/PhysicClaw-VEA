@@ -31,6 +31,14 @@ function assertData<T>(data: T | null, error: any, context: string): T {
 
 // Falls back to localhost so createClient does not throw on undefined – the
 // Supabase SDK will return auth errors when the user tries to sign in.
+if (!supabaseUrl || !supabaseAnonKey) {
+    console.error(
+        '[Supabase] VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY no configurados. ' +
+        'La app arranca pero toda la integración con el backend fallará. ' +
+        'Copia .env.example a .env y define ambas variables.',
+    )
+}
+
 export const supabase = createClient(
     supabaseUrl ?? 'http://localhost:54321',
     supabaseAnonKey ?? 'anon-key-not-configured',

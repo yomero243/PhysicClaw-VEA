@@ -81,51 +81,52 @@ export const CubeGenerator: React.FC = () => {
   }, [currentScene, sceneObjects, removeObject])
 
   const buttonStyle: React.CSSProperties = {
-    padding: '10px 15px',
-    background: 'rgba(0, 212, 255, 0.2)',
-    border: '1px solid #00d4ff',
-    borderRadius: '4px',
-    color: '#00d4ff',
+    height: 34,
+    padding: '0 12px',
+    background: 'rgba(18, 21, 15, 0.72)',
+    border: '1px solid rgba(140, 255, 176, 0.22)',
+    borderRadius: '5px',
+    color: '#EAF3DF',
     fontFamily: '"Courier New", monospace',
-    fontSize: '12px',
+    fontSize: '10px',
+    letterSpacing: 1.2,
     cursor: 'pointer',
-    boxShadow: '0 0 10px rgba(0, 212, 255, 0.2)',
+    boxShadow: '0 12px 28px rgba(0, 0, 0, 0.28)',
     transition: 'all 0.2s',
-    width: '160px'
+    width: '142px',
+    backdropFilter: 'blur(14px)',
   }
 
   return (
     <div style={{
       position: 'absolute',
-      top: 80,
-      right: 20,
-      zIndex: 1000, // Aumentamos zIndex para asegurar que sea clickable
+      bottom: 24,
+      right: 24,
+      zIndex: 13,
       display: 'flex',
       flexDirection: 'column',
-      gap: '10px'
+      gap: '8px'
     }}>
       <button
         onClick={createCube}
         style={buttonStyle}
-        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(0, 212, 255, 0.4)'}
-        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(0, 212, 255, 0.2)'}
+        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(0, 212, 255, 0.16)'}
+        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(18, 21, 15, 0.72)'}
       >
-        + CREAR CUBO (BD)
+        + CUBE
       </button>
       
       <button
         onClick={deleteCubes}
         style={{
           ...buttonStyle,
-          background: 'rgba(255, 50, 50, 0.2)',
-          border: '1px solid #ff3232',
-          color: '#ff3232',
-          boxShadow: '0 0 10px rgba(255, 50, 50, 0.2)',
+          border: '1px solid rgba(255, 92, 92, 0.22)',
+          color: '#FF7A5C',
         }}
-        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 50, 50, 0.4)'}
-        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255, 50, 50, 0.2)'}
+        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 92, 92, 0.16)'}
+        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(18, 21, 15, 0.72)'}
       >
-        - BORRAR CUBOS
+        CLEAR CUBES
       </button>
     </div>
   )

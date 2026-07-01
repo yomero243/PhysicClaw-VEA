@@ -6,6 +6,7 @@ import { useRef, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Text, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
+import { isTrustedModelUrl } from '../multiplayer/validation'
 import type { SessionUser } from '../types/multiplayer'
 
 // ── RemoteAvatar ────────────────────────────────────────────────────────────
@@ -101,7 +102,7 @@ function PlaceholderAvatar() {
     return (
         <mesh>
             <boxGeometry ref={geometryRef} args={[0.5, 1, 0.3]} />
-            <meshStandardMaterial ref={materialRef} color="#4488ff" wireframe />
+            <meshStandardMaterial ref={materialRef} color="#8CFFB0" wireframe />
         </mesh>
     )
 }
@@ -141,7 +142,9 @@ function RemoteAvatar({ user }: RemoteAvatarProps) {
     // Choose avatar mesh based on avatarId.
     const renderAvatar = () => {
         const { avatar_id } = user
-        if (avatar_id?.startsWith('https://')) {
+        // avatar_id is announced by the remote client itself: only fetch GLBs
+        // hosted on our own Supabase storage, never arbitrary external URLs.
+        if (avatar_id?.startsWith('https://') && isTrustedModelUrl(avatar_id)) {
             return <GLTFAvatar url={avatar_id} />
         }
         if (avatar_id === 'base-sphere') {
@@ -164,7 +167,7 @@ function RemoteAvatar({ user }: RemoteAvatarProps) {
             <Text
                 position={[0, 1.2, 0]}
                 fontSize={0.18}
-                color="#00d4ff"
+                color="#8CFFB0"
                 anchorX="center"
                 anchorY="middle"
                 outlineColor="#000000"

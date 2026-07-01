@@ -166,11 +166,11 @@ export const GLBUploadPanel = () => {
                 style={{
                     position: 'absolute', top: 20, right: 60, zIndex: 20,
                     width: 44, height: 44, borderRadius: 4,
-                    background: 'rgba(2,8,18,0.75)', backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(0,255,136,0.25)',
-                    color: '#00ff88', fontSize: 18, cursor: 'pointer',
+                    background: 'rgba(10,11,10,0.75)', backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(201,243,106,0.25)',
+                    color: '#C9F36A', fontSize: 18, cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: '0 0 16px rgba(0,255,136,0.1)',
+                    boxShadow: '0 0 16px rgba(201,243,106,0.1)',
                     transition: 'all 0.2s',
                     fontFamily: '"Courier New", monospace',
                 }}>
@@ -185,31 +185,31 @@ export const GLBUploadPanel = () => {
             <style>{`
                 .glb-panel-scroll::-webkit-scrollbar { width: 3px; }
                 .glb-panel-scroll::-webkit-scrollbar-track { background: transparent; }
-                .glb-panel-scroll::-webkit-scrollbar-thumb { background: rgba(0,255,136,0.2); border-radius: 2px; }
+                .glb-panel-scroll::-webkit-scrollbar-thumb { background: rgba(201,243,106,0.2); border-radius: 2px; }
             `}</style>
 
             <div style={{
                 position: 'absolute', top: 20, right: 60, zIndex: 20,
                 width: 320,
-                background: 'rgba(2,8,18,0.92)',
+                background: 'rgba(10,11,10,0.92)',
                 backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(0,255,136,0.18)',
+                border: '1px solid rgba(201,243,106,0.18)',
                 borderRadius: 6,
-                boxShadow: '0 0 40px rgba(0,255,136,0.06), 0 16px 40px rgba(0,0,0,0.5)',
+                boxShadow: '0 0 40px rgba(201,243,106,0.06), 0 16px 40px rgba(0,0,0,0.5)',
                 fontFamily: '"Courier New", monospace',
                 overflow: 'hidden',
             }}>
                 {/* Top accent */}
-                <div style={{ height: 1, background: 'linear-gradient(to right, transparent, #00ff88, transparent)' }} />
+                <div style={{ height: 1, background: 'linear-gradient(to right, transparent, #C9F36A, transparent)' }} />
 
                 {/* Header */}
                 <div style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                     padding: '10px 14px',
-                    borderBottom: '1px solid rgba(0,255,136,0.08)',
+                    borderBottom: '1px solid rgba(201,243,106,0.08)',
                 }}>
-                    <span style={{ fontSize: 11, letterSpacing: 3, color: '#00ff88', fontWeight: 700 }}>
-                        GLB<span style={{ color: 'rgba(0,255,136,0.3)' }}>::UPLOAD</span>
+                    <span style={{ fontSize: 11, letterSpacing: 3, color: '#C9F36A', fontWeight: 700 }}>
+                        GLB<span style={{ color: 'rgba(201,243,106,0.3)' }}>::UPLOAD</span>
                     </span>
                     <button onClick={() => setOpen(false)}
                         style={{ background: 'none', border: 'none', color: '#2a7a5a', cursor: 'pointer', fontSize: 14, lineHeight: 1 }}>
@@ -224,20 +224,20 @@ export const GLBUploadPanel = () => {
                     {error && (
                         <div style={{
                             padding: '7px 10px', marginBottom: 10, borderRadius: 3,
-                            background: 'rgba(255,50,50,0.08)', border: '1px solid rgba(255,80,80,0.2)',
-                            color: '#ff6060', fontSize: 10, letterSpacing: 1,
+                            background: 'rgba(255,122,92,0.08)', border: '1px solid rgba(255,122,92,0.2)',
+                            color: '#FF7A5C', fontSize: 10, letterSpacing: 1,
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                         }}>
                             <span>{error}</span>
                             <button onClick={() => setError(null)}
-                                style={{ background: 'none', border: 'none', color: '#ff6060', cursor: 'pointer', fontSize: 12 }}>✕</button>
+                                style={{ background: 'none', border: 'none', color: '#FF7A5C', cursor: 'pointer', fontSize: 12 }}>✕</button>
                         </div>
                     )}
                     {success && (
                         <div style={{
                             padding: '7px 10px', marginBottom: 10, borderRadius: 3,
-                            background: 'rgba(0,255,136,0.06)', border: '1px solid rgba(0,255,136,0.2)',
-                            color: '#00ff88', fontSize: 10, letterSpacing: 1,
+                            background: 'rgba(201,243,106,0.06)', border: '1px solid rgba(201,243,106,0.2)',
+                            color: '#C9F36A', fontSize: 10, letterSpacing: 1,
                         }}>
                             {success}
                         </div>
@@ -251,9 +251,9 @@ export const GLBUploadPanel = () => {
                         onClick={() => fileRef.current?.click()}
                         style={{
                             padding: model ? '12px' : '28px 12px',
-                            border: `2px dashed ${dragOver ? '#00ff88' : model ? 'rgba(0,255,136,0.3)' : 'rgba(0,255,136,0.12)'}`,
+                            border: `2px dashed ${dragOver ? '#C9F36A' : model ? 'rgba(201,243,106,0.3)' : 'rgba(201,243,106,0.12)'}`,
                             borderRadius: 4,
-                            background: dragOver ? 'rgba(0,255,136,0.06)' : 'rgba(0,10,24,0.4)',
+                            background: dragOver ? 'rgba(201,243,106,0.06)' : 'rgba(18,21,15,0.4)',
                             cursor: 'pointer',
                             transition: 'all 0.2s',
                             textAlign: 'center',
@@ -276,10 +276,10 @@ export const GLBUploadPanel = () => {
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                 <div style={{
                                     width: 36, height: 36, borderRadius: 4,
-                                    background: 'rgba(0,255,136,0.1)',
-                                    border: '1px solid rgba(0,255,136,0.2)',
+                                    background: 'rgba(201,243,106,0.1)',
+                                    border: '1px solid rgba(201,243,106,0.2)',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontSize: 16, color: '#00ff88', flexShrink: 0,
+                                    fontSize: 16, color: '#C9F36A', flexShrink: 0,
                                 }}>
                                     ◆
                                 </div>
@@ -299,11 +299,11 @@ export const GLBUploadPanel = () => {
                             </div>
                         ) : (
                             <>
-                                <div style={{ fontSize: 24, color: 'rgba(0,255,136,0.3)', marginBottom: 8 }}>+</div>
+                                <div style={{ fontSize: 24, color: 'rgba(201,243,106,0.3)', marginBottom: 8 }}>+</div>
                                 <div style={{ fontSize: 10, color: '#2a7a5a', letterSpacing: 2 }}>
                                     DROP .GLB HERE
                                 </div>
-                                <div style={{ fontSize: 9, color: 'rgba(0,255,136,0.2)', marginTop: 4 }}>
+                                <div style={{ fontSize: 9, color: 'rgba(201,243,106,0.2)', marginTop: 4 }}>
                                     or click to browse — max {formatBytes(MODEL_UPLOAD.MAX_BYTES)}
                                 </div>
                             </>
@@ -315,7 +315,7 @@ export const GLBUploadPanel = () => {
                         <>
                             {/* Name */}
                             <div style={{ marginBottom: 12 }}>
-                                <div style={{ fontSize: 9, letterSpacing: 2, color: 'rgba(0,255,136,0.4)', marginBottom: 5 }}>
+                                <div style={{ fontSize: 9, letterSpacing: 2, color: 'rgba(201,243,106,0.4)', marginBottom: 5 }}>
                                     MODEL NAME
                                 </div>
                                 <input
@@ -324,8 +324,8 @@ export const GLBUploadPanel = () => {
                                     placeholder="My Model"
                                     style={{
                                         width: '100%', padding: '8px 12px', boxSizing: 'border-box',
-                                        background: 'rgba(0,10,24,0.6)',
-                                        border: '1px solid rgba(0,255,136,0.15)',
+                                        background: 'rgba(18,21,15,0.6)',
+                                        border: '1px solid rgba(201,243,106,0.15)',
                                         borderRadius: 4, color: '#c8e8d0',
                                         fontSize: 11, fontFamily: '"Courier New", monospace',
                                         outline: 'none',
@@ -336,14 +336,14 @@ export const GLBUploadPanel = () => {
                             {/* Scale */}
                             <div style={{ marginBottom: 12 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                                    <span style={{ fontSize: 9, letterSpacing: 2, color: 'rgba(0,255,136,0.4)' }}>SCALE</span>
-                                    <span style={{ fontSize: 10, color: '#00ff88' }}>{scale.toFixed(2)}</span>
+                                    <span style={{ fontSize: 9, letterSpacing: 2, color: 'rgba(201,243,106,0.4)' }}>SCALE</span>
+                                    <span style={{ fontSize: 10, color: '#C9F36A' }}>{scale.toFixed(2)}</span>
                                 </div>
-                                <div style={{ position: 'relative', height: 3, background: 'rgba(0,255,136,0.1)', borderRadius: 2 }}>
+                                <div style={{ position: 'relative', height: 3, background: 'rgba(201,243,106,0.1)', borderRadius: 2 }}>
                                     <div style={{
                                         position: 'absolute', left: 0, top: 0, height: '100%', borderRadius: 2,
                                         width: `${(scale / 5) * 100}%`,
-                                        background: 'linear-gradient(to right, rgba(0,255,136,0.4), #00ff88)',
+                                        background: 'linear-gradient(to right, rgba(201,243,106,0.4), #C9F36A)',
                                     }} />
                                     <input type="range" min={0.01} max={5} step={0.01} value={scale}
                                         onChange={(e) => setScale(parseFloat(e.target.value))}
@@ -355,14 +355,14 @@ export const GLBUploadPanel = () => {
                             {/* Position Y */}
                             <div style={{ marginBottom: 12 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                                    <span style={{ fontSize: 9, letterSpacing: 2, color: 'rgba(0,255,136,0.4)' }}>HEIGHT (Y)</span>
-                                    <span style={{ fontSize: 10, color: '#00ff88' }}>{posY.toFixed(2)}</span>
+                                    <span style={{ fontSize: 9, letterSpacing: 2, color: 'rgba(201,243,106,0.4)' }}>HEIGHT (Y)</span>
+                                    <span style={{ fontSize: 10, color: '#C9F36A' }}>{posY.toFixed(2)}</span>
                                 </div>
-                                <div style={{ position: 'relative', height: 3, background: 'rgba(0,255,136,0.1)', borderRadius: 2 }}>
+                                <div style={{ position: 'relative', height: 3, background: 'rgba(201,243,106,0.1)', borderRadius: 2 }}>
                                     <div style={{
                                         position: 'absolute', left: 0, top: 0, height: '100%', borderRadius: 2,
                                         width: `${((posY + 3) / 6) * 100}%`,
-                                        background: 'linear-gradient(to right, rgba(0,255,136,0.4), #00ff88)',
+                                        background: 'linear-gradient(to right, rgba(201,243,106,0.4), #C9F36A)',
                                     }} />
                                     <input type="range" min={-3} max={3} step={0.05} value={posY}
                                         onChange={(e) => setPosY(parseFloat(e.target.value))}
@@ -373,15 +373,15 @@ export const GLBUploadPanel = () => {
 
                             {/* Rig type */}
                             <div style={{ marginBottom: 14 }}>
-                                <div style={{ fontSize: 9, letterSpacing: 2, color: 'rgba(0,255,136,0.4)', marginBottom: 5 }}>
+                                <div style={{ fontSize: 9, letterSpacing: 2, color: 'rgba(201,243,106,0.4)', marginBottom: 5 }}>
                                     RIG TYPE
                                 </div>
                                 <div style={{ position: 'relative' }}>
                                     <select value={rigType} onChange={(e) => setRigType(e.target.value as RigType)}
                                         style={{
                                             width: '100%', padding: '8px 12px',
-                                            background: 'rgba(0,10,24,0.6)',
-                                            border: '1px solid rgba(0,255,136,0.15)',
+                                            background: 'rgba(18,21,15,0.6)',
+                                            border: '1px solid rgba(201,243,106,0.15)',
                                             borderRadius: 4, color: '#c8e8d0',
                                             fontSize: 11, fontFamily: '"Courier New", monospace',
                                             outline: 'none', cursor: 'pointer', appearance: 'none',
@@ -392,7 +392,7 @@ export const GLBUploadPanel = () => {
                                             </option>
                                         ))}
                                     </select>
-                                    <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: 'rgba(0,255,136,0.4)', pointerEvents: 'none', fontSize: 10 }}>
+                                    <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: 'rgba(201,243,106,0.4)', pointerEvents: 'none', fontSize: 10 }}>
                                         ▾
                                     </span>
                                 </div>
@@ -404,13 +404,13 @@ export const GLBUploadPanel = () => {
                                 disabled={uploading || !modelName.trim()}
                                 style={{
                                     width: '100%', padding: '10px 0', borderRadius: 4,
-                                    border: `1px solid ${uploading || !modelName.trim() ? 'rgba(0,255,136,0.1)' : '#00ff88'}`,
-                                    background: uploading || !modelName.trim() ? 'transparent' : 'linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,255,136,0.05))',
-                                    color: uploading || !modelName.trim() ? '#2a5a4a' : '#00ff88',
+                                    border: `1px solid ${uploading || !modelName.trim() ? 'rgba(201,243,106,0.1)' : '#C9F36A'}`,
+                                    background: uploading || !modelName.trim() ? 'transparent' : 'linear-gradient(135deg, rgba(201,243,106,0.15), rgba(201,243,106,0.05))',
+                                    color: uploading || !modelName.trim() ? '#2a5a4a' : '#C9F36A',
                                     fontSize: 10, fontFamily: '"Courier New", monospace', fontWeight: 700, letterSpacing: 2,
                                     cursor: uploading || !modelName.trim() ? 'not-allowed' : 'pointer',
                                     transition: 'all 0.15s',
-                                    boxShadow: uploading || !modelName.trim() ? 'none' : '0 0 10px rgba(0,255,136,0.15)',
+                                    boxShadow: uploading || !modelName.trim() ? 'none' : '0 0 10px rgba(201,243,106,0.15)',
                                 }}>
                                 {uploading ? 'LOADING...' : 'ADD TO SCENE'}
                             </button>
@@ -418,8 +418,8 @@ export const GLBUploadPanel = () => {
                     )}
 
                     {/* Scene objects list with visibility toggles */}
-                    <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(0,255,136,0.15), transparent)', margin: '14px 0' }} />
-                    <div style={{ fontSize: 9, letterSpacing: 3, color: 'rgba(0,255,136,0.4)', marginBottom: 10 }}>
+                    <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(201,243,106,0.15), transparent)', margin: '14px 0' }} />
+                    <div style={{ fontSize: 9, letterSpacing: 3, color: 'rgba(201,243,106,0.4)', marginBottom: 10 }}>
                         SCENE OBJECTS
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
@@ -431,8 +431,8 @@ export const GLBUploadPanel = () => {
                                     style={{
                                         display: 'flex', alignItems: 'center', gap: 8,
                                         padding: '7px 10px', borderRadius: 3,
-                                        border: `1px solid ${isVisible ? 'rgba(0,255,136,0.25)' : 'rgba(255,255,255,0.06)'}`,
-                                        background: isVisible ? 'rgba(0,255,136,0.05)' : 'rgba(255,255,255,0.02)',
+                                        border: `1px solid ${isVisible ? 'rgba(201,243,106,0.25)' : 'rgba(255,255,255,0.06)'}`,
+                                        background: isVisible ? 'rgba(201,243,106,0.05)' : 'rgba(255,255,255,0.02)',
                                         transition: 'all 0.15s',
                                     }}>
                                     {/* Visibility toggle */}
@@ -441,9 +441,9 @@ export const GLBUploadPanel = () => {
                                         title={isVisible ? 'Hide' : 'Show'}
                                         style={{
                                             width: 22, height: 22, borderRadius: 3, flexShrink: 0,
-                                            background: isVisible ? 'rgba(0,255,136,0.15)' : 'rgba(255,255,255,0.05)',
-                                            border: `1px solid ${isVisible ? 'rgba(0,255,136,0.4)' : 'rgba(255,255,255,0.1)'}`,
-                                            color: isVisible ? '#00ff88' : '#3a3a3a',
+                                            background: isVisible ? 'rgba(201,243,106,0.15)' : 'rgba(255,255,255,0.05)',
+                                            border: `1px solid ${isVisible ? 'rgba(201,243,106,0.4)' : 'rgba(255,255,255,0.1)'}`,
+                                            color: isVisible ? '#C9F36A' : '#3a3a3a',
                                             fontSize: 11, cursor: 'pointer',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             transition: 'all 0.15s',
@@ -465,8 +465,8 @@ export const GLBUploadPanel = () => {
                                     {/* Type badge */}
                                     <span style={{
                                         fontSize: 8, letterSpacing: 1, padding: '2px 5px', borderRadius: 2,
-                                        background: isCustom ? 'rgba(0,255,136,0.08)' : 'rgba(0,212,255,0.08)',
-                                        color: isCustom ? 'rgba(0,255,136,0.5)' : 'rgba(0,212,255,0.5)',
+                                        background: isCustom ? 'rgba(201,243,106,0.08)' : 'rgba(140,255,176,0.08)',
+                                        color: isCustom ? 'rgba(201,243,106,0.5)' : 'rgba(140,255,176,0.5)',
                                     }}>
                                         {isCustom ? 'GLB' : 'BASE'}
                                     </span>
@@ -491,7 +491,7 @@ export const GLBUploadPanel = () => {
                 </div>
 
                 {/* Bottom accent */}
-                <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(0,255,136,0.12), transparent)' }} />
+                <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(201,243,106,0.12), transparent)' }} />
             </div>
         </>
     )
