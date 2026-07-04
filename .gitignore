@@ -14,6 +14,7 @@ dist-ssr
 
 # Editor directories and files
 .claude/*
+!.claude/launch.json
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -36,6 +37,6 @@ openclaw-control.json
 AGENTS_STATE.md
 CLAUDE.md
 REVIEW.md
+
 # OpenClaw Dev Token
 .openclaw-token
-outlook_brief_probe.ps1
