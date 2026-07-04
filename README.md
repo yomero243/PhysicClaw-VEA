@@ -1,273 +1,119 @@
 # PhysicClaw-VEA
 
-**PhysicClaw-VEA** is an interactive 3D visualization application built with modern web technologies. It features a "Virtual Entity Augmented" (VEA) that reacts dynamically to simulated internal states (thinking, emotions) through custom shaders, animations, and real AI conversation via the OpenClaw API.
+[![CI](https://github.com/yomero243/PhysicClaw-VEA/actions/workflows/ci.yml/badge.svg)](https://github.com/yomero243/PhysicClaw-VEA/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## Key Features
+**PhysicClaw-VEA** is a real-time, interactive 3D visualization environment that gives a digital "body" to an AI agent. A **Virtual Entity Augmented (VEA)** reacts dynamically to conversation — mood, intensity, and thinking states drive custom GLSL shaders and character animations — while scenes, chat history, and avatars persist to Supabase and sync across users in real time.
 
-- **Advanced 3D Visualization**: Uses **React Three Fiber** and **Three.js** to render an immersive 3D scene with environment lighting and contact shadows.
-- **Reactive Shaders**: `EnergyShader` visually modifies the entity based on `intensity`, `isThinking`, and `mood` state.
-- **"Soul" System**: Global state management with **Zustand** to simulate entity behaviors (`isThinking`, `mood`, `intensity`, `lastMessage`, `activeCharacterId`).
-- **AI Chat Interface**: Overlay UI to send text messages to the OpenClaw API (default model: `google/gemini-2.5-flash`) and receive AI responses.
-- **Voice Input / Text-to-Speech**: Microphone support via the Web SpeechRecognition API and spoken responses via SpeechSynthesis, both configured for `es-ES`.
-- **Dynamic Character System**: `DynamicCharacter` component loads FBX or GLB models defined in `CHARACTERS` config and switches animations based on the active mood.
-- **GLB Model Support**: Loads external GLB models with animations and applies the `EnergyShader` to all meshes.
-- **FBX Character Loader**: Loads animated FBX characters (e.g., Mixamo rigs) with mood-driven animation switching.
-- **OpenClaw External Control**: Two mechanisms let external agents control the entity state at runtime:
-  - Write a JSON command to `openclaw-control.json` (watched by the Vite plugin).
-  - POST a JSON command to the `/api/control` HTTP endpoint exposed by the Vite dev server.
+**Live:** [physicclaw.vercel.app](https://physicclaw.vercel.app)
 
-## Setup
+## Features
 
-Follow these steps to get PhysicClaw-VEA running locally from scratch.
+- **Reactive 3D entity** — React Three Fiber scene with a custom `EnergyShader` that visualizes the agent's `mood`, `intensity`, and `isThinking` state in real time.
+- **AI chat with emotional states** — messages go through a Supabase Edge Function to an OpenAI-compatible LLM gateway; responses carry structured mood data that animates the avatar.
+- **Voice in / voice out** — Web Speech API for microphone input and spoken responses (`es-ES`).
+- **Character system** — switchable FBX/GLB characters with mood-driven animation retargeting, plus user-uploaded GLB models stored in Supabase Storage.
+- **Gaussian splat environments** — load `.splat` environments by URL and persist them per scene.
+- **Cloud persistence** — anonymous Supabase auth; scenes, 3D objects, chat sessions, and avatar configs stored in Postgres behind row-level security.
+- **Multi-user presence** — realtime channels broadcast presence and scene events to other connected users (user discovery panel, remote avatars).
+- **External agent control** — external agents can drive the entity state via `openclaw-control.json` (file watcher) or the dev server's authenticated `/api/control` endpoint. See [docs/agents/SKILL.md](docs/agents/SKILL.md).
+- **Error surfacing** — toast notification system reports persistence/chat failures to the user instead of failing silently.
 
-### 1. Configure environment variables
+## Tech Stack
 
-```bash
-# From the project root
-cp .env.example .env
-```
+React 19 · TypeScript · Vite 7 · Three.js + React Three Fiber + Drei · Zustand · Supabase (Auth, Postgres + RLS, Realtime, Storage, Edge Functions) · Zod · Vitest
 
-Adjust the variables as needed (see `.env.example` for the full list with descriptions).
-
-### 2. Install dependencies and start the project
+## Quick Start
 
 ```bash
-# Install Node dependencies
+# 1. Install dependencies
 npm install
 
-# Start the Vite dev server
-npm run dev
+# 2. Configure environment
+cp .env.example .env    # then fill in your Supabase URL + anon key
+
+# 3. Run
+npm run dev             # http://localhost:5173
 ```
 
-The app will be available at `http://localhost:5173` (or the port set in `VITE_PORT`).
+See [.env.example](.env.example) for every variable with descriptions. The two required ones are `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
 
-To build for production:
+> **Security note:** never put LLM tokens in `VITE_*` variables — anything `VITE_*` ships to the browser. LLM secrets live server-side as Edge Function secrets (`OPENCLAW_SECRET_TOKEN`). The build runs `verify-env` and fails if a secret-like `VITE_*` variable is detected.
 
-```bash
-npm run build
-npm run preview   # serves the build locally to verify
-```
+### Scripts
 
----
-
-## Technologies Used
-
-- [Vite](https://vitejs.dev/) — build tool and dev server
-- [React](https://react.dev/) (v19)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Three.js](https://threejs.org/)
-- [React Three Fiber](https://docs.pmnd.rs/react-three-fiber) — React renderer for Three.js
-- [React Three Drei](https://github.com/pmndrs/drei) — helpers for R3F (`useGLTF`, `useFBX`, `ContactShadows`, `Environment`, `OrbitControls`, ...)
-- [Zustand](https://zustand-demo.pmnd.rs/) — global state management
-
-## Installation and Usage
-
-1. **Install dependencies**:
-    ```bash
-    npm install
-    ```
-
-2. **Configure environment variables** (create a `.env` file in the project root):
-    ```env
-    VITE_OPENCLAW_API_URL=http://127.0.0.1:18789
-    # Do NOT set VITE_OPENCLAW_TOKEN in production.
-    VITE_OPENCLAW_MODEL=google/gemini-2.5-flash
-    ```
-    If `VITE_OPENCLAW_API_URL` is not set, requests go through the built-in Vite proxy (`/v1` -> `http://127.0.0.1:18789`).
-
-3. **Start development server**:
-    ```bash
-    npm run dev
-    ```
-
-4. **Build for production**:
-    ```bash
-    npm run build
-    ```
+| Command | Description |
+|---|---|
+| `npm run dev` | Vite dev server with HMR |
+| `npm run build` | Type-check + production build (runs `verify-env` first) |
+| `npm run check` | Full gate: env check, typecheck, tests, lint |
+| `npm test` | Vitest run |
+| `npm run lint` / `npm run format` | ESLint / Prettier |
 
 ## Project Structure
 
 ```
 src/
-├── components/
-│   ├── AugmentedEntity.tsx   — Legacy entity component (GLB + EnergyShader fallback)
-│   ├── ChatInterface.tsx     — Chat overlay with voice input and character selector
-│   ├── DynamicCharacter.tsx  — Active character renderer (FBX / GLB / BaseEntity)
-│   ├── Experience.tsx        — R3F Canvas with lighting, shadows and environment
-│   └── MyCharacter.tsx       — Standalone FBX loader (legacy, not used in main scene)
-├── constants/
-│   └── characters.ts         — CHARACTERS config array (id, model URL, type, scale...)
-├── hooks/
-│   └── useOpenClawControl.ts — Listens for Vite HMR "openclaw-command" events
-├── services/
-│   └── openClawService.ts    — Fetch wrapper for the OpenClaw chat completions API
-├── shaders/
-│   └── EnergyShader.ts       — Custom GLSL shader material (uTime, uIntensity, uColor)
-├── store/
-│   └── soulStore.ts          — Zustand store: isThinking, mood, intensity, lastMessage, activeCharacterId
-├── App.tsx                   — Root component
-└── OpenClawControl.tsx       — Polling-based control component (reads openclaw-control.json every 1 s)
+├── components/     # UI + 3D: Experience (R3F canvas), ChatInterface, DynamicCharacter,
+│                   # panels (Avatar, GLBUpload, GaussianSplat, UserDiscovery), Toasts, InterfaceChrome
+├── store/          # Zustand stores: soulStore (entity state), sceneStore (persistence),
+│                   # splatStore, mineStore, toastStore
+├── services/       # openClawService — LLM chat via Supabase Edge Function
+├── multiplayer/    # presence system, session client, zod validation
+├── hooks/          # useMultiplayer, usePresence, useGLBUpload, useAnimationRetarget, ...
+├── shaders/        # EnergyShader, DemoShader (GLSL)
+├── auth/           # AuthProvider (Supabase anonymous sessions)
+├── lib/            # supabase client + typed table APIs, constraints, bone maps
+└── constants/      # CHARACTERS config
+
+supabase/
+├── functions/chat/ # Edge Function: authenticated LLM proxy (JWT + CORS + rate limit)
+└── migrations/     # 001–010 SQL migrations
+
+docs/agents/        # Context files for AI coding agents (GEMINI.md, SKILL.md)
 ```
 
-## Available Characters
+## Characters
 
-Defined in `src/constants/characters.ts`:
+Defined in [src/constants/characters.ts](src/constants/characters.ts):
 
-| ID | Name | Type | Model |
-|----|------|------|-------|
-| `happy-idle` | Happy Bot | FBX | `/HappyIdle.fbx` |
-| `base-sphere` | Energy Core | GLB (procedural) | *(base geometry)* |
+| ID | Name | Type |
+|----|------|------|
+| `happy-idle` | Happy Bot | GLB (`/Avata1.glb`) |
+| `base-sphere` | Energy Core | Procedural (base geometry + EnergyShader) |
+| `cyber-sentinel` | Cyber Sentinel | Procedural (red shader preset) |
+| `logic-guardian` | Logic Guardian | Procedural (gold shader preset) |
 
-Switch the active character via the character selector buttons in the chat UI, or via the `setActiveCharacterId` command through the OpenClaw control interface.
+Switch via the character tabs in the chat UI, or externally through the control interface. Users can also upload their own GLB models.
 
-## Soul Store — State Reference
+## Backend
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `isThinking` | `boolean` | `false` | Shows "thinking" animation; boosts intensity by 0.8 |
-| `mood` | `string` | `'calm'` | `'calm'`, `'excited'`, `'thinking'`, `'listening'` |
-| `intensity` | `number` | `0.5` | Shader energy intensity (0 to ~2) |
-| `lastMessage` | `string` | `''` | Last user message shown in the UI |
-| `activeCharacterId` | `string` | `'happy-idle'` | ID of the currently rendered character |
+- **Auth:** anonymous sign-in (Supabase) — every visitor gets a real `authenticated` session without registering. Requires "Allow anonymous sign-ins" enabled in the Supabase dashboard.
+- **Database:** Postgres tables (`profiles`, `scenes`, `scene_objects`, `objects_3d`, `sessions`, `messages`, `avatar_configs`) with owner-scoped RLS policies. Migration `010` consolidated all policies into single per-table owner policies using `(SELECT auth.uid())` (statement-level evaluation) scoped to `authenticated`.
+- **Chat:** the client never talks to the LLM directly in production. `supabase/functions/chat` validates the caller's JWT, enforces an origin allowlist, a model allowlist, message size limits, and per-user rate limiting, then forwards to the OpenClaw gateway using the server-side `OPENCLAW_SECRET_TOKEN`.
+- **CI/CD:** GitHub Actions runs typecheck, tests, lint, and build on every push/PR to `main`/`develop`. Vercel deploys from Git integration. Dependabot keeps dependencies patched.
 
----
+### Known gaps (tracked)
 
-## Roadmap — Future Deployment Architecture
+- Repo migrations `005–009` (multiplayer tables, cross-owner RLS, private model bucket) are **not yet applied** to the production project — multiplayer persistence and the private `models` bucket are pending a migration sync.
+- The `chat` Edge Function must be deployed and its secrets configured for AI replies to work in production.
+- Edge Function rate limiting is in-memory (per-isolate); a durable store is planned.
 
-The following schema describes the planned evolution of PhysicClaw-VEA into a **multi-user**, **persistent**, and **team-deployable** platform.
+## Roadmap
 
-### Architecture Layers
+| Phase | Goal | Status |
+|-------|------|--------|
+| **v1.x** | Single-user local app: reactive VEA, AI chat, FBX/GLB support | ✅ Done |
+| **v2.0** | Auth + cloud scene persistence (Supabase, RLS) | ✅ Done (anonymous auth; account linking pending) |
+| **v2.5** | Real-time collaborative scenes (presence, realtime events) | 🟡 In progress — client ready, DB sync pending |
+| **v3.0** | CI/CD, staging/production environments, monitoring | 🟡 In progress — CI + deploys live, monitoring pending |
+| **v3.5** | Agent marketplace: per-user system prompts, models, avatars | ⬜ Planned |
+| **v4.0** | WebGPU renderer + TSL shaders | ⬜ Planned |
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  LAYER 00 · CLIENT / BROWSER                                    │
-│                                                                 │
-│  ┌──────────────────┐  ┌────────────────┐  ┌────────────────┐  │
-│  │  Web App (R3F)   │  │  Auth Session  │  │  Voice / TTS   │  │
-│  │  React 19        │  │  JWT           │  │  Web Speech API│  │
-│  │  Three.js WebGPU │  │                │  │  es-ES native  │  │
-│  └──────────────────┘  └────────────────┘  └────────────────┘  │
-└───────────────────────────────┬─────────────────────────────────┘
-                                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  LAYER 01 · HOSTING & CDN · STATIC ASSETS                      │
-│                                                                 │
-│  ┌──────────────────────────┐  ┌────────────────────────────┐  │
-│  │  Vercel / Netlify        │  │  Cloud Storage             │  │
-│  │  Vite bundle · Edge CDN  │  │  GLB · FBX · Textures      │  │
-│  │  Auto CI/CD from GitHub  │  │                            │  │
-│  └──────────────────────────┘  └────────────────────────────┘  │
-└───────────────────────────────┬─────────────────────────────────┘
-                                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  LAYER 02 · API LAYER · GRAPHQL + REST                         │
-│                                                                 │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
-│  │  pg_graphql  │  │ Auth         │  │  Realtime            │  │
-│  │  /graphql/v1 │  │  JWT · OAuth │  │  WebSocket · Live    │  │
-│  │              │  │  Magic Link  │  │  multi-user scene    │  │
-│  └──────────────┘  └──────────────┘  └──────────────────────┘  │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │  OpenClaw Gateway (Azure VM)                             │   │
-│  │  LLM Proxy · Gemini 2.5 Flash · POST /v1/chat            │   │
-│  └──────────────────────────────────────────────────────────┘   │
-└───────────────────────────────┬─────────────────────────────────┘
-                                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  LAYER 03 · BACKEND SERVICES · PROCESSING                      │
-│                                                                 │
-│  ┌──────────────────────┐  ┌───────────────┐  ┌─────────────┐  │
-│  │  Edge Functions      │  │  DB Webhooks  │  │  Azure VM   │  │
-│  │  Deno · TypeScript   │  │               │  │  OpenClaw   │  │
-│  │  upload-model        │  │  INSERT/UPDATE│  │  port       │  │
-│  │  chat-proxy          │  │  triggers     │  │  18789      │  │
-│  └──────────────────────┘  └───────────────┘  └─────────────┘  │
-└───────────────────────────────┬─────────────────────────────────┘
-                                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  LAYER 04 · PERSISTENCE · POSTGRESQL + STORAGE                 │
-│                                                                 │
-│  ┌────────────────────┐  ┌───────────────┐  ┌───────────────┐  │
-│  │  PostgreSQL 15     │  │  Storage      │  │  Row Level    │  │
-│  │                    │  │  Buckets      │  │  Security     │  │
-│  │  scenes            │  │  models/      │  │               │  │
-│  │  objects_3d        │  │  textures/    │  │  per table    │  │
-│  │  agents · messages │  │  S3-compat    │  │               │  │
-│  └────────────────────┘  └───────────────┘  └───────────────┘  │
-└───────────────────────────────┬─────────────────────────────────┘
-                                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  LAYER 05 · DEVOPS · CI/CD · MONITORING                        │
-│                                                                 │
-│  ┌──────────────┐  ┌─────────────────────┐  ┌──────────────┐  │
-│  │  GitHub      │  │  GitHub Actions     │  │  Monitoring  │  │
-│  │  main → prod │  │  lint · types       │  │  Sentry      │  │
-│  │  develop→stg │  │                    │  │  Vercel Anlt │  │
-│  │  feature/*   │  │  vercel deploy      │  │              │  │
-│  └──────────────┘  └─────────────────────┘  └──────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-```
+## Security
 
-### CI/CD Pipeline
+See [SECURITY.md](SECURITY.md) for the security policy and how to report vulnerabilities.
 
-```
-[Dev local]  →  [Pull Request]  →  [CI checks]  →  [Staging]
-feature/*        → develop          lint · types      preview deploy
-                                    build
+## License
 
-[Staging]  →  [Code Review]  →  [DB Migration]  →  [Production]
-                 → main                               vercel deploy
-```
-
-### Environments
-
-| Environment | URL | Database | Branch |
-|-------------|-----|----------|--------|
-| **LOCAL** | `localhost:5173` | Local DB | `feature/*` |
-| **STAGING** | `preview.vercel.app` | Staging project | `develop` |
-| **PRODUCTION** | `physiclaw.app` | Prod project | `main` |
-
-### Environment Variables per Environment
-
-```env
-# Frontend (Vite — public)
-VITE_OPENCLAW_API_URL     = https://your-api-gateway.com
-
-# Edge Functions (private — never exposed to the client)
-OPENCLAW_SECRET_TOKEN     = your-secret-token
-
-# CI/CD (GitHub Actions secrets)
-VERCEL_TOKEN              = your-vercel-token
-```
-
-Use `.env.example` as the single local template. Staging and production values should be configured directly in Vercel, Supabase, and GitHub Secrets.
-
-Builds run `npm run verify-env` before bundling. Any variable with a secret-like name under `VITE_*` is blocked unless it is explicitly allowlisted, because `VITE_*` values are shipped to the browser.
-
-### Current Hardening Notes
-
-- Chat requests use `supabase/functions/chat` so `OPENCLAW_SECRET_TOKEN` stays server-side.
-- Multiplayer RLS is tightened by `supabase/migrations/006_security_hardening.sql`; users can only read/write physics events for scenes they own or have joined.
-- Uploaded GLB models are hardened by `supabase/migrations/007_private_model_storage.sql`; the `models` bucket is private and the client renders models through short-lived signed URLs.
-- The Vite `/api/control` endpoint is a development bridge. Production control should use an authenticated server or Edge Function endpoint.
-- CI runs install, TypeScript, ESLint, Vitest, environment verification, and production build on `main`, `develop`, and PRs.
-
-### Team Roles
-
-| Role | Responsibilities |
-|------|-----------------|
-| **Frontend / 3D** (1–2 devs) | R3F scenes, TSL shaders, Zustand soulStore, TransformControls UX, DynamicCharacter, Chat UI / voice |
-| **Backend / Data** (1 dev) | PostgreSQL schema + RLS, Edge Functions (Deno), Storage policies, GraphQL queries/mutations |
-| **AI / Integration** (1 dev) | OpenClaw gateway config, per-user system prompts, conversation history, mood → shader mapping, alternative LLM models |
-| **DevOps** (1 dev part-time) | GitHub Actions pipelines, Vercel/Netlify config, environment variables, monitoring & alerts, Azure VM deploy |
-
-### Phase Roadmap
-
-| Phase | Goal | Key Technologies |
-|-------|------|-----------------|
-| **v1.x** *(current)* | Single-user local app with reactive VEA, AI chat and FBX/GLB support | React 19, R3F, Zustand, OpenClaw |
-| **v2.0** | Multi-user authentication + cloud scene persistence | Auth (JWT), PostgreSQL, RLS |
-| **v2.5** | Real-time collaborative scenes (multiple simultaneous users) | Realtime, WebSocket, Presence |
-| **v3.0** | Full deployment with automated CI/CD, staging and production | GitHub Actions, Vercel |
-| **v3.5** | Agent marketplace: per-user system prompts, models and avatars | Edge Functions, Storage buckets, pg_graphql |
-| **v4.0** | WebGPU renderer + TSL shaders for advanced effects on modern hardware | Three.js WebGPU, TSL, Chrome/Edge 113+ |
+[MIT](LICENSE) © 2026 Gabriel Cerdio
