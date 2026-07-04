@@ -8,6 +8,7 @@ import { GaussianSplatPanel } from './components/GaussianSplatPanel'
 import { MoodDemo } from './components/MoodDemo'
 import { InterfaceChrome } from './components/InterfaceChrome'
 import { UserDiscoveryPanel } from './components/UserDiscoveryPanel'
+import { Toasts } from './components/Toasts'
 import { AuthProvider } from './auth'
 import { useOpenClawControl } from './hooks/useOpenClawControl'
 import { useMultiplayer } from './hooks/useMultiplayer'
@@ -65,6 +66,7 @@ function AppContent() {
                 <GaussianSplatPanel />
                 <UserDiscoveryPanel remoteUsers={remoteUsers} sceneId={currentScene?.id ?? null} />
                 <ChatInterface />
+                <Toasts />
             </div>
         </div>
     )

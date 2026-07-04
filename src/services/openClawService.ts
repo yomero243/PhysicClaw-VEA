@@ -6,6 +6,8 @@ export interface OpenClawResponse {
     text: string;
     mood: string;
     intensity: number;
+    /** True when the request failed and `text` is an error notice, not a real reply. */
+    isError?: boolean;
 }
 
 // System prompt that makes the VEA act as an embodied avatar with emotional awareness
@@ -219,17 +221,11 @@ export const openClawService = {
             persistHistory(userId);
             console.error('[OpenClawService] sendMessage failed:', err);
             const errorResponse: OpenClawResponse = {
-                text: 'Lo siento, hubo un error al conectar con OpenClaw.',
+                text: 'No se pudo conectar con el asistente. Intenta de nuevo.',
                 mood: 'sad',
                 intensity: 0.3,
+                isError: true,
             };
-
-            store.addChatMessage({
-                role: 'assistant',
-                content: errorResponse.text,
-                mood: 'sad',
-                timestamp: Date.now(),
-            });
 
             return errorResponse;
         } finally {

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, memo } from 'react'
 import { useSceneStore } from '../store/sceneStore'
 import { useSoulStore } from '../store/soulStore'
 import { openClawService } from '../services/openClawService'
+import { toast } from '../store/toastStore'
 import { CHARACTERS } from '../constants/characters'
 import type { MessageRole, MoodType } from '../types/database'
 
@@ -254,10 +255,19 @@ export const ChatInterface = () => {
     setInputText('')
 
     const result = await openClawService.sendMessage(trimmed)
-    
+
+    if (result.isError) {
+      // Surface the failure without persisting it as a fake assistant reply
+      toast(result.text, 'error')
+      setMood('sad')
+      setIntensity(0.3)
+      setInputText(trimmed)
+      return
+    }
+
     // Persistent assistant response
     await saveMessage(result.text, 'assistant', result.mood as MoodType, result.intensity)
-    
+
     setMood((result.mood ?? 'calm') as MoodType)
     setIntensity(result.intensity ?? 0.5)
     speakResponse(result.text)
@@ -280,6 +290,11 @@ export const ChatInterface = () => {
     recog.interimResults = false
     recog.onstart = () => { setIsListening(true); setMood('listening'); setIntensity(0.8) }
     recog.onend = () => { setIsListening(false); setMood('calm'); setIntensity(0.5) }
+    recog.onerror = (e: any) => {
+      if (e.error !== 'aborted' && e.error !== 'no-speech') {
+        toast('No se pudo usar el micrófono. Revisa los permisos del navegador.', 'error')
+      }
+    }
     recog.onresult = (e: any) => sendRef.current(e.results[0][0].transcript)
     recognitionRef.current = recog
     return function cleanupSpeechRecognition() {
