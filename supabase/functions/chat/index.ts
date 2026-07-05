@@ -36,7 +36,11 @@ function getCorsHeaders(req: Request): Record<string, string> | null {
 }
 
 function getRateLimit(): number {
-  const configuredLimit = Number(Deno.env.get("CHAT_RATE_LIMIT_PER_MINUTE"));
+  // Floor to an integer: the consume_rate_limit RPC declares p_limit as
+  // integer, and a fractional env value would error the RPC on every call.
+  const configuredLimit = Math.floor(
+    Number(Deno.env.get("CHAT_RATE_LIMIT_PER_MINUTE")),
+  );
   return Number.isFinite(configuredLimit) && configuredLimit > 0
     ? configuredLimit
     : DEFAULT_RATE_LIMIT_PER_MINUTE;
