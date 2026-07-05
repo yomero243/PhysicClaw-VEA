@@ -69,6 +69,30 @@ function getControlRateLimit(): number {
     : DEFAULT_CONTROL_RATE_LIMIT_PER_MINUTE;
 }
 
+// In-memory fallback limiter (per isolate) — used only when the durable
+// RPC fails, so a database hiccup degrades to per-isolate limiting
+// instead of no limiting at all.
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function consumeRateLimitLocal(
+  key: string,
+): { allowed: boolean; retryAfter: number } {
+  const now = Date.now();
+  for (const [k, entry] of rateLimitMap.entries()) {
+    if (now > entry.resetAt) rateLimitMap.delete(k);
+  }
+
+  const entry = rateLimitMap.get(key);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true, retryAfter: 0 };
+  }
+
+  entry.count += 1;
+  const retryAfter = Math.ceil((entry.resetAt - now) / 1000);
+  return { allowed: entry.count <= getControlRateLimit(), retryAfter };
+}
+
 // Module scope is reused within an isolate — cache the service client.
 let cachedServiceClient: ReturnType<typeof createClient> | null = null;
 
@@ -130,13 +154,23 @@ Deno.serve(async (req: Request) => {
       p_window_ms: RATE_LIMIT_WINDOW_MS,
     },
   );
-  if (!rateError && Array.isArray(rateData) && rateData.length > 0 &&
-      !rateData[0].allowed) {
+  let rate: { allowed: boolean; retryAfter: number };
+  if (!rateError && Array.isArray(rateData) && rateData.length > 0) {
+    rate = {
+      allowed: Boolean(rateData[0].allowed),
+      retryAfter: Number(rateData[0].retry_after_seconds) || 0,
+    };
+  } else {
+    console.error("consume_rate_limit RPC failed:", rateError?.message);
+    rate = consumeRateLimitLocal(`control:${tokenRow.id}`);
+  }
+
+  if (!rate.allowed) {
     return new Response(JSON.stringify({ error: "Too many requests" }), {
       status: 429,
       headers: {
         "Content-Type": "application/json",
-        "Retry-After": String(rateData[0].retry_after_seconds ?? 1),
+        "Retry-After": String(rate.retryAfter || 1),
       },
     });
   }
