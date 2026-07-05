@@ -46,15 +46,6 @@ function getRateLimit(): number {
     : DEFAULT_RATE_LIMIT_PER_MINUTE;
 }
 
-function getClientIp(req: Request): string {
-  const forwardedFor = req.headers.get("x-forwarded-for");
-  if (forwardedFor) return forwardedFor.split(",")[0].trim();
-
-  return req.headers.get("cf-connecting-ip") ??
-    req.headers.get("x-real-ip") ??
-    "unknown";
-}
-
 function pruneRateLimitMap(now: number): void {
   for (const [key, entry] of rateLimitMap.entries()) {
     if (now > entry.resetAt) rateLimitMap.delete(key);
@@ -124,8 +115,10 @@ async function consumeRateLimitDurable(
       return null;
     }
 
+    // Strict boolean check: anything other than a true boolean from the
+    // RPC (e.g. a coerced string) must NOT be treated as allowed.
     return {
-      allowed: Boolean(data[0].allowed),
+      allowed: data[0].allowed === true,
       retryAfter: Number(data[0].retry_after_seconds) || 0,
     };
   } catch (err) {
@@ -217,7 +210,10 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: "Unauthorized" }, 401, corsHeaders);
   }
 
-  const rateLimitKey = `chat:${user.id}:${getClientIp(req)}`;
+  // Keyed by authenticated uid only: IP headers (x-forwarded-for) are
+  // client-influenceable and would both weaken the limit and blow up the
+  // persisted key cardinality in rate_limits.
+  const rateLimitKey = `chat:${user.id}`;
   const rateLimitResult = (await consumeRateLimitDurable(rateLimitKey)) ??
     consumeRateLimit(rateLimitKey);
   if (!rateLimitResult.allowed) {
