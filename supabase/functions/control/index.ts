@@ -16,10 +16,26 @@ interface ControlBody {
   id?: string;
 }
 
-function json(body: Record<string, unknown>, status: number): Response {
+// Agents are typically server-side callers, but browser-based agents work
+// too: every response carries CORS headers, not just the preflight.
+const CORS_HEADERS: Record<string, string> = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "content-type, x-agent-token",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+function json(
+  body: Record<string, unknown>,
+  status: number,
+  extraHeaders: Record<string, string> = {},
+): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      ...CORS_HEADERS,
+      "Content-Type": "application/json",
+      ...extraHeaders,
+    },
   });
 }
 
@@ -63,7 +79,11 @@ async function sha256Hex(input: string): Promise<string> {
 }
 
 function getControlRateLimit(): number {
-  const configured = Number(Deno.env.get("CONTROL_RATE_LIMIT_PER_MINUTE"));
+  // Floor to an integer: the consume_rate_limit RPC declares p_limit as
+  // integer, and a fractional env value would error the RPC on every call.
+  const configured = Math.floor(
+    Number(Deno.env.get("CONTROL_RATE_LIMIT_PER_MINUTE")),
+  );
   return Number.isFinite(configured) && configured > 0
     ? configured
     : DEFAULT_CONTROL_RATE_LIMIT_PER_MINUTE;
@@ -107,13 +127,7 @@ function getServiceClient(): ReturnType<typeof createClient> | null {
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "content-type, x-agent-token",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-      },
-    });
+    return new Response("ok", { headers: CORS_HEADERS });
   }
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
@@ -166,12 +180,8 @@ Deno.serve(async (req: Request) => {
   }
 
   if (!rate.allowed) {
-    return new Response(JSON.stringify({ error: "Too many requests" }), {
-      status: 429,
-      headers: {
-        "Content-Type": "application/json",
-        "Retry-After": String(rate.retryAfter || 1),
-      },
+    return json({ error: "Too many requests" }, 429, {
+      "Retry-After": String(rate.retryAfter || 1),
     });
   }
 

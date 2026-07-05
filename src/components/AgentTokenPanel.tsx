@@ -92,6 +92,7 @@ export function AgentTokenPanel() {
                 </span>
                 <button
                     onClick={() => { setOpen(false); setFreshSecret(null) }}
+                    aria-label="Close agent tokens panel"
                     style={{ background: 'none', border: 'none', color: '#8CFFB0', cursor: 'pointer', fontSize: 12 }}
                 >
                     ✕

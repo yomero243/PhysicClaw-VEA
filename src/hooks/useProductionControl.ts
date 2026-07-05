@@ -19,6 +19,10 @@ export function useProductionControl() {
     useEffect(() => {
         if (!userId) return
 
+        // New user (login/logout/account switch) → fresh dedupe state, so a
+        // reused command id from the previous session is not dropped.
+        lastProcessedId.current = undefined
+
         const channel = supabase
             .channel(`control:${userId}`, {
                 config: { private: true, broadcast: { self: false } },
