@@ -31,9 +31,20 @@ set search_path = pg_catalog, public
 as $$
 declare
     v_now    timestamptz := now();
-    v_window interval    := make_interval(secs => p_window_ms / 1000.0);
+    v_window interval;
     v_row    public.rate_limits;
 begin
+    if p_key is null or p_key = '' then
+        raise exception 'consume_rate_limit: p_key must be non-empty';
+    end if;
+    if p_limit is null or p_limit <= 0 then
+        raise exception 'consume_rate_limit: p_limit must be > 0 (got %)', p_limit;
+    end if;
+    if p_window_ms is null or p_window_ms <= 0 then
+        raise exception 'consume_rate_limit: p_window_ms must be > 0 (got %)', p_window_ms;
+    end if;
+    v_window := make_interval(secs => p_window_ms / 1000.0);
+
     -- Opportunistic cleanup: drop keys idle for 2+ windows.
     -- Probabilistic (~1% of calls) so the hot path stays an indexed upsert.
     if random() < 0.01 then

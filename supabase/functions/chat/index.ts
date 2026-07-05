@@ -108,8 +108,15 @@ async function consumeRateLimitDurable(
       p_window_ms: RATE_LIMIT_WINDOW_MS,
     });
 
-    if (error || !Array.isArray(data) || data.length === 0) {
-      console.error("consume_rate_limit RPC failed:", error?.message);
+    if (error) {
+      console.error("consume_rate_limit RPC failed:", error.message);
+      return null;
+    }
+    if (!Array.isArray(data) || data.length === 0) {
+      console.error(
+        "consume_rate_limit RPC returned unexpected shape:",
+        JSON.stringify(data),
+      );
       return null;
     }
 
