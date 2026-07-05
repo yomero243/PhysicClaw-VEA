@@ -73,6 +73,46 @@ function consumeRateLimit(key: string): { allowed: boolean; retryAfter: number }
   return { allowed: entry.count <= limit, retryAfter };
 }
 
+interface RateLimitResult {
+  allowed: boolean;
+  retryAfter: number;
+}
+
+/**
+ * Durable rate limit via Postgres RPC (shared across isolates).
+ * Returns null on any failure so the caller can fall back to the
+ * in-memory limiter — rate limiting must never take the chat down.
+ */
+async function consumeRateLimitDurable(
+  key: string,
+): Promise<RateLimitResult | null> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceRoleKey) return null;
+
+  try {
+    const serviceClient = createClient(supabaseUrl, serviceRoleKey);
+    const { data, error } = await serviceClient.rpc("consume_rate_limit", {
+      p_key: key,
+      p_limit: getRateLimit(),
+      p_window_ms: RATE_LIMIT_WINDOW_MS,
+    });
+
+    if (error || !Array.isArray(data) || data.length === 0) {
+      console.error("consume_rate_limit RPC failed:", error?.message);
+      return null;
+    }
+
+    return {
+      allowed: Boolean(data[0].allowed),
+      retryAfter: Number(data[0].retry_after_seconds) || 0,
+    };
+  } catch (err) {
+    console.error("consume_rate_limit RPC threw:", err);
+    return null;
+  }
+}
+
 function forbiddenCorsResponse(): Response {
   return new Response(JSON.stringify({ error: "Origin not allowed" }), {
     status: 403,
@@ -156,8 +196,9 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: "Unauthorized" }, 401, corsHeaders);
   }
 
-  const rateLimitKey = `${user.id}:${getClientIp(req)}`;
-  const rateLimitResult = consumeRateLimit(rateLimitKey);
+  const rateLimitKey = `chat:${user.id}:${getClientIp(req)}`;
+  const rateLimitResult = (await consumeRateLimitDurable(rateLimitKey)) ??
+    consumeRateLimit(rateLimitKey);
   if (!rateLimitResult.allowed) {
     return rateLimitResponse(rateLimitResult.retryAfter, corsHeaders);
   }
