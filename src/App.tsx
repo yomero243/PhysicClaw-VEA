@@ -11,6 +11,7 @@ import { UserDiscoveryPanel } from './components/UserDiscoveryPanel'
 import { Toasts } from './components/Toasts'
 import { AuthProvider } from './auth'
 import { useOpenClawControl } from './hooks/useOpenClawControl'
+import { useProductionControl } from './hooks/useProductionControl'
 import { useMultiplayer } from './hooks/useMultiplayer'
 import { useSoulStore } from './store/soulStore'
 import { useSceneStore } from './store/sceneStore'
@@ -26,6 +27,7 @@ function AppContent() {
     const lowPerformanceMode = useSoulStore((s) => s.lowPerformanceMode)
     const setLowPerformanceMode = useSoulStore((s) => s.setLowPerformanceMode)
     useOpenClawControl()
+    useProductionControl()
 
     useEffect(function initStore() {
         initialize()
