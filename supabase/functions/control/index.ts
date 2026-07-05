@@ -63,7 +63,7 @@ function validateCommand(body: ControlBody): string | null {
       return typeof body.value === "string" &&
           body.value.length > 0 && body.value.length <= CHAR_ID_MAX_LEN
         ? null
-        : "setActiveCharacterId value must be a non-empty string";
+        : `setActiveCharacterId value must be a non-empty string of <= ${CHAR_ID_MAX_LEN} chars`;
     default:
       return "Unknown command";
   }
@@ -138,8 +138,10 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Server misconfiguration" }, 500);
   }
 
+  // Full-format check (prefix + 64 hex chars, as issued by the panel) so
+  // garbage never reaches hashing or the DB lookup.
   const secret = req.headers.get("x-agent-token");
-  if (!secret || !secret.startsWith("pcvea_")) {
+  if (!secret || !/^pcvea_[0-9a-f]{64}$/.test(secret)) {
     return json({ error: "Missing or malformed X-Agent-Token header" }, 401);
   }
 
@@ -160,22 +162,31 @@ Deno.serve(async (req: Request) => {
   }
 
   // Rate limit per token (shares the durable limiter from migration 011).
-  const { data: rateData, error: rateError } = await serviceClient.rpc(
-    "consume_rate_limit",
-    {
-      p_key: `control:${tokenRow.id}`,
-      p_limit: getControlRateLimit(),
-      p_window_ms: RATE_LIMIT_WINDOW_MS,
-    },
-  );
-  let rate: { allowed: boolean; retryAfter: number };
-  if (!rateError && Array.isArray(rateData) && rateData.length > 0) {
-    rate = {
-      allowed: Boolean(rateData[0].allowed),
-      retryAfter: Number(rateData[0].retry_after_seconds) || 0,
-    };
-  } else {
-    console.error("consume_rate_limit RPC failed:", rateError?.message);
+  // Any failure — RPC error, thrown fetch, unexpected shape — falls back to
+  // the in-memory limiter; the endpoint never runs unlimited (no fail-open).
+  let rate: { allowed: boolean; retryAfter: number } | null = null;
+  try {
+    const { data: rateData, error: rateError } = await serviceClient.rpc(
+      "consume_rate_limit",
+      {
+        p_key: `control:${tokenRow.id}`,
+        p_limit: getControlRateLimit(),
+        p_window_ms: RATE_LIMIT_WINDOW_MS,
+      },
+    );
+    if (!rateError && Array.isArray(rateData) && rateData.length > 0) {
+      rate = {
+        // Strict boolean check: only a true boolean counts as allowed.
+        allowed: rateData[0].allowed === true,
+        retryAfter: Number(rateData[0].retry_after_seconds) || 0,
+      };
+    } else {
+      console.error("consume_rate_limit RPC failed:", rateError?.message);
+    }
+  } catch (err) {
+    console.error("consume_rate_limit RPC threw:", err);
+  }
+  if (!rate) {
     rate = consumeRateLimitLocal(`control:${tokenRow.id}`);
   }
 
