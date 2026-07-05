@@ -69,6 +69,18 @@ function getControlRateLimit(): number {
     : DEFAULT_CONTROL_RATE_LIMIT_PER_MINUTE;
 }
 
+// Module scope is reused within an isolate — cache the service client.
+let cachedServiceClient: ReturnType<typeof createClient> | null = null;
+
+function getServiceClient(): ReturnType<typeof createClient> | null {
+  if (cachedServiceClient) return cachedServiceClient;
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceRoleKey) return null;
+  cachedServiceClient = createClient(supabaseUrl, serviceRoleKey);
+  return cachedServiceClient;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", {
@@ -83,7 +95,8 @@ Deno.serve(async (req: Request) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!supabaseUrl || !serviceRoleKey) {
+  const serviceClient = getServiceClient();
+  if (!supabaseUrl || !serviceRoleKey || !serviceClient) {
     return json({ error: "Server misconfiguration" }, 500);
   }
 
@@ -92,7 +105,6 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Missing or malformed X-Agent-Token header" }, 401);
   }
 
-  const serviceClient = createClient(supabaseUrl, serviceRoleKey);
   const tokenHash = await sha256Hex(secret);
 
   const { data: tokenRow, error: tokenError } = await serviceClient
