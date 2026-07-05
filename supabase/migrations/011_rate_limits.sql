@@ -27,7 +27,7 @@ create or replace function public.consume_rate_limit(
 returns table (allowed boolean, retry_after_seconds integer)
 language plpgsql
 security definer
-set search_path = pg_catalog, public
+set search_path = ''
 as $$
 declare
     v_now    timestamptz := now();

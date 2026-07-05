@@ -35,6 +35,9 @@ function getCorsHeaders(req: Request): Record<string, string> | null {
   };
 }
 
+// Postgres int4 bound: a larger p_limit would error the RPC on every call.
+const MAX_RATE_LIMIT = 2_147_483_647;
+
 function getRateLimit(): number {
   // Floor to an integer: the consume_rate_limit RPC declares p_limit as
   // integer, and a fractional env value would error the RPC on every call.
@@ -42,7 +45,7 @@ function getRateLimit(): number {
     Number(Deno.env.get("CHAT_RATE_LIMIT_PER_MINUTE")),
   );
   return Number.isFinite(configuredLimit) && configuredLimit > 0
-    ? configuredLimit
+    ? Math.min(configuredLimit, MAX_RATE_LIMIT)
     : DEFAULT_RATE_LIMIT_PER_MINUTE;
 }
 
