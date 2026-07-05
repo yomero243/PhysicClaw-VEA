@@ -16,7 +16,7 @@ import type { PhysicsEvent, SessionUser } from '../types/multiplayer'
  */
 const GRID_POSITION: [number, number, number] = [0, -1.01, 0]
 const GRID_ARGS: [number, number] = [20, 20]
-const BG_ARGS: [string] = ['#0A0B0A']
+const BG_ARGS: [string] = ['#0C0912']
 const CONTACT_SHADOWS_POS: [number, number, number] = [0, -1, 0]
 const BOX_ARGS: [number, number, number] = [1, 1, 1]
 
@@ -89,7 +89,7 @@ const SceneObjects = memo(function SceneObjects() {
                         >
                             <boxGeometry args={BOX_ARGS} />
                             <meshStandardMaterial 
-                                color={(obj.metadata?.color as string) || '#8CFFB0'} 
+                                color={(obj.metadata?.color as string) || '#A78BFA'} 
                                 metalness={0.9}
                                 roughness={0.05}
                             />
@@ -106,10 +106,10 @@ const FloorGrid = () => {
     const gridConfig = useMemo(() => ({
         cellSize: 0.5,
         cellThickness: 0.5,
-        cellColor: '#1a3a4a',
+        cellColor: '#2A2440',
         sectionSize: 2,
         sectionThickness: 1,
-        sectionColor: '#8CFFB0',
+        sectionColor: '#A78BFA',
         fadeDistance: 20,
         fadeStrength: 1.5,
         infiniteGrid: true,
@@ -212,7 +212,7 @@ export const Experience = ({
                     <directionalLight
                         position={[-6, 5, -6]}
                         intensity={0.4}
-                        color="#aaccff"
+                        color="#C4B5FD"
                     />
                     {/* Luz de rebote sutil desde abajo */}
                     <pointLight
@@ -225,7 +225,7 @@ export const Experience = ({
                 <>
                     {/* Luces simplificadas sin sombras en modo optimizado */}
                     <directionalLight position={[6, 10, 6]} intensity={1.2} />
-                    <directionalLight position={[-6, 5, -6]} intensity={0.3} color="#aaccff" />
+                    <directionalLight position={[-6, 5, -6]} intensity={0.3} color="#C4B5FD" />
                 </>
             )}
 

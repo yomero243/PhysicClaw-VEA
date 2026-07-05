@@ -83,11 +83,11 @@ export const CubeGenerator: React.FC = () => {
   const buttonStyle: React.CSSProperties = {
     height: 34,
     padding: '0 12px',
-    background: 'rgba(18, 21, 15, 0.72)',
-    border: '1px solid rgba(140, 255, 176, 0.22)',
+    background: 'rgba(19,15,28, 0.72)',
+    border: '1px solid rgba(167,139,250, 0.22)',
     borderRadius: '5px',
-    color: '#EAF3DF',
-    fontFamily: '"Courier New", monospace',
+    color: '#F4F1FF',
+    fontFamily: '"JetBrains Mono", "Courier New", monospace',
     fontSize: '10px',
     letterSpacing: 1.2,
     cursor: 'pointer',
@@ -111,7 +111,7 @@ export const CubeGenerator: React.FC = () => {
         onClick={createCube}
         style={buttonStyle}
         onMouseOver={(e) => e.currentTarget.style.background = 'rgba(0, 212, 255, 0.16)'}
-        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(18, 21, 15, 0.72)'}
+        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(19,15,28, 0.72)'}
       >
         + CUBE
       </button>
@@ -121,10 +121,10 @@ export const CubeGenerator: React.FC = () => {
         style={{
           ...buttonStyle,
           border: '1px solid rgba(255, 92, 92, 0.22)',
-          color: '#FF7A5C',
+          color: '#FB7185',
         }}
         onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 92, 92, 0.16)'}
-        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(18, 21, 15, 0.72)'}
+        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(19,15,28, 0.72)'}
       >
         CLEAR CUBES
       </button>

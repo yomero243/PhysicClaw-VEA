@@ -42,7 +42,7 @@ function AppContent() {
                 height: '100vh',
                 display: 'flex',
                 flexDirection: 'row',
-                background: '#0A0B0A',
+                background: '#0C0912',
                 overflow: 'hidden',
             }}
         >

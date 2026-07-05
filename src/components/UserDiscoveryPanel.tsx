@@ -112,8 +112,8 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                 right: 20,
                 zIndex: 12,
                 width: 'min(320px, calc(100vw - 40px))',
-                fontFamily: '"Courier New", monospace',
-                color: '#EAF3DF',
+                fontFamily: '"JetBrains Mono", "Courier New", monospace',
+                color: '#F4F1FF',
                 pointerEvents: 'auto',
             }}
         >
@@ -123,9 +123,9 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                         marginBottom: 8,
                         padding: '8px 10px',
                         borderRadius: 4,
-                        background: 'rgba(10,11,10,0.86)',
-                        border: `1px solid ${notice.kind === 'join' ? 'rgba(201,243,106,0.35)' : 'rgba(255,190,80,0.35)'}`,
-                        color: notice.kind === 'join' ? '#C9F36A' : '#F2B84B',
+                        background: 'rgba(12,9,18,0.86)',
+                        border: `1px solid ${notice.kind === 'join' ? 'rgba(240,171,252,0.35)' : 'rgba(255,190,80,0.35)'}`,
+                        color: notice.kind === 'join' ? '#F0ABFC' : '#F2B84B',
                         fontSize: 10,
                         letterSpacing: 1.2,
                         boxShadow: '0 10px 28px rgba(0,0,0,0.35)',
@@ -137,15 +137,15 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
 
             <div
                 style={{
-                    background: 'linear-gradient(180deg, rgba(18,21,15,0.9), rgba(10,11,10,0.82))',
+                    background: 'linear-gradient(180deg, rgba(19,15,28,0.9), rgba(12,9,18,0.82))',
                     backdropFilter: 'blur(18px)',
-                    border: '1px solid rgba(140,255,176,0.18)',
+                    border: '1px solid rgba(167,139,250,0.18)',
                     borderRadius: 7,
                     overflow: 'hidden',
-                    boxShadow: '0 18px 42px rgba(0,0,0,0.42), 0 0 22px rgba(140,255,176,0.07)',
+                    boxShadow: '0 18px 42px rgba(0,0,0,0.42), 0 0 22px rgba(167,139,250,0.07)',
                 }}
             >
-                <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(140,255,176,0.35), transparent)' }} />
+                <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(167,139,250,0.35), transparent)' }} />
 
                 <div
                     style={{
@@ -166,9 +166,9 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                             padding: 0,
                             background: 'transparent',
                             border: 'none',
-                            color: '#8CFFB0',
+                            color: '#A78BFA',
                             cursor: 'pointer',
-                            fontFamily: '"Courier New", monospace',
+                            fontFamily: '"JetBrains Mono", "Courier New", monospace',
                             minWidth: 0,
                         }}
                     >
@@ -177,15 +177,15 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                                 width: 7,
                                 height: 7,
                                 borderRadius: '50%',
-                                background: remoteUsers.length > 0 ? '#C9F36A' : '#5B644D',
-                                boxShadow: remoteUsers.length > 0 ? '0 0 8px #C9F36A' : 'none',
+                                background: remoteUsers.length > 0 ? '#F0ABFC' : '#4E4766',
+                                boxShadow: remoteUsers.length > 0 ? '0 0 8px #F0ABFC' : 'none',
                                 flexShrink: 0,
                             }}
                         />
                         <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2 }}>
                             DISCOVERY
                         </span>
-                        <span style={{ color: 'rgba(140,255,176,0.35)', fontSize: 10 }}>
+                        <span style={{ color: 'rgba(167,139,250,0.35)', fontSize: 10 }}>
                             {collapsed ? 'SHOW' : 'HIDE'}
                         </span>
                     </button>
@@ -202,8 +202,8 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                             style={{
                                 padding: '3px 7px',
                                 borderRadius: 3,
-                                border: '1px solid rgba(140,255,176,0.16)',
-                                color: remoteUsers.length > 0 ? '#C9F36A' : '#A9B89A',
+                                border: '1px solid rgba(167,139,250,0.16)',
+                                color: remoteUsers.length > 0 ? '#F0ABFC' : '#A6A0C3',
                                 fontSize: 9,
                                 letterSpacing: 1.2,
                             }}
@@ -221,10 +221,10 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
                                 padding: '0 12px 9px',
-                                color: '#A9B89A',
+                                color: '#A6A0C3',
                                 fontSize: 9,
                                 letterSpacing: 1.2,
-                                borderBottom: '1px solid rgba(140,255,176,0.08)',
+                                borderBottom: '1px solid rgba(167,139,250,0.08)',
                             }}
                         >
                             <span>SCENE::{sceneLabel}</span>
@@ -235,7 +235,7 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                             <div
                                 style={{
                                     padding: '16px 12px',
-                                    color: '#A9B89A',
+                                    color: '#A6A0C3',
                                     fontSize: 10,
                                     lineHeight: 1.5,
                                     letterSpacing: 1,
@@ -264,20 +264,20 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                                                 gridTemplateColumns: '1fr auto',
                                                 gap: 10,
                                                 padding: '10px 12px',
-                                                background: selected ? 'rgba(140,255,176,0.1)' : 'transparent',
+                                                background: selected ? 'rgba(167,139,250,0.1)' : 'transparent',
                                                 border: 'none',
-                                                borderBottom: '1px solid rgba(140,255,176,0.06)',
-                                                color: '#EAF3DF',
+                                                borderBottom: '1px solid rgba(167,139,250,0.06)',
+                                                color: '#F4F1FF',
                                                 textAlign: 'left',
                                                 cursor: 'pointer',
-                                                fontFamily: '"Courier New", monospace',
+                                                fontFamily: '"JetBrains Mono", "Courier New", monospace',
                                             }}
                                         >
                                             <span style={{ minWidth: 0 }}>
                                                 <span
                                                     style={{
                                                         display: 'block',
-                                                        color: selected ? '#8CFFB0' : '#EAF3DF',
+                                                        color: selected ? '#A78BFA' : '#F4F1FF',
                                                         fontSize: 11,
                                                         letterSpacing: 1.4,
                                                         whiteSpace: 'nowrap',
@@ -291,7 +291,7 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                                                     style={{
                                                         display: 'block',
                                                         marginTop: 4,
-                                                        color: '#A9B89A',
+                                                        color: '#A6A0C3',
                                                         fontSize: 9,
                                                         letterSpacing: 1,
                                                         whiteSpace: 'nowrap',
@@ -312,10 +312,10 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                                                     flexShrink: 0,
                                                 }}
                                             >
-                                                <span style={{ color: '#C9F36A', fontSize: 10, letterSpacing: 1 }}>
+                                                <span style={{ color: '#F0ABFC', fontSize: 10, letterSpacing: 1 }}>
                                                     {distance.toFixed(1)}M
                                                 </span>
-                                                <span style={{ color: '#A9B89A', fontSize: 9, letterSpacing: 1 }}>
+                                                <span style={{ color: '#A6A0C3', fontSize: 9, letterSpacing: 1 }}>
                                                     {lastSeenLabel(user.last_seen_at)}
                                                 </span>
                                             </span>
@@ -329,14 +329,14 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                             <div
                                 style={{
                                     padding: 12,
-                                    borderTop: '1px solid rgba(140,255,176,0.08)',
+                                    borderTop: '1px solid rgba(167,139,250,0.08)',
                                     display: 'grid',
                                     gap: 9,
                                 }}
                             >
                                 <div
                                     style={{
-                                        color: '#A9B89A',
+                                        color: '#A6A0C3',
                                         fontSize: 9,
                                         lineHeight: 1.5,
                                         letterSpacing: 1,
@@ -351,13 +351,13 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                                     style={{
                                         height: 34,
                                         borderRadius: 4,
-                                        border: '1px solid rgba(140,255,176,0.28)',
-                                        background: 'rgba(140,255,176,0.08)',
-                                        color: '#8CFFB0',
+                                        border: '1px solid rgba(167,139,250,0.28)',
+                                        background: 'rgba(167,139,250,0.08)',
+                                        color: '#A78BFA',
                                         fontSize: 10,
                                         fontWeight: 700,
                                         letterSpacing: 1.4,
-                                        fontFamily: '"Courier New", monospace',
+                                        fontFamily: '"JetBrains Mono", "Courier New", monospace',
                                         cursor: 'pointer',
                                     }}
                                 >
@@ -366,7 +366,7 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                             </div>
                         )}
 
-                        <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(140,255,176,0.12), transparent)' }} />
+                        <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(167,139,250,0.12), transparent)' }} />
                     </>
                 )}
             </div>

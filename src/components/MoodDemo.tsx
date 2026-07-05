@@ -100,17 +100,17 @@ function Overlay({ moodIndex, onSelect }: OverlayProps) {
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'space-between',
             padding: '40px 24px',
-            fontFamily: '"Courier New", monospace',
+            fontFamily: '"JetBrains Mono", "Courier New", monospace',
         }}>
             {/* ── Top: branding ── */}
             <div style={{ textAlign: 'center' }}>
-                <div style={{ color: '#8CFFB0', fontSize: 11, letterSpacing: 6, textTransform: 'uppercase', opacity: 0.5 }}>
+                <div style={{ color: '#A78BFA', fontSize: 11, letterSpacing: 6, textTransform: 'uppercase', opacity: 0.5 }}>
                     PhysicClaw
                 </div>
                 <div style={{ color: '#ffffff', fontSize: 32, letterSpacing: 4, fontWeight: 'bold', marginTop: 6 }}>
                     VEA
                 </div>
-                <div style={{ color: '#6b7a90', fontSize: 10, letterSpacing: 3, marginTop: 4, textTransform: 'uppercase' }}>
+                <div style={{ color: '#7B7398', fontSize: 10, letterSpacing: 3, marginTop: 4, textTransform: 'uppercase' }}>
                     Virtual Entity Augmented
                 </div>
             </div>
@@ -120,7 +120,7 @@ function Overlay({ moodIndex, onSelect }: OverlayProps) {
 
                 {/* mood label */}
                 <div style={{ marginBottom: 28 }}>
-                    <div style={{ color: '#6b7a90', fontSize: 10, letterSpacing: 4, textTransform: 'uppercase', marginBottom: 8 }}>
+                    <div style={{ color: '#7B7398', fontSize: 10, letterSpacing: 4, textTransform: 'uppercase', marginBottom: 8 }}>
                         current mood
                     </div>
                     <div style={{
@@ -158,8 +158,8 @@ function Overlay({ moodIndex, onSelect }: OverlayProps) {
                     href="/"
                     style={{
                         display: 'inline-block',
-                        fontFamily: '"Courier New", monospace',
-                        color: '#030810',
+                        fontFamily: '"JetBrains Mono", "Courier New", monospace',
+                        color: '#0A0614',
                         background: mood.color,
                         padding: '12px 36px',
                         fontSize: 11,
@@ -173,7 +173,7 @@ function Overlay({ moodIndex, onSelect }: OverlayProps) {
                     Talk to it
                 </a>
 
-                <div style={{ color: '#6b7a90', fontSize: 10, letterSpacing: 2, marginTop: 16, opacity: 0.5 }}>
+                <div style={{ color: '#7B7398', fontSize: 10, letterSpacing: 2, marginTop: 16, opacity: 0.5 }}>
                     Each response changes what you see
                 </div>
             </div>
@@ -205,9 +205,9 @@ export function MoodDemo() {
     }, [])
 
     return (
-        <div style={{ width: '100vw', height: '100vh', background: '#030810', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ width: '100vw', height: '100vh', background: '#0A0614', position: 'relative', overflow: 'hidden' }}>
             <Canvas camera={{ position: [0, 0, 4], fov: 45 }}>
-                <color attach="background" args={['#030810']} />
+                <color attach="background" args={['#0A0614']} />
                 <ambientLight intensity={0.1} />
                 <pointLight position={[4, 4, 4]} intensity={0.4} />
                 <DemoSphere moodIndex={moodIndex} />
@@ -225,7 +225,7 @@ export function MoodDemo() {
             {/* Credit */}
             <div style={{
                 position: 'absolute', bottom: 16, right: 20,
-                fontFamily: '"Courier New", monospace',
+                fontFamily: '"JetBrains Mono", "Courier New", monospace',
                 color: 'rgba(255,255,255,0.12)',
                 fontSize: 10, letterSpacing: 2,
             }}>

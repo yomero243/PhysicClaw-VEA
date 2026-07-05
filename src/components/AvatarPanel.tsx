@@ -14,7 +14,7 @@ interface ShaderConfig {
   [key: string]: unknown
 }
 
-const DEFAULT_COLORS: ColorConfig = { primary: '#8CFFB0', secondary: '#7700ff', glow: '#C9F36A', emission: '#ffffff' }
+const DEFAULT_COLORS: ColorConfig = { primary: '#A78BFA', secondary: '#7700ff', glow: '#F0ABFC', emission: '#ffffff' }
 const DEFAULT_SHADERS: ShaderConfig = { wireframeOpacity: 0.3, glowIntensity: 1.2, pulseSpeed: 1.0, distortion: 0.1 }
 
 const ENVS = ['apartment','city','dawn','forest','lobby','night','park','studio','sunset','warehouse']
@@ -33,14 +33,14 @@ const PRESET_MODELS = [
 
 const PanelLabel = memo(function PanelLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ fontSize: 9, letterSpacing: 3, color: 'rgba(140,255,176,0.4)', marginBottom: 10, fontFamily: '"Courier New", monospace' }}>
+    <div style={{ fontSize: 9, letterSpacing: 3, color: 'rgba(167,139,250,0.4)', marginBottom: 10, fontFamily: '"JetBrains Mono", "Courier New", monospace' }}>
       {children}
     </div>
   )
 })
 
 const Divider = memo(function Divider() {
-  return <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(140,255,176,0.15), transparent)', margin: '14px 0' }} />
+  return <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(167,139,250,0.15), transparent)', margin: '14px 0' }} />
 })
 
 const CyberSlider = memo(function CyberSlider({
@@ -49,14 +49,14 @@ const CyberSlider = memo(function CyberSlider({
   return (
     <div style={{ marginBottom: 14 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-        <span style={{ fontSize: 11, color: '#A9B89A', fontFamily: '"Courier New", monospace' }}>{label}</span>
-        <span style={{ fontSize: 10, color: '#8CFFB0', fontFamily: '"Courier New", monospace' }}>{value.toFixed(2)}</span>
+        <span style={{ fontSize: 11, color: '#A6A0C3', fontFamily: '"JetBrains Mono", "Courier New", monospace' }}>{label}</span>
+        <span style={{ fontSize: 10, color: '#A78BFA', fontFamily: '"JetBrains Mono", "Courier New", monospace' }}>{value.toFixed(2)}</span>
       </div>
-      <div style={{ position: 'relative', height: 3, background: 'rgba(140,255,176,0.1)', borderRadius: 2 }}>
+      <div style={{ position: 'relative', height: 3, background: 'rgba(167,139,250,0.1)', borderRadius: 2 }}>
         <div style={{
           position: 'absolute' as const, left: 0, top: 0, height: '100%', borderRadius: 2,
           width: `${((value - min) / (max - min)) * 100}%`,
-          background: 'linear-gradient(to right, rgba(140,255,176,0.4), #8CFFB0)',
+          background: 'linear-gradient(to right, rgba(167,139,250,0.4), #A78BFA)',
         }} />
         <input type="range" min={min} max={max} step={step} value={value}
           onChange={e => onChange(parseFloat(e.target.value))}
@@ -77,15 +77,15 @@ const ColorRow = memo(function ColorRow({ label, value, onChange }: { label: str
         <div style={{
           width: 28, height: 28, borderRadius: 3,
           background: value,
-          border: '1px solid rgba(140,255,176,0.2)',
+          border: '1px solid rgba(167,139,250,0.2)',
           boxShadow: `0 0 8px ${value}44`,
         }} />
         <input type="color" value={value} onChange={e => onChange(e.target.value)}
           style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%', border: 'none', padding: 0 }}
         />
       </div>
-      <span style={{ flex: 1, fontSize: 11, color: '#A9B89A', fontFamily: '"Courier New", monospace', textTransform: 'capitalize' }}>{label}</span>
-      <span style={{ fontSize: 10, color: '#5B644D', fontFamily: '"Courier New", monospace' }}>{value.toUpperCase()}</span>
+      <span style={{ flex: 1, fontSize: 11, color: '#A6A0C3', fontFamily: '"JetBrains Mono", "Courier New", monospace', textTransform: 'capitalize' }}>{label}</span>
+      <span style={{ fontSize: 10, color: '#4E4766', fontFamily: '"JetBrains Mono", "Courier New", monospace' }}>{value.toUpperCase()}</span>
     </div>
   )
 })
@@ -96,16 +96,16 @@ const CyberSelect = memo(function CyberSelect({ value, options, onChange }: { va
       <select value={value} onChange={e => onChange(e.target.value)}
         style={{
           width: '100%', padding: '8px 12px',
-          background: 'rgba(18,21,15,0.6)',
-          border: '1px solid rgba(140,255,176,0.15)',
-          borderRadius: 4, color: '#EAF3DF',
-          fontSize: 11, fontFamily: '"Courier New", monospace',
+          background: 'rgba(19,15,28,0.6)',
+          border: '1px solid rgba(167,139,250,0.15)',
+          borderRadius: 4, color: '#F4F1FF',
+          fontSize: 11, fontFamily: '"JetBrains Mono", "Courier New", monospace',
           outline: 'none', cursor: 'pointer',
           appearance: 'none',
         }}>
         {options.map(o => <option key={o} value={o}>{o.toUpperCase()}</option>)}
       </select>
-      <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: 'rgba(140,255,176,0.4)', pointerEvents: 'none', fontSize: 10 }}>▾</span>
+      <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: 'rgba(167,139,250,0.4)', pointerEvents: 'none', fontSize: 10 }}>▾</span>
     </div>
   )
 })
@@ -119,10 +119,10 @@ const CyberInput = memo(function CyberInput({ value, onChange, placeholder }: { 
       onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
       style={{
         width: '100%', padding: '8px 12px', boxSizing: 'border-box',
-        background: 'rgba(18,21,15,0.6)',
-        border: `1px solid ${focused ? 'rgba(140,255,176,0.45)' : 'rgba(140,255,176,0.15)'}`,
-        borderRadius: 4, color: '#EAF3DF',
-        fontSize: 11, fontFamily: '"Courier New", monospace',
+        background: 'rgba(19,15,28,0.6)',
+        border: `1px solid ${focused ? 'rgba(167,139,250,0.45)' : 'rgba(167,139,250,0.15)'}`,
+        borderRadius: 4, color: '#F4F1FF',
+        fontSize: 11, fontFamily: '"JetBrains Mono", "Courier New", monospace',
         outline: 'none', transition: 'border-color 0.2s',
       }}
     />
@@ -134,12 +134,12 @@ const SaveButton = memo(function SaveButton({ onClick, disabled, saving }: { onC
     <button onClick={onClick} disabled={disabled}
       style={{
         padding: '8px 20px', borderRadius: 4,
-        border: `1px solid ${disabled ? 'rgba(140,255,176,0.1)' : '#8CFFB0'}`,
-        background: disabled ? 'transparent' : 'linear-gradient(135deg, rgba(140,255,176,0.15), rgba(140,255,176,0.05))',
-        color: disabled ? '#5B644D' : '#8CFFB0',
-        fontSize: 10, fontFamily: '"Courier New", monospace', fontWeight: 700, letterSpacing: 2,
+        border: `1px solid ${disabled ? 'rgba(167,139,250,0.1)' : '#A78BFA'}`,
+        background: disabled ? 'transparent' : 'linear-gradient(135deg, rgba(167,139,250,0.15), rgba(167,139,250,0.05))',
+        color: disabled ? '#4E4766' : '#A78BFA',
+        fontSize: 10, fontFamily: '"JetBrains Mono", "Courier New", monospace', fontWeight: 700, letterSpacing: 2,
         cursor: disabled ? 'not-allowed' : 'pointer', transition: 'all 0.15s',
-        boxShadow: disabled ? 'none' : '0 0 10px rgba(140,255,176,0.15)',
+        boxShadow: disabled ? 'none' : '0 0 10px rgba(167,139,250,0.15)',
       }}>
       {saving ? 'SAVING...' : 'SAVE'}
     </button>
@@ -177,7 +177,7 @@ export const AvatarPanel = () => {
   const [shaders, setShaders] = useState<ShaderConfig>(DEFAULT_SHADERS)
   const [sceneName, setSceneName] = useState('')
   const [sceneEnv, setSceneEnv] = useState('city')
-  const [bgColor, setBgColor] = useState('#0A0B0A')
+  const [bgColor, setBgColor] = useState('#0C0912')
   const [ambientIntensity, setAmbientIntensity] = useState(0.5)
 
   useEffect(function syncAvatarConfig() {
@@ -238,13 +238,13 @@ export const AvatarPanel = () => {
         style={{
           position: 'absolute', top: 20, left: 20, zIndex: 20,
           width: 44, height: 44, borderRadius: 4,
-          background: 'rgba(10,11,10,0.75)', backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(140,255,176,0.25)',
-          color: '#8CFFB0', fontSize: 18, cursor: 'pointer',
+          background: 'rgba(12,9,18,0.75)', backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(167,139,250,0.25)',
+          color: '#A78BFA', fontSize: 18, cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 0 16px rgba(140,255,176,0.1)',
+          boxShadow: '0 0 16px rgba(167,139,250,0.1)',
           transition: 'all 0.2s',
-          fontFamily: '"Courier New", monospace',
+          fontFamily: '"JetBrains Mono", "Courier New", monospace',
         }}>
         ⊞
       </button>
@@ -257,31 +257,31 @@ export const AvatarPanel = () => {
       <style>{`
         .vea-panel-scroll::-webkit-scrollbar { width: 3px; }
         .vea-panel-scroll::-webkit-scrollbar-track { background: transparent; }
-        .vea-panel-scroll::-webkit-scrollbar-thumb { background: rgba(140,255,176,0.2); border-radius: 2px; }
-        select option { background: #030810; color: #EAF3DF; }
+        .vea-panel-scroll::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.2); border-radius: 2px; }
+        select option { background: #0A0614; color: #F4F1FF; }
       `}</style>
 
       <div style={{
         position: 'absolute', top: 20, left: 20, zIndex: 20,
         width: 300,
-        background: 'rgba(10,11,10,0.90)',
+        background: 'rgba(12,9,18,0.90)',
         backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(140,255,176,0.18)',
+        border: '1px solid rgba(167,139,250,0.18)',
         borderRadius: 6,
-        boxShadow: '0 0 40px rgba(140,255,176,0.06), 0 16px 40px rgba(0,0,0,0.5)',
-        fontFamily: '"Courier New", monospace',
+        boxShadow: '0 0 40px rgba(167,139,250,0.06), 0 16px 40px rgba(0,0,0,0.5)',
+        fontFamily: '"JetBrains Mono", "Courier New", monospace',
         overflow: 'hidden',
       }}>
 
         {/* top accent bar */}
-        <div style={{ height: 1, background: 'linear-gradient(to right, transparent, #8CFFB0, transparent)' }} />
+        <div style={{ height: 1, background: 'linear-gradient(to right, transparent, #A78BFA, transparent)' }} />
 
         {/* corner ornaments */}
         {[
-          { top: 5, left: 5, borderTop: '1px solid #8CFFB0', borderLeft: '1px solid #8CFFB0' },
-          { top: 5, right: 5, borderTop: '1px solid #8CFFB0', borderRight: '1px solid #8CFFB0' },
-          { bottom: 5, left: 5, borderBottom: '1px solid rgba(140,255,176,0.3)', borderLeft: '1px solid rgba(140,255,176,0.3)' },
-          { bottom: 5, right: 5, borderBottom: '1px solid rgba(140,255,176,0.3)', borderRight: '1px solid rgba(140,255,176,0.3)' },
+          { top: 5, left: 5, borderTop: '1px solid #A78BFA', borderLeft: '1px solid #A78BFA' },
+          { top: 5, right: 5, borderTop: '1px solid #A78BFA', borderRight: '1px solid #A78BFA' },
+          { bottom: 5, left: 5, borderBottom: '1px solid rgba(167,139,250,0.3)', borderLeft: '1px solid rgba(167,139,250,0.3)' },
+          { bottom: 5, right: 5, borderBottom: '1px solid rgba(167,139,250,0.3)', borderRight: '1px solid rgba(167,139,250,0.3)' },
         ].map((s, i) => (
           <span key={i} style={{ position: 'absolute', width: 10, height: 10, ...s as React.CSSProperties }} />
         ))}
@@ -290,15 +290,15 @@ export const AvatarPanel = () => {
         <div style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           padding: '10px 14px',
-          borderBottom: '1px solid rgba(140,255,176,0.08)',
+          borderBottom: '1px solid rgba(167,139,250,0.08)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 11, letterSpacing: 3, color: '#8CFFB0', fontWeight: 700 }}>
-              VEA<span style={{ color: 'rgba(140,255,176,0.3)' }}>::PANEL</span>
+            <span style={{ fontSize: 11, letterSpacing: 3, color: '#A78BFA', fontWeight: 700 }}>
+              VEA<span style={{ color: 'rgba(167,139,250,0.3)' }}>::PANEL</span>
             </span>
           </div>
           <button onClick={() => setOpen(false)}
-            style={{ background: 'none', border: 'none', color: '#5B644D', cursor: 'pointer', fontSize: 14, lineHeight: 1 }}>
+            style={{ background: 'none', border: 'none', color: '#4E4766', cursor: 'pointer', fontSize: 14, lineHeight: 1 }}>
             ✕
           </button>
         </div>
@@ -307,13 +307,13 @@ export const AvatarPanel = () => {
         <div style={{
           padding: '6px 14px',
           display: 'flex', gap: 14, alignItems: 'center',
-          borderBottom: '1px solid rgba(140,255,176,0.06)',
+          borderBottom: '1px solid rgba(167,139,250,0.06)',
           fontSize: 9, letterSpacing: 2,
         }}>
-          <span style={{ color: '#5B644D' }}>MOOD <span style={{ color: '#8CFFB0' }}>{mood.toUpperCase()}</span></span>
-          <span style={{ color: '#5B644D' }}>INT <span style={{ color: '#8CFFB0' }}>{intensity.toFixed(2)}</span></span>
+          <span style={{ color: '#4E4766' }}>MOOD <span style={{ color: '#A78BFA' }}>{mood.toUpperCase()}</span></span>
+          <span style={{ color: '#4E4766' }}>INT <span style={{ color: '#A78BFA' }}>{intensity.toFixed(2)}</span></span>
           {currentScene && (
-            <span style={{ marginLeft: 'auto', color: '#1a4a6a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 100 }}>
+            <span style={{ marginLeft: 'auto', color: '#4A4074', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 100 }}>
               {currentScene.name.toUpperCase()}
             </span>
           )}
@@ -323,33 +323,33 @@ export const AvatarPanel = () => {
         {error && (
           <div style={{
             padding: '7px 14px', fontSize: 10, letterSpacing: 1,
-            background: 'rgba(255,122,92,0.08)', borderBottom: '1px solid rgba(255,122,92,0.2)',
-            color: '#FF7A5C', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            background: 'rgba(251,113,133,0.08)', borderBottom: '1px solid rgba(251,113,133,0.2)',
+            color: '#FB7185', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           }}>
             <span>⚠ {error}</span>
-            <button onClick={clearError} style={{ background: 'none', border: 'none', color: '#FF7A5C', cursor: 'pointer', fontSize: 12 }}>✕</button>
+            <button onClick={clearError} style={{ background: 'none', border: 'none', color: '#FB7185', cursor: 'pointer', fontSize: 12 }}>✕</button>
           </div>
         )}
 
         {/* ── Loading ── */}
         {isLoadingScene && (
-          <div style={{ padding: '10px 14px', fontSize: 10, letterSpacing: 2, color: '#5B644D', textAlign: 'center' }}>
+          <div style={{ padding: '10px 14px', fontSize: 10, letterSpacing: 2, color: '#4E4766', textAlign: 'center' }}>
             LOADING SCENE...
           </div>
         )}
 
         {/* ── Tabs ── */}
-        <div style={{ display: 'flex', borderBottom: '1px solid rgba(140,255,176,0.08)' }}>
+        <div style={{ display: 'flex', borderBottom: '1px solid rgba(167,139,250,0.08)' }}>
           {(['avatar', 'scene', 'shader', 'bot'] as Tab[]).map(t => (
             <button key={t} onClick={() => setTab(t)}
               style={{
                 flex: 1, padding: '9px 0',
-                background: tab === t ? 'rgba(140,255,176,0.06)' : 'none',
+                background: tab === t ? 'rgba(167,139,250,0.06)' : 'none',
                 border: 'none',
-                borderBottom: `2px solid ${tab === t ? '#8CFFB0' : 'transparent'}`,
-                color: tab === t ? '#8CFFB0' : '#5B644D',
+                borderBottom: `2px solid ${tab === t ? '#A78BFA' : 'transparent'}`,
+                color: tab === t ? '#A78BFA' : '#4E4766',
                 cursor: 'pointer', fontSize: 9, letterSpacing: 2,
-                fontFamily: '"Courier New", monospace',
+                fontFamily: '"JetBrains Mono", "Courier New", monospace',
                 transition: 'all 0.15s',
               }}>
               {t.toUpperCase()}
@@ -371,13 +371,13 @@ export const AvatarPanel = () => {
                     <button key={char.id} onClick={() => setActiveCharacterId(char.id)}
                       style={{
                         padding: '7px 10px', borderRadius: 3, cursor: 'pointer',
-                        border: `1px solid ${active ? '#8CFFB0' : 'rgba(140,255,176,0.12)'}`,
-                        background: active ? 'rgba(140,255,176,0.1)' : 'transparent',
-                        color: active ? '#8CFFB0' : '#A9B89A',
-                        fontSize: 10, fontFamily: '"Courier New", monospace', letterSpacing: 1,
+                        border: `1px solid ${active ? '#A78BFA' : 'rgba(167,139,250,0.12)'}`,
+                        background: active ? 'rgba(167,139,250,0.1)' : 'transparent',
+                        color: active ? '#A78BFA' : '#A6A0C3',
+                        fontSize: 10, fontFamily: '"JetBrains Mono", "Courier New", monospace', letterSpacing: 1,
                         textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                         transition: 'all 0.15s',
-                        boxShadow: active ? '0 0 8px rgba(140,255,176,0.15)' : 'none',
+                        boxShadow: active ? '0 0 8px rgba(167,139,250,0.15)' : 'none',
                       }}>
                       <span>{active ? '▶ ' : '· '}{char.name.toUpperCase()}</span>
                       <span style={{ opacity: 0.4, fontSize: 9 }}>{char.type.toUpperCase()}</span>
@@ -400,28 +400,28 @@ export const AvatarPanel = () => {
               <PanelLabel>SCENE SETTINGS</PanelLabel>
 
               <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 9, letterSpacing: 2, color: '#5B644D', marginBottom: 5 }}>NAME</div>
+                <div style={{ fontSize: 9, letterSpacing: 2, color: '#4E4766', marginBottom: 5 }}>NAME</div>
                 <CyberInput value={sceneName} onChange={setSceneName} placeholder="SCENE NAME" />
               </div>
 
               <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 9, letterSpacing: 2, color: '#5B644D', marginBottom: 5 }}>ENVIRONMENT</div>
+                <div style={{ fontSize: 9, letterSpacing: 2, color: '#4E4766', marginBottom: 5 }}>ENVIRONMENT</div>
                 <CyberSelect value={sceneEnv} options={ENVS} onChange={setSceneEnv} />
               </div>
 
               <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 9, letterSpacing: 2, color: '#5B644D', marginBottom: 5 }}>BACKGROUND COLOR</div>
+                <div style={{ fontSize: 9, letterSpacing: 2, color: '#4E4766', marginBottom: 5 }}>BACKGROUND COLOR</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ position: 'relative', width: 32, height: 28 }}>
                     <div style={{
                       width: 32, height: 28, borderRadius: 3,
-                      background: bgColor, border: '1px solid rgba(140,255,176,0.2)',
+                      background: bgColor, border: '1px solid rgba(167,139,250,0.2)',
                       boxShadow: `0 0 8px ${bgColor}44`,
                     }} />
                     <input type="color" value={bgColor} onChange={e => setBgColor(e.target.value)}
                       style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} />
                   </div>
-                  <span style={{ fontSize: 10, color: '#5B644D', fontFamily: '"Courier New", monospace' }}>{bgColor.toUpperCase()}</span>
+                  <span style={{ fontSize: 10, color: '#4E4766', fontFamily: '"JetBrains Mono", "Courier New", monospace' }}>{bgColor.toUpperCase()}</span>
                 </div>
               </div>
 
@@ -456,22 +456,22 @@ export const AvatarPanel = () => {
           {tab === 'bot' && (
             <>
               <PanelLabel>CLAWBOT CONFIG</PanelLabel>
-              <div style={{ fontSize: 10, color: '#5B644D', marginBottom: 12, lineHeight: 1.4 }}>
+              <div style={{ fontSize: 10, color: '#4E4766', marginBottom: 12, lineHeight: 1.4 }}>
                 Route conversations through our secure server or use your own API key.
               </div>
 
               <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 9, letterSpacing: 2, color: '#5B644D', marginBottom: 5 }}>API BASE URL</div>
+                <div style={{ fontSize: 9, letterSpacing: 2, color: '#4E4766', marginBottom: 5 }}>API BASE URL</div>
                 <CyberInput value={botUrl} onChange={setBotUrl} placeholder="https://api.openclaw.ai" />
               </div>
 
               <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 9, letterSpacing: 2, color: '#5B644D', marginBottom: 5 }}>API TOKEN (OPTIONAL)</div>
+                <div style={{ fontSize: 9, letterSpacing: 2, color: '#4E4766', marginBottom: 5 }}>API TOKEN (OPTIONAL)</div>
                 <CyberInput value={botToken} onChange={setBotToken} placeholder="Your API key" />
               </div>
 
               <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 9, letterSpacing: 2, color: '#5B644D', marginBottom: 5 }}>MODEL</div>
+                <div style={{ fontSize: 9, letterSpacing: 2, color: '#4E4766', marginBottom: 5 }}>MODEL</div>
                 <CyberSelect value={botModel} options={PRESET_MODELS} onChange={setBotModel} />
               </div>
             </>
@@ -481,15 +481,15 @@ export const AvatarPanel = () => {
         {/* ── Footer ── */}
         <div style={{
           padding: '10px 14px',
-          borderTop: '1px solid rgba(140,255,176,0.08)',
+          borderTop: '1px solid rgba(167,139,250,0.08)',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         }}>
           {saveMsg ? (
-            <span style={{ fontSize: 9, letterSpacing: 2, color: saveMsg.ok ? '#C9F36A' : '#FF7A5C' }}>
+            <span style={{ fontSize: 9, letterSpacing: 2, color: saveMsg.ok ? '#F0ABFC' : '#FB7185' }}>
               {saveMsg.ok ? '✓' : '✗'} {saveMsg.text}
             </span>
           ) : (
-            <span style={{ fontSize: 9, letterSpacing: 1, color: '#1a4a6a' }}>
+            <span style={{ fontSize: 9, letterSpacing: 1, color: '#4A4074' }}>
               ● SESSION ACTIVE
             </span>
           )}
@@ -497,7 +497,7 @@ export const AvatarPanel = () => {
         </div>
 
         {/* bottom accent */}
-        <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(140,255,176,0.12), transparent)' }} />
+        <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(167,139,250,0.12), transparent)' }} />
       </div>
     </>
   )

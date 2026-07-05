@@ -3,9 +3,9 @@ import { useToastStore, type ToastType } from '../store/toastStore'
 import { useSceneStore } from '../store/sceneStore'
 
 const ACCENTS: Record<ToastType, string> = {
-    error: '#FF7A5C',
-    success: '#8CFFB0',
-    info: '#C9F36A',
+    error: '#FB7185',
+    success: '#A78BFA',
+    info: '#F0ABFC',
 }
 
 const LABELS: Record<ToastType, string> = {
@@ -43,7 +43,7 @@ export function Toasts() {
                 alignItems: 'flex-end',
                 gap: 8,
                 pointerEvents: 'none',
-                fontFamily: '"Courier New", monospace',
+                fontFamily: '"JetBrains Mono", "Courier New", monospace',
             }}
         >
             <style>{`
@@ -63,9 +63,9 @@ export function Toasts() {
                         maxWidth: 340,
                         padding: '10px 14px',
                         borderRadius: 6,
-                        border: '1px solid rgba(140,255,176,0.14)',
+                        border: '1px solid rgba(167,139,250,0.14)',
                         borderLeft: `3px solid ${ACCENTS[t.type]}`,
-                        background: 'rgba(10,11,10,0.92)',
+                        background: 'rgba(12,9,18,0.92)',
                         backdropFilter: 'blur(14px)',
                         boxShadow: '0 12px 32px rgba(0,0,0,0.45)',
                         animation: 'vea-toast-in 0.18s ease-out',
@@ -82,7 +82,7 @@ export function Toasts() {
                     >
                         {LABELS[t.type]}
                     </div>
-                    <div style={{ fontSize: 12, lineHeight: 1.5, color: '#EAF3DF' }}>
+                    <div style={{ fontSize: 12, lineHeight: 1.5, color: '#F4F1FF' }}>
                         {t.message}
                     </div>
                 </div>

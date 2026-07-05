@@ -102,7 +102,7 @@ function PlaceholderAvatar() {
     return (
         <mesh>
             <boxGeometry ref={geometryRef} args={[0.5, 1, 0.3]} />
-            <meshStandardMaterial ref={materialRef} color="#8CFFB0" wireframe />
+            <meshStandardMaterial ref={materialRef} color="#A78BFA" wireframe />
         </mesh>
     )
 }
@@ -167,7 +167,7 @@ function RemoteAvatar({ user }: RemoteAvatarProps) {
             <Text
                 position={[0, 1.2, 0]}
                 fontSize={0.18}
-                color="#8CFFB0"
+                color="#A78BFA"
                 anchorX="center"
                 anchorY="middle"
                 outlineColor="#000000"
