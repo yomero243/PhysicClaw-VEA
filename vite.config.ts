@@ -1,6 +1,5 @@
 import { defineConfig, Plugin, ViteDevServer } from 'vite'
 import react from '@vitejs/plugin-react'
-import obfuscatorPlugin from 'vite-plugin-javascript-obfuscator'
 import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
@@ -212,23 +211,8 @@ const ALLOWED_PROXY_PATHS = ['/v1/chat/completions', '/v1/models']
 // https://vite.dev/config/
 export default defineConfig({
     plugins: [
-        react(), 
+        react(),
         openClawControlPlugin(),
-        obfuscatorPlugin({
-            include: ['src/**/*.ts', 'src/**/*.tsx'],
-            exclude: [/node_modules/],
-            apply: 'build', // Only obfuscate on production build
-            options: {
-                compact: true,
-                controlFlowFlattening: true,
-                controlFlowFlatteningThreshold: 0.75,
-                numbersToExpressions: true,
-                simplify: true,
-                stringArrayShuffle: true,
-                splitStrings: true,
-                stringArrayThreshold: 0.75
-            }
-        })
     ],
     build: {
         rollupOptions: {
