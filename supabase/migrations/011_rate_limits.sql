@@ -27,7 +27,7 @@ create or replace function public.consume_rate_limit(
 returns table (allowed boolean, retry_after_seconds integer)
 language plpgsql
 security definer
-set search_path = public
+set search_path = pg_catalog, public
 as $$
 declare
     v_now    timestamptz := now();
@@ -35,8 +35,11 @@ declare
     v_row    public.rate_limits;
 begin
     -- Opportunistic cleanup: drop keys idle for 2+ windows.
-    delete from public.rate_limits
-     where window_start < v_now - (v_window * 2);
+    -- Probabilistic (~1% of calls) so the hot path stays an indexed upsert.
+    if random() < 0.01 then
+        delete from public.rate_limits
+         where window_start < v_now - (v_window * 2);
+    end if;
 
     insert into public.rate_limits as rl (key, count, window_start)
     values (p_key, 1, v_now)

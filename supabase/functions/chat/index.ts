@@ -78,6 +78,18 @@ interface RateLimitResult {
   retryAfter: number;
 }
 
+// Module scope is reused within an isolate — cache the service client.
+let cachedServiceClient: ReturnType<typeof createClient> | null = null;
+
+function getServiceClient(): ReturnType<typeof createClient> | null {
+  if (cachedServiceClient) return cachedServiceClient;
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceRoleKey) return null;
+  cachedServiceClient = createClient(supabaseUrl, serviceRoleKey);
+  return cachedServiceClient;
+}
+
 /**
  * Durable rate limit via Postgres RPC (shared across isolates).
  * Returns null on any failure so the caller can fall back to the
@@ -86,12 +98,10 @@ interface RateLimitResult {
 async function consumeRateLimitDurable(
   key: string,
 ): Promise<RateLimitResult | null> {
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!supabaseUrl || !serviceRoleKey) return null;
+  const serviceClient = getServiceClient();
+  if (!serviceClient) return null;
 
   try {
-    const serviceClient = createClient(supabaseUrl, serviceRoleKey);
     const { data, error } = await serviceClient.rpc("consume_rate_limit", {
       p_key: key,
       p_limit: getRateLimit(),
