@@ -35,20 +35,18 @@ function getCorsHeaders(req: Request): Record<string, string> | null {
   };
 }
 
+// Postgres int4 bound: a larger p_limit would error the RPC on every call.
+const MAX_RATE_LIMIT = 2_147_483_647;
+
 function getRateLimit(): number {
-  const configuredLimit = Number(Deno.env.get("CHAT_RATE_LIMIT_PER_MINUTE"));
+  // Floor to an integer: the consume_rate_limit RPC declares p_limit as
+  // integer, and a fractional env value would error the RPC on every call.
+  const configuredLimit = Math.floor(
+    Number(Deno.env.get("CHAT_RATE_LIMIT_PER_MINUTE")),
+  );
   return Number.isFinite(configuredLimit) && configuredLimit > 0
-    ? configuredLimit
+    ? Math.min(configuredLimit, MAX_RATE_LIMIT)
     : DEFAULT_RATE_LIMIT_PER_MINUTE;
-}
-
-function getClientIp(req: Request): string {
-  const forwardedFor = req.headers.get("x-forwarded-for");
-  if (forwardedFor) return forwardedFor.split(",")[0].trim();
-
-  return req.headers.get("cf-connecting-ip") ??
-    req.headers.get("x-real-ip") ??
-    "unknown";
 }
 
 function pruneRateLimitMap(now: number): void {
@@ -71,6 +69,65 @@ function consumeRateLimit(key: string): { allowed: boolean; retryAfter: number }
   entry.count += 1;
   const retryAfter = Math.ceil((entry.resetAt - now) / 1000);
   return { allowed: entry.count <= limit, retryAfter };
+}
+
+interface RateLimitResult {
+  allowed: boolean;
+  retryAfter: number;
+}
+
+// Module scope is reused within an isolate — cache the service client.
+let cachedServiceClient: ReturnType<typeof createClient> | null = null;
+
+function getServiceClient(): ReturnType<typeof createClient> | null {
+  if (cachedServiceClient) return cachedServiceClient;
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceRoleKey) return null;
+  cachedServiceClient = createClient(supabaseUrl, serviceRoleKey);
+  return cachedServiceClient;
+}
+
+/**
+ * Durable rate limit via Postgres RPC (shared across isolates).
+ * Returns null on any failure so the caller can fall back to the
+ * in-memory limiter — rate limiting must never take the chat down.
+ */
+async function consumeRateLimitDurable(
+  key: string,
+): Promise<RateLimitResult | null> {
+  const serviceClient = getServiceClient();
+  if (!serviceClient) return null;
+
+  try {
+    const { data, error } = await serviceClient.rpc("consume_rate_limit", {
+      p_key: key,
+      p_limit: getRateLimit(),
+      p_window_ms: RATE_LIMIT_WINDOW_MS,
+    });
+
+    if (error) {
+      console.error("consume_rate_limit RPC failed:", error.message);
+      return null;
+    }
+    if (!Array.isArray(data) || data.length === 0) {
+      console.error(
+        "consume_rate_limit RPC returned unexpected shape:",
+        JSON.stringify(data),
+      );
+      return null;
+    }
+
+    // Strict boolean check: anything other than a true boolean from the
+    // RPC (e.g. a coerced string) must NOT be treated as allowed.
+    return {
+      allowed: data[0].allowed === true,
+      retryAfter: Number(data[0].retry_after_seconds) || 0,
+    };
+  } catch (err) {
+    console.error("consume_rate_limit RPC threw:", err);
+    return null;
+  }
 }
 
 function forbiddenCorsResponse(): Response {
@@ -156,8 +213,12 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: "Unauthorized" }, 401, corsHeaders);
   }
 
-  const rateLimitKey = `${user.id}:${getClientIp(req)}`;
-  const rateLimitResult = consumeRateLimit(rateLimitKey);
+  // Keyed by authenticated uid only: IP headers (x-forwarded-for) are
+  // client-influenceable and would both weaken the limit and blow up the
+  // persisted key cardinality in rate_limits.
+  const rateLimitKey = `chat:${user.id}`;
+  const rateLimitResult = (await consumeRateLimitDurable(rateLimitKey)) ??
+    consumeRateLimit(rateLimitKey);
   if (!rateLimitResult.allowed) {
     return rateLimitResponse(rateLimitResult.retryAfter, corsHeaders);
   }

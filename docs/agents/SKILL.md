@@ -68,6 +68,40 @@ send_command("setMood", "excited")
 
 > **Important:** Always include a unique `id` (e.g., a Unix timestamp) with each command. The plugin and the `OpenClawControl` component both use this `id` to avoid re-processing stale commands.
 
+### Method 3 — Production: `POST /functions/v1/control` (deployed app)
+
+Works against the deployed app — no dev server needed. Create an agent token
+in the app (AGENT TOKENS panel, bottom-left) and send commands to the
+Supabase Edge Function:
+
+```bash
+curl -X POST "https://<project-ref>.supabase.co/functions/v1/control" \
+  -H "Content-Type: application/json" \
+  -H "X-Agent-Token: pcvea_..." \
+  -d '{"command": "setMood", "value": "excited", "id": "1"}'
+```
+
+```python
+import requests, time
+
+CONTROL_URL = "https://<project-ref>.supabase.co/functions/v1/control"
+TOKEN = "pcvea_..."  # from the AGENT TOKENS panel — shown once at creation
+
+def cmd(command, value):
+    requests.post(
+        CONTROL_URL,
+        headers={"X-Agent-Token": TOKEN},
+        json={"command": command, "value": value, "id": str(time.time())},
+    ).raise_for_status()
+
+cmd("setIsThinking", True)
+cmd("setMood", "thinking")
+```
+
+Commands and values are identical to Methods 1–2. Each token controls only
+its owner's entity; delivery is a private Realtime channel (`control:{user}`).
+Rate limit: `CONTROL_RATE_LIMIT_PER_MINUTE` (default 60/min per token).
+
 ---
 
 ## Available Commands
