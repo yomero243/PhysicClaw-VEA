@@ -33,7 +33,12 @@ export function useOpenClawControl() {
         }
 
         // ── Production fallback: poll openclaw-control.json ───────────────────
-        const POLL_INTERVAL = Number(import.meta.env.VITE_CONTROL_POLL_MS) || 2000
+        // Opt-in via VITE_CONTROL_POLL_MS: with the Realtime production
+        // control channel (useProductionControl) this legacy polling is
+        // redundant, so deployed builds no longer poll a (usually absent)
+        // file every 2s unless explicitly configured to.
+        const POLL_INTERVAL = Number(import.meta.env.VITE_CONTROL_POLL_MS)
+        if (!Number.isFinite(POLL_INTERVAL) || POLL_INTERVAL <= 0) return
 
         const poll = async () => {
             try {

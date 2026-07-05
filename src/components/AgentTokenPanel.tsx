@@ -22,6 +22,7 @@ export function AgentTokenPanel() {
         if (!userId) return
         try {
             setTokens(await agentTokensApi.list(userId))
+            setError(null)
         } catch (e) {
             setError(e instanceof Error ? e.message : String(e))
         }
