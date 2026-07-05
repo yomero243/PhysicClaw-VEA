@@ -40,9 +40,9 @@ function json(
 }
 
 function validateCommand(body: ControlBody): string | null {
-  // `id` is optional but must be a short string when present — otherwise the
-  // client-side Zod schema rejects the whole payload and the command
-  // silently never applies.
+  // `id` is optional; a non-string id would make the client-side Zod schema
+  // reject the whole payload and the command would silently never apply.
+  // The length cap is server-side hygiene only (not in constraints.ts).
   if (body.id !== undefined &&
       (typeof body.id !== "string" || body.id.length > 128)) {
     return "id must be a string of <= 128 chars when provided";
