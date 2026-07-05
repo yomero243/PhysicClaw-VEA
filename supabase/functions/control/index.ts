@@ -40,6 +40,13 @@ function json(
 }
 
 function validateCommand(body: ControlBody): string | null {
+  // `id` is optional but must be a short string when present — otherwise the
+  // client-side Zod schema rejects the whole payload and the command
+  // silently never applies.
+  if (body.id !== undefined &&
+      (typeof body.id !== "string" || body.id.length > 128)) {
+    return "id must be a string of <= 128 chars when provided";
+  }
   switch (body.command) {
     case "setMood":
       return typeof body.value === "string" && VALID_MOODS.includes(body.value)

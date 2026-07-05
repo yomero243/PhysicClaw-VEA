@@ -141,7 +141,11 @@ export function AgentTokenPanel() {
                         {freshSecret}
                     </code>
                     <button
-                        onClick={() => { void navigator.clipboard.writeText(freshSecret) }}
+                        onClick={() => {
+                            navigator.clipboard.writeText(freshSecret).catch(() => {
+                                setError('Clipboard unavailable — copy the token manually')
+                            })
+                        }}
                         style={{
                             display: 'block', marginTop: 6, background: 'none',
                             border: '1px solid rgba(140,255,176,0.3)', borderRadius: 3,
