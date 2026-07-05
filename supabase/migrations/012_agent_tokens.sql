@@ -19,6 +19,11 @@ create index if not exists agent_tokens_user_id_idx
 
 alter table public.agent_tokens enable row level security;
 
+-- RLS restricts rows, but table privileges must be granted explicitly —
+-- don't rely on the project's "automatically expose new tables" default.
+grant select, insert, update, delete on table public.agent_tokens
+    to authenticated, service_role;
+
 drop policy if exists agent_tokens_owner on public.agent_tokens;
 create policy agent_tokens_owner on public.agent_tokens
     for all to authenticated
