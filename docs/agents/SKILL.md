@@ -3,6 +3,12 @@ name: vea
 description: VEA (Virtual Entity Augmented) gives an AI agent a visible body on the web. Use this skill to drive an entity's live state — mood, thinking, intensity, character, scene objects — in VEA PhysicClaw, and to author or load its form in VEA perZona. Trigger on "give my agent a body", "show the entity", "set mood", "spawn object", "entity", "embodiment", "VEA", "perZona", "PhysicClaw".
 ---
 
+<!--
+  CANONICAL SOURCE: VEA-perZona/docs/agents/SKILL.md
+  PhysicClaw-VEA keeps a synced copy (and serves it at /SKILL.md via its
+  prebuild step). Edit this file; do not edit the copies.
+-->
+
 # VEA — Virtual Entity Augmented
 
 <identity>
@@ -21,9 +27,12 @@ is where it lives.
 These forms are exact. Do not vary them.
 
 - `VEA` — ALWAYS uppercase. An initialism. NEVER "Vea" or "vea" in prose.
-- `perZona` — brand form, capital Z. Use in prose, UI and documentation.
-- `perzona` — technical form, all lowercase. Use in repos, URLs, table names, env vars.
+- `perZona` — brand form, capital Z. Prose, UI, documentation, repository names.
+- `perzona` — lowercase form, ONLY where the identifier is conventionally
+  lowercase: database tables (`perzona_avatars`), env vars, URL paths.
 - `PhysicClaw` — one word, two capitals.
+- Repositories are `VEA-perZona` and `PhysicClaw-VEA` — brand casing, so the two
+  siblings look like siblings.
 - Say **entity**. Do NOT say "avatar" except when discussing file formats.
 </naming>
 
