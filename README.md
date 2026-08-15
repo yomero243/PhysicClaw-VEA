@@ -1,3 +1,5 @@
+
+
 # PhysicClaw-VEA
 
 [![CI](https://github.com/yomero243/PhysicClaw-VEA/actions/workflows/ci.yml/badge.svg)](https://github.com/yomero243/PhysicClaw-VEA/actions/workflows/ci.yml)
@@ -47,6 +49,7 @@ See [.env.example](.env.example) for every variable with descriptions. The two r
 | `npm run dev` | Vite dev server with HMR |
 | `npm run build` | Type-check + production build (runs `verify-env` first) |
 | `npm run check` | Full gate: env check, typecheck, tests, lint |
+| `npm run typecheck` | Run TypeScript type checking (`tsc --noEmit`) |
 | `npm test` | Vitest run |
 | `npm run lint` / `npm run format` | ESLint / Prettier |
 
