@@ -27,13 +27,36 @@ const CONTROL_API_TOKEN =
 const OPENCLAW_LOCAL_PORT = Number(process.env.OPENCLAW_LOCAL_PORT ?? 18789)
 
 
-// Allowed commands and their value validators
+// Allowed commands and their value validators.
+// Lightweight structural checks only — the client re-validates every command
+// against the Zod ControlCommandSchema (src/lib/constraints.ts) before applying.
+const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/
+const isVec3 = (v: unknown) =>
+    Array.isArray(v) && v.length === 3 && v.every(n => typeof n === 'number' && Number.isFinite(n))
+const isRecord = (v: unknown): v is Record<string, unknown> =>
+    typeof v === 'object' && v !== null && !Array.isArray(v)
+
 const COMMAND_VALIDATORS: Record<string, (v: unknown) => boolean> = {
     setMood: v => typeof v === 'string' && ['calm', 'excited', 'thinking', 'listening'].includes(v),
     setIsThinking: v => typeof v === 'boolean',
     setIntensity: v => typeof v === 'number' && v >= 0 && v <= 2,
     setLastMessage: v => typeof v === 'string' && v.length <= 500,
     setActiveCharacterId: v => typeof v === 'string' && v.length > 0 && v.length <= 64,
+    setShaderColor: v => isRecord(v) &&
+        typeof v.characterId === 'string' && v.characterId.length > 0 && v.characterId.length <= 64 &&
+        typeof v.color === 'string' && HEX_COLOR_RE.test(v.color),
+    setObjectVisibility: v => isRecord(v) &&
+        typeof v.id === 'string' && v.id.length > 0 && v.id.length <= 64 &&
+        typeof v.visible === 'boolean',
+    spawnObject: v => isRecord(v) &&
+        (v.label === undefined || (typeof v.label === 'string' && v.label.length <= 60)) &&
+        (v.color === undefined || (typeof v.color === 'string' && HEX_COLOR_RE.test(v.color))) &&
+        (v.position === undefined || isVec3(v.position)) &&
+        (v.rotation === undefined || isVec3(v.rotation)) &&
+        (v.scale === undefined || isVec3(v.scale)) &&
+        (v.model_url === undefined || (typeof v.model_url === 'string' && /^https:\/\/.+\.splat$/i.test(v.model_url))),
+    removeObject: v => typeof v === 'string' &&
+        (v === 'primitives' || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)),
 }
 
 // Simple in-memory rate limiter: max 30 requests per minute per IP

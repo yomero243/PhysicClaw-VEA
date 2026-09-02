@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# MkDocs build output
+site/
+
 # Editor directories and files
 .claude/*
 !.claude/launch.json
@@ -32,6 +35,9 @@ dist-ssr
 
 # OpenClaw control file
 openclaw-control.json
+
+# Supabase CLI state
+supabase/.temp/
 
 # Agent & Review states
 AGENTS_STATE.md

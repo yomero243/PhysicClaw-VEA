@@ -48,14 +48,13 @@ export const GLBUploadPanel = () => {
     const [success, setSuccess] = useState<string | null>(null)
     const fileRef = useRef<HTMLInputElement>(null)
 
-    const {
-        addCustomCharacter,
-        customCharacters,
-        removeCustomCharacter,
-        visibleObjects,
-        toggleObjectVisibility,
-        setCustomModelUrl,
-    } = useSoulStore()
+    // Selectores granulares para no re-renderizar el panel con cambios de mood/chat
+    const addCustomCharacter = useSoulStore((s) => s.addCustomCharacter)
+    const customCharacters = useSoulStore((s) => s.customCharacters)
+    const removeCustomCharacter = useSoulStore((s) => s.removeCustomCharacter)
+    const visibleObjects = useSoulStore((s) => s.visibleObjects)
+    const toggleObjectVisibility = useSoulStore((s) => s.toggleObjectVisibility)
+    const setCustomModelUrl = useSoulStore((s) => s.setCustomModelUrl)
     const userId = useSoulStore((s) => s.userId)
     const allObjects = [...CHARACTERS, ...customCharacters]
 

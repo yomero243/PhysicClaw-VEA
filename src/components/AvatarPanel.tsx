@@ -148,10 +148,14 @@ const SaveButton = memo(function SaveButton({ onClick, disabled, saving }: { onC
 
 // ─── Main Component ───────────────────────────────────────────────
 export const AvatarPanel = () => {
-  const {
-    currentScene, avatarConfig, isLoadingScene, error,
-    saveSceneSettings, saveAvatarConfig, clearError,
-  } = useSceneStore()
+  // Selectores granulares para no re-renderizar el panel con cada mensaje guardado
+  const currentScene = useSceneStore(s => s.currentScene)
+  const avatarConfig = useSceneStore(s => s.avatarConfig)
+  const isLoadingScene = useSceneStore(s => s.isLoadingScene)
+  const error = useSceneStore(s => s.error)
+  const saveSceneSettings = useSceneStore(s => s.saveSceneSettings)
+  const saveAvatarConfig = useSceneStore(s => s.saveAvatarConfig)
+  const clearError = useSceneStore(s => s.clearError)
 
   // Selectores granulares para evitar re-renders de todo el panel
   const activeCharacterId = useSoulStore(s => s.activeCharacterId)
