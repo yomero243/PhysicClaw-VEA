@@ -8,7 +8,11 @@ import type { ObjectType } from '../types/database'
  * y otro para borrar todos los cubos existentes.
  */
 export const CubeGenerator: React.FC = () => {
-  const { upsertObject, removeObject, sceneObjects, userId, currentScene } = useSceneStore()
+  const upsertObject = useSceneStore(s => s.upsertObject)
+  const removeObject = useSceneStore(s => s.removeObject)
+  const sceneObjects = useSceneStore(s => s.sceneObjects)
+  const userId = useSceneStore(s => s.userId)
+  const currentScene = useSceneStore(s => s.currentScene)
 
   const createCube = useCallback(async () => {
     if (!userId || !currentScene) {
