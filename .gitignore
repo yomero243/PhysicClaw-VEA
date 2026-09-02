@@ -36,6 +36,9 @@ site/
 # OpenClaw control file
 openclaw-control.json
 
+# Supabase CLI state
+supabase/.temp/
+
 # Agent & Review states
 AGENTS_STATE.md
 CLAUDE.md
