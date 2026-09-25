@@ -65,7 +65,7 @@ schema_paths = []
 
 [db.seed]
 # If enabled, seeds the database after migrations during a db reset.
-# Off: seed rows (costumes, rigs, idle clip) ship inside migrations 014/015.
+# Off: seed rows (costumes, rigs, idle clip) ship inside the baseline migration.
 enabled = false
 # Specifies an ordered list of seed files to load during db reset.
 # Supports glob patterns relative to supabase directory: "./seeds/*.sql"

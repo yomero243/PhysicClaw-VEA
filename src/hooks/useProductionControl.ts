@@ -9,8 +9,8 @@ import { useSoulStore } from '../store/soulStore'
  * Subscribes to the private Realtime channel `control:{userId}` where the
  * `control` Edge Function broadcasts validated agent commands, and applies
  * them to the soul store through the same path as dev-mode control.
- * Receiving is enforced server-side by the realtime.messages policy from
- * migration 012 (owner-only topic).
+ * Receiving is enforced server-side by the realtime.messages policy
+ * `control_channel_receive` (owner-only topic).
  */
 export function useProductionControl() {
     const userId = useSoulStore((s) => s.userId)

@@ -278,7 +278,7 @@ Deno.serve(async (req: Request) => {
   const validationError = validateCommand(body);
   if (validationError) return json({ error: validationError }, 400);
 
-  // Rate limit per token (shares the durable limiter from migration 011).
+  // Rate limit per token (the durable rate_limits table, service role only).
   // Scene commands mutate persistent data, so they consume a separate,
   // stricter bucket. Any failure — RPC error, thrown fetch, unexpected
   // shape — falls back to the in-memory limiter; the endpoint never runs
