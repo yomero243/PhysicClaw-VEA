@@ -21,7 +21,7 @@ interface ChatMsg {
 // ─── Sub-components ───────────────────────────────────────────────
 
 const MoodDot = memo(function MoodDot({ mood, isThinking, isListening }: { mood: string; isThinking: boolean; isListening: boolean }) {
-  const color = isThinking ? '#b060ff' : isListening ? '#FF7A5C' : '#8CFFB0'
+  const color = isThinking ? '#b060ff' : isListening ? 'var(--danger)' : 'var(--accent)'
   const label = isThinking ? 'PROCESSING' : isListening ? 'LISTENING' : mood.toUpperCase()
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -58,15 +58,15 @@ const CharacterTabs = memo(function CharacterTabs({
             style={{
               padding: '4px 12px',
               borderRadius: 2,
-              border: `1px solid ${active ? '#8CFFB0' : 'rgba(140,255,176,0.2)'}`,
-              background: active ? 'rgba(140,255,176,0.12)' : 'transparent',
-              color: active ? '#8CFFB0' : '#A9B89A',
+              border: `1px solid ${active ? 'var(--accent)' : 'rgba(var(--accent-rgb), 0.2)'}`,
+              background: active ? 'rgba(var(--accent-rgb), 0.12)' : 'transparent',
+              color: active ? 'var(--accent)' : 'var(--dim)',
               fontSize: 10,
               fontFamily: '"Courier New", monospace',
               letterSpacing: 1,
               cursor: 'pointer',
               transition: 'all 0.15s',
-              boxShadow: active ? '0 0 8px rgba(140,255,176,0.2)' : 'none',
+              boxShadow: active ? '0 0 8px rgba(var(--accent-rgb), 0.2)' : 'none',
             }}
           >
             {char.name.toUpperCase()}
@@ -89,13 +89,13 @@ const MessageBubble = memo(function MessageBubble({ msg, userName }: { msg: Chat
         maxWidth: '80%',
         padding: '9px 14px',
         background: isUser
-          ? 'linear-gradient(135deg, rgba(140,255,176,0.12), rgba(93,122,65,0.08))'
+          ? 'linear-gradient(135deg, rgba(var(--accent-rgb), 0.12), rgba(var(--olive-rgb), 0.08))'
           : 'rgba(255,255,255,0.04)',
-        border: `1px solid ${isUser ? 'rgba(140,255,176,0.25)' : 'rgba(255,255,255,0.07)'}`,
+        border: `1px solid ${isUser ? 'rgba(var(--accent-rgb), 0.25)' : 'rgba(255,255,255,0.07)'}`,
         borderRadius: isUser ? '8px 8px 2px 8px' : '8px 8px 8px 2px',
         fontSize: 13,
         lineHeight: 1.6,
-        color: isUser ? '#EAF3DF' : '#A9B89A',
+        color: isUser ? 'var(--text)' : 'var(--dim)',
         fontFamily: '"Courier New", monospace',
         position: 'relative',
       }}>
@@ -103,7 +103,7 @@ const MessageBubble = memo(function MessageBubble({ msg, userName }: { msg: Chat
         <div style={{
           fontSize: 9,
           letterSpacing: 2,
-          color: isUser ? 'rgba(140,255,176,0.5)' : 'rgba(169,184,154,0.4)',
+          color: isUser ? 'rgba(var(--accent-rgb), 0.5)' : 'rgba(var(--dim-rgb), 0.4)',
           marginBottom: 4,
         }}>
           {isUser ? (userName ?? 'USER') : 'VEA'}
@@ -111,7 +111,7 @@ const MessageBubble = memo(function MessageBubble({ msg, userName }: { msg: Chat
         {msg.text}
       </div>
       <div style={{
-        fontSize: 9, color: '#5B644D',
+        fontSize: 9, color: 'var(--muted)',
         marginTop: 3, paddingInline: 4,
         fontFamily: '"Courier New", monospace',
         letterSpacing: 1,
@@ -135,7 +135,7 @@ const ThinkingBubble = memo(function ThinkingBubble() {
         {[0, 1, 2].map(i => (
           <span key={i} style={{
             width: 6, height: 6, borderRadius: '50%',
-            background: '#8CFFB0',
+            background: 'var(--accent)',
             display: 'inline-block',
             animation: `vea-blink 1.2s ease-in-out ${i * 0.2}s infinite`,
             opacity: 0.4,
@@ -155,9 +155,9 @@ const SendButton = memo(function SendButton({ onClick, disabled }: { onClick: ()
         padding: '0 20px',
         height: 44,
         borderRadius: 4,
-        border: `1px solid ${disabled ? 'rgba(140,255,176,0.15)' : '#8CFFB0'}`,
-        background: disabled ? 'transparent' : 'linear-gradient(135deg, rgba(140,255,176,0.15), rgba(140,255,176,0.05))',
-        color: disabled ? '#5B644D' : '#8CFFB0',
+        border: `1px solid ${disabled ? 'rgba(var(--accent-rgb), 0.15)' : 'var(--accent)'}`,
+        background: disabled ? 'transparent' : 'linear-gradient(135deg, rgba(var(--accent-rgb), 0.15), rgba(var(--accent-rgb), 0.05))',
+        color: disabled ? 'var(--muted)' : 'var(--accent)',
         fontFamily: '"Courier New", monospace',
         fontSize: 11,
         fontWeight: 700,
@@ -165,7 +165,7 @@ const SendButton = memo(function SendButton({ onClick, disabled }: { onClick: ()
         cursor: disabled ? 'default' : 'pointer',
         whiteSpace: 'nowrap',
         transition: 'all 0.15s',
-        boxShadow: disabled ? 'none' : '0 0 10px rgba(140,255,176,0.15)',
+        boxShadow: disabled ? 'none' : '0 0 10px rgba(var(--accent-rgb), 0.15)',
         flexShrink: 0,
       }}
     >
@@ -181,11 +181,11 @@ const MicButton = memo(function MicButton({ isListening, onClick }: { isListenin
       title={isListening ? 'Stop' : 'Voice input'}
       style={{
         width: 44, height: 44, borderRadius: 4, border: 'none', flexShrink: 0,
-        background: isListening ? 'rgba(255,122,92,0.2)' : 'rgba(255,255,255,0.04)',
-        color: isListening ? '#FF7A5C' : '#A9B89A',
+        background: isListening ? 'rgba(var(--danger-rgb), 0.2)' : 'rgba(255,255,255,0.04)',
+        color: isListening ? 'var(--danger)' : 'var(--dim)',
         cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: 16, transition: 'all 0.15s',
-        boxShadow: isListening ? '0 0 12px rgba(255,122,92,0.3)' : 'none',
+        boxShadow: isListening ? '0 0 12px rgba(var(--danger-rgb), 0.3)' : 'none',
       }}
     >
       {isListening ? '⬛' : '🎙'}
@@ -320,11 +320,11 @@ export const ChatInterface = () => {
           0%, 80%, 100% { opacity: 0.2; transform: scaleY(0.6); }
           40% { opacity: 1; transform: scaleY(1); }
         }
-        .vea-input::placeholder { color: rgba(140,255,176,0.25); }
-        .vea-input:focus { border-color: rgba(140,255,176,0.5) !important; box-shadow: 0 0 12px rgba(140,255,176,0.12); }
+        .vea-input::placeholder { color: rgba(var(--accent-rgb), 0.25); }
+        .vea-input:focus { border-color: rgba(var(--accent-rgb), 0.5) !important; box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.12); }
         .vea-scrollbar::-webkit-scrollbar { width: 3px; }
         .vea-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .vea-scrollbar::-webkit-scrollbar-thumb { background: rgba(140,255,176,0.2); border-radius: 2px; }
+        .vea-scrollbar::-webkit-scrollbar-thumb { background: rgba(var(--accent-rgb), 0.2); border-radius: 2px; }
       `}</style>
 
       <div style={{
@@ -339,27 +339,27 @@ export const ChatInterface = () => {
       }}>
         {/* ── Main panel ── */}
         <div style={{
-          background: 'rgba(10,11,10,0.88)',
+          background: 'rgba(var(--panel-deep-rgb), 0.88)',
           backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(140,255,176,0.18)',
+          border: '1px solid rgba(var(--accent-rgb), 0.18)',
           borderRadius: 6,
-          boxShadow: '0 0 40px rgba(140,255,176,0.06), 0 16px 40px rgba(0,0,0,0.5)',
+          boxShadow: '0 0 40px rgba(var(--accent-rgb), 0.06), 0 16px 40px rgba(0,0,0,0.5)',
           overflow: 'hidden',
         }}>
 
           {/* top accent */}
-          <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(140,255,176,0.4), transparent)' }} />
+          <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(var(--accent-rgb), 0.4), transparent)' }} />
 
           {/* ── Header ── */}
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '10px 16px',
-            borderBottom: '1px solid rgba(140,255,176,0.08)',
+            borderBottom: '1px solid rgba(var(--accent-rgb), 0.08)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               {/* VEA label */}
-              <span style={{ fontSize: 11, letterSpacing: 3, color: '#8CFFB0', fontWeight: 700 }}>
-                VEA<span style={{ color: 'rgba(140,255,176,0.3)' }}>::CHAT</span>
+              <span style={{ fontSize: 11, letterSpacing: 3, color: 'var(--accent)', fontWeight: 700 }}>
+                VEA<span style={{ color: 'rgba(var(--accent-rgb), 0.3)' }}>::CHAT</span>
               </span>
               <MoodDot mood={mood} isThinking={isThinking} isListening={isListening} />
             </div>
@@ -367,7 +367,7 @@ export const ChatInterface = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               {/* User badge - Guest mode */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 9, color: 'rgba(140,255,176,0.5)', letterSpacing: 1 }}>
+                <span style={{ fontSize: 9, color: 'rgba(var(--accent-rgb), 0.5)', letterSpacing: 1 }}>
                   {userName?.toUpperCase() ?? 'GUEST'}
                 </span>
               </div>
@@ -376,20 +376,20 @@ export const ChatInterface = () => {
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 5,
                 background: 'none',
-                border: '1px solid rgba(140,255,176,0.15)',
+                border: '1px solid rgba(var(--accent-rgb), 0.15)',
                 borderRadius: 3,
                 padding: '3px 8px',
               }}>
                 <span style={{
                   width: 5, height: 5, borderRadius: '50%',
-                  background: '#C9F36A',
-                  boxShadow: '0 0 5px #C9F36A',
+                  background: 'var(--accent2)',
+                  boxShadow: '0 0 5px var(--accent2)',
                   display: 'inline-block',
                   flexShrink: 0,
                 }} />
                 <span style={{
                   fontSize: 9, letterSpacing: 1,
-                  color: 'rgba(201,243,106,0.7)',
+                  color: 'rgba(var(--accent2-rgb), 0.7)',
                   fontFamily: '"Courier New", monospace',
                 }}>
                   CORE::ON
@@ -401,7 +401,7 @@ export const ChatInterface = () => {
                 onClick={() => setCollapsed(c => !c)}
                 title={collapsed ? 'Expand' : 'Collapse'}
                 style={{
-                  background: 'none', border: 'none', color: '#5B644D',
+                  background: 'none', border: 'none', color: 'var(--muted)',
                   cursor: 'pointer', fontSize: 12, lineHeight: 1, padding: '0 2px',
                   fontFamily: '"Courier New", monospace', letterSpacing: 1,
                 }}
@@ -417,7 +417,7 @@ export const ChatInterface = () => {
               {selectableCharacters.length > 1 && (
               <div style={{
                 padding: '8px 16px',
-                borderBottom: '1px solid rgba(140,255,176,0.06)',
+                borderBottom: '1px solid rgba(var(--accent-rgb), 0.06)',
               }}>
                 <CharacterTabs
                   characters={selectableCharacters}
@@ -438,7 +438,7 @@ export const ChatInterface = () => {
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 10,
-                    borderBottom: '1px solid rgba(140,255,176,0.06)',
+                    borderBottom: '1px solid rgba(var(--accent-rgb), 0.06)',
                   }}
                 >
                   {/* Fallback if no history */}
@@ -473,12 +473,12 @@ export const ChatInterface = () => {
                   {/* corner accents on input */}
                   <span style={{
                     position: 'absolute', top: -1, left: -1, width: 6, height: 6,
-                    borderTop: '1px solid rgba(140,255,176,0.4)', borderLeft: '1px solid rgba(140,255,176,0.4)',
+                    borderTop: '1px solid rgba(var(--accent-rgb), 0.4)', borderLeft: '1px solid rgba(var(--accent-rgb), 0.4)',
                     pointerEvents: 'none',
                   }} />
                   <span style={{
                     position: 'absolute', bottom: -1, right: -1, width: 6, height: 6,
-                    borderBottom: '1px solid rgba(140,255,176,0.4)', borderRight: '1px solid rgba(140,255,176,0.4)',
+                    borderBottom: '1px solid rgba(var(--accent-rgb), 0.4)', borderRight: '1px solid rgba(var(--accent-rgb), 0.4)',
                     pointerEvents: 'none',
                   }} />
                   <input
@@ -494,10 +494,10 @@ export const ChatInterface = () => {
                       width: '100%',
                       height: 44,
                       padding: '0 14px',
-                      background: 'rgba(18,21,15,0.6)',
-                      border: '1px solid rgba(140,255,176,0.15)',
+                      background: 'rgba(var(--panel-rgb), 0.6)',
+                      border: '1px solid rgba(var(--accent-rgb), 0.15)',
                       borderRadius: 4,
-                      color: '#EAF3DF',
+                      color: 'var(--text)',
                       fontSize: 13,
                       fontFamily: '"Courier New", monospace',
                       outline: 'none',
@@ -515,7 +515,7 @@ export const ChatInterface = () => {
           )}
 
           {/* bottom accent */}
-          <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(140,255,176,0.12), transparent)' }} />
+          <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(var(--accent-rgb), 0.12), transparent)' }} />
         </div>
       </div>
     </>

@@ -8,6 +8,7 @@ import { Text, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { isTrustedModelUrl } from '../multiplayer/validation'
 import type { SessionUser } from '../types/multiplayer'
+import { useThemeStore } from '../theme/theme'
 
 // ── RemoteAvatar ────────────────────────────────────────────────────────────
 
@@ -55,10 +56,11 @@ function SphereAvatar({ userId }: { userId: string }) {
  * PlaceholderAvatar — minimal box mesh used for 'happy-idle' or unknown avatarIds.
  */
 function PlaceholderAvatar() {
+    const accent = useThemeStore((s) => s.palette.accent)
     return (
         <mesh>
             <boxGeometry args={[0.5, 1, 0.3]} />
-            <meshStandardMaterial color="#8CFFB0" wireframe />
+            <meshStandardMaterial color={accent} wireframe />
         </mesh>
     )
 }
@@ -111,6 +113,7 @@ function RemoteAvatar({ user }: RemoteAvatarProps) {
     }
 
     const labelText = user.user_id.slice(0, 6)
+    const accent = useThemeStore((s) => s.palette.accent)
 
     return (
         <group 
@@ -123,7 +126,7 @@ function RemoteAvatar({ user }: RemoteAvatarProps) {
             <Text
                 position={[0, 1.2, 0]}
                 fontSize={0.18}
-                color="#8CFFB0"
+                color={accent}
                 anchorX="center"
                 anchorY="middle"
                 outlineColor="#000000"

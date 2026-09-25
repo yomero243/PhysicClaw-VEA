@@ -113,7 +113,7 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                 zIndex: 12,
                 width: 'min(320px, calc(100vw - 40px))',
                 fontFamily: '"Courier New", monospace',
-                color: '#EAF3DF',
+                color: 'var(--text)',
                 pointerEvents: 'auto',
             }}
         >
@@ -123,9 +123,9 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                         marginBottom: 8,
                         padding: '8px 10px',
                         borderRadius: 4,
-                        background: 'rgba(10,11,10,0.86)',
-                        border: `1px solid ${notice.kind === 'join' ? 'rgba(201,243,106,0.35)' : 'rgba(255,190,80,0.35)'}`,
-                        color: notice.kind === 'join' ? '#C9F36A' : '#F2B84B',
+                        background: 'rgba(var(--panel-deep-rgb), 0.86)',
+                        border: `1px solid ${notice.kind === 'join' ? 'rgba(var(--accent2-rgb), 0.35)' : 'rgba(255,190,80,0.35)'}`,
+                        color: notice.kind === 'join' ? 'var(--accent2)' : '#F2B84B',
                         fontSize: 10,
                         letterSpacing: 1.2,
                         boxShadow: '0 10px 28px rgba(0,0,0,0.35)',
@@ -137,15 +137,15 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
 
             <div
                 style={{
-                    background: 'linear-gradient(180deg, rgba(18,21,15,0.9), rgba(10,11,10,0.82))',
+                    background: 'linear-gradient(180deg, rgba(var(--panel-rgb), 0.9), rgba(var(--panel-deep-rgb), 0.82))',
                     backdropFilter: 'blur(18px)',
-                    border: '1px solid rgba(140,255,176,0.18)',
+                    border: '1px solid rgba(var(--accent-rgb), 0.18)',
                     borderRadius: 7,
                     overflow: 'hidden',
-                    boxShadow: '0 18px 42px rgba(0,0,0,0.42), 0 0 22px rgba(140,255,176,0.07)',
+                    boxShadow: '0 18px 42px rgba(0,0,0,0.42), 0 0 22px rgba(var(--accent-rgb), 0.07)',
                 }}
             >
-                <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(140,255,176,0.35), transparent)' }} />
+                <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(var(--accent-rgb), 0.35), transparent)' }} />
 
                 <div
                     style={{
@@ -166,7 +166,7 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                             padding: 0,
                             background: 'transparent',
                             border: 'none',
-                            color: '#8CFFB0',
+                            color: 'var(--accent)',
                             cursor: 'pointer',
                             fontFamily: '"Courier New", monospace',
                             minWidth: 0,
@@ -177,15 +177,15 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                                 width: 7,
                                 height: 7,
                                 borderRadius: '50%',
-                                background: remoteUsers.length > 0 ? '#C9F36A' : '#5B644D',
-                                boxShadow: remoteUsers.length > 0 ? '0 0 8px #C9F36A' : 'none',
+                                background: remoteUsers.length > 0 ? 'var(--accent2)' : 'var(--muted)',
+                                boxShadow: remoteUsers.length > 0 ? '0 0 8px var(--accent2)' : 'none',
                                 flexShrink: 0,
                             }}
                         />
                         <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2 }}>
                             DISCOVERY
                         </span>
-                        <span style={{ color: 'rgba(140,255,176,0.35)', fontSize: 10 }}>
+                        <span style={{ color: 'rgba(var(--accent-rgb), 0.35)', fontSize: 10 }}>
                             {collapsed ? 'SHOW' : 'HIDE'}
                         </span>
                     </button>
@@ -202,8 +202,8 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                             style={{
                                 padding: '3px 7px',
                                 borderRadius: 3,
-                                border: '1px solid rgba(140,255,176,0.16)',
-                                color: remoteUsers.length > 0 ? '#C9F36A' : '#A9B89A',
+                                border: '1px solid rgba(var(--accent-rgb), 0.16)',
+                                color: remoteUsers.length > 0 ? 'var(--accent2)' : 'var(--dim)',
                                 fontSize: 9,
                                 letterSpacing: 1.2,
                             }}
@@ -221,10 +221,10 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
                                 padding: '0 12px 9px',
-                                color: '#A9B89A',
+                                color: 'var(--dim)',
                                 fontSize: 9,
                                 letterSpacing: 1.2,
-                                borderBottom: '1px solid rgba(140,255,176,0.08)',
+                                borderBottom: '1px solid rgba(var(--accent-rgb), 0.08)',
                             }}
                         >
                             <span>SCENE::{sceneLabel}</span>
@@ -235,7 +235,7 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                             <div
                                 style={{
                                     padding: '16px 12px',
-                                    color: '#A9B89A',
+                                    color: 'var(--dim)',
                                     fontSize: 10,
                                     lineHeight: 1.5,
                                     letterSpacing: 1,
@@ -264,10 +264,10 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                                                 gridTemplateColumns: '1fr auto',
                                                 gap: 10,
                                                 padding: '10px 12px',
-                                                background: selected ? 'rgba(140,255,176,0.1)' : 'transparent',
+                                                background: selected ? 'rgba(var(--accent-rgb), 0.1)' : 'transparent',
                                                 border: 'none',
-                                                borderBottom: '1px solid rgba(140,255,176,0.06)',
-                                                color: '#EAF3DF',
+                                                borderBottom: '1px solid rgba(var(--accent-rgb), 0.06)',
+                                                color: 'var(--text)',
                                                 textAlign: 'left',
                                                 cursor: 'pointer',
                                                 fontFamily: '"Courier New", monospace',
@@ -277,7 +277,7 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                                                 <span
                                                     style={{
                                                         display: 'block',
-                                                        color: selected ? '#8CFFB0' : '#EAF3DF',
+                                                        color: selected ? 'var(--accent)' : 'var(--text)',
                                                         fontSize: 11,
                                                         letterSpacing: 1.4,
                                                         whiteSpace: 'nowrap',
@@ -291,7 +291,7 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                                                     style={{
                                                         display: 'block',
                                                         marginTop: 4,
-                                                        color: '#A9B89A',
+                                                        color: 'var(--dim)',
                                                         fontSize: 9,
                                                         letterSpacing: 1,
                                                         whiteSpace: 'nowrap',
@@ -312,10 +312,10 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                                                     flexShrink: 0,
                                                 }}
                                             >
-                                                <span style={{ color: '#C9F36A', fontSize: 10, letterSpacing: 1 }}>
+                                                <span style={{ color: 'var(--accent2)', fontSize: 10, letterSpacing: 1 }}>
                                                     {distance.toFixed(1)}M
                                                 </span>
-                                                <span style={{ color: '#A9B89A', fontSize: 9, letterSpacing: 1 }}>
+                                                <span style={{ color: 'var(--dim)', fontSize: 9, letterSpacing: 1 }}>
                                                     {lastSeenLabel(user.last_seen_at)}
                                                 </span>
                                             </span>
@@ -329,14 +329,14 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                             <div
                                 style={{
                                     padding: 12,
-                                    borderTop: '1px solid rgba(140,255,176,0.08)',
+                                    borderTop: '1px solid rgba(var(--accent-rgb), 0.08)',
                                     display: 'grid',
                                     gap: 9,
                                 }}
                             >
                                 <div
                                     style={{
-                                        color: '#A9B89A',
+                                        color: 'var(--dim)',
                                         fontSize: 9,
                                         lineHeight: 1.5,
                                         letterSpacing: 1,
@@ -351,9 +351,9 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                                     style={{
                                         height: 34,
                                         borderRadius: 4,
-                                        border: '1px solid rgba(140,255,176,0.28)',
-                                        background: 'rgba(140,255,176,0.08)',
-                                        color: '#8CFFB0',
+                                        border: '1px solid rgba(var(--accent-rgb), 0.28)',
+                                        background: 'rgba(var(--accent-rgb), 0.08)',
+                                        color: 'var(--accent)',
                                         fontSize: 10,
                                         fontWeight: 700,
                                         letterSpacing: 1.4,
@@ -366,7 +366,7 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                             </div>
                         )}
 
-                        <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(140,255,176,0.12), transparent)' }} />
+                        <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(var(--accent-rgb), 0.12), transparent)' }} />
                     </>
                 )}
             </div>

@@ -45,7 +45,7 @@ function AppContent() {
                 height: '100vh',
                 display: 'flex',
                 flexDirection: 'row',
-                background: '#0A0B0A',
+                background: 'var(--bg)',
                 overflow: 'hidden',
             }}
         >

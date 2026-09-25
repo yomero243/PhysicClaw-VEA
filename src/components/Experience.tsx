@@ -10,13 +10,13 @@ import { CAMERA } from '../lib/constraints'
 import { useSceneStore } from '../store/sceneStore'
 import { useSoulStore } from '../store/soulStore'
 import type { PhysicsEvent, SessionUser } from '../types/multiplayer'
+import { useThemeStore } from '../theme/theme'
 
 /**
  * Arrays estáticos para evitar recreación de memoria en cada render (Performance R3F)
  */
 const GRID_POSITION: [number, number, number] = [0, -1.01, 0]
 const GRID_ARGS: [number, number] = [20, 20]
-const BG_ARGS: [string] = ['#0A0B0A']
 const CONTACT_SHADOWS_POS: [number, number, number] = [0, -1, 0]
 const BOX_ARGS: [number, number, number] = [1, 1, 1]
 
@@ -51,6 +51,7 @@ const CameraController = () => {
  * Renderiza los objetos guardados en la BD que sean primitivos (como cubos).
  */
 const SceneObjects = memo(function SceneObjects() {
+    const accent = useThemeStore((s) => s.palette.accent)
     const sceneObjects = useSceneStore(s => s.sceneObjects)
     const lowPerformanceMode = useSoulStore(s => s.lowPerformanceMode)
 
@@ -89,7 +90,7 @@ const SceneObjects = memo(function SceneObjects() {
                         >
                             <boxGeometry args={BOX_ARGS} />
                             <meshStandardMaterial 
-                                color={(obj.metadata?.color as string) || '#8CFFB0'} 
+                                color={(obj.metadata?.color as string) || accent} 
                                 metalness={0.9}
                                 roughness={0.05}
                             />
@@ -103,17 +104,18 @@ const SceneObjects = memo(function SceneObjects() {
 })
 
 const FloorGrid = () => {
+    const scene = useThemeStore((s) => s.palette.scene)
     const gridConfig = useMemo(() => ({
         cellSize: 0.5,
         cellThickness: 0.5,
-        cellColor: '#1a3a4a',
+        cellColor: scene.gridCell,
         sectionSize: 2,
         sectionThickness: 1,
-        sectionColor: '#8CFFB0',
+        sectionColor: scene.gridSection,
         fadeDistance: 20,
         fadeStrength: 1.5,
         infiniteGrid: true,
-    }), [])
+    }), [scene])
 
     return (
         <Grid
@@ -180,6 +182,7 @@ export const Experience = ({
 }: ExperienceProps) => {
     const playerRef = useRef<THREE.Group>(null)
     const lowPerformanceMode = useSoulStore((s) => s.lowPerformanceMode)
+    const scenePalette = useThemeStore((s) => s.palette.scene)
 
     return (
         <Canvas 
@@ -187,7 +190,7 @@ export const Experience = ({
             dpr={lowPerformanceMode ? 1 : [1, 2]}
             shadows={!lowPerformanceMode}
         >
-            <color attach="background" args={BG_ARGS} />
+            <color attach="background" args={[scenePalette.background]} />
             <CameraController />
 
             {/* Iluminación sofisticada adaptativa según el modo de rendimiento */}
@@ -212,7 +215,7 @@ export const Experience = ({
                     <directionalLight
                         position={[-6, 5, -6]}
                         intensity={0.4}
-                        color="#aaccff"
+                        color={scenePalette.fillLight}
                     />
                     {/* Luz de rebote sutil desde abajo */}
                     <pointLight
@@ -225,7 +228,7 @@ export const Experience = ({
                 <>
                     {/* Luces simplificadas sin sombras en modo optimizado */}
                     <directionalLight position={[6, 10, 6]} intensity={1.2} />
-                    <directionalLight position={[-6, 5, -6]} intensity={0.3} color="#aaccff" />
+                    <directionalLight position={[-6, 5, -6]} intensity={0.3} color={scenePalette.fillLight} />
                 </>
             )}
 
