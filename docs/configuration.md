@@ -8,7 +8,6 @@ All configuration is driven by environment variables. Copy `.env.example` to `.e
 |---|---|---|
 | `VITE_SUPABASE_URL` | ✅ | Your Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | ✅ | Supabase anon/publishable key (safe to expose; RLS enforces access) |
-| `VITE_OPENCLAW_API_URL` | — | Base URL of an OpenAI-compatible gateway for **local development only**. Empty = use the built-in Vite proxy (`/v1` → `http://127.0.0.1:18789`) |
 | `VITE_OPENCLAW_MODEL` | — | Model id sent in chat requests (default `google/gemini-2.5-flash`) |
 | `VITE_PORT` | — | Vite dev server port (default `5173`) |
 | `VITE_CONTROL_POLL_MS` | — | Poll interval for `openclaw-control.json` (default `2000` ms) |
@@ -17,10 +16,14 @@ All configuration is driven by environment variables. Copy `.env.example` to `.e
 
 | Variable | Description |
 |---|---|
-| `OPENCLAW_LOCAL_PORT` | Port of the local LLM proxy that the Vite `/v1` proxy forwards to (default `18789`) |
+| `LLM_API_KEY` | **Your** LLM API key. Lives only in your personal `.env`; the Vite server adds it to requests it forwards. Never sent to the browser, never stored. Never prefix it with `VITE_` |
+| `LLM_API_URL` | Any OpenAI-compatible base URL the `/v1` proxy forwards to. Empty = local OpenClaw gateway on `OPENCLAW_LOCAL_PORT` |
+| `OPENCLAW_LOCAL_PORT` | Port of a local OpenClaw gateway, used when `LLM_API_URL` is empty (default `18789`) |
 | `CONTROL_API_TOKEN` | Token required to `POST /api/control` on the dev server. If unset, a random token is generated and logged to stdout on startup |
 
 ## Edge Function secrets (Supabase, server-side only)
+
+> The app no longer calls the `chat` function: each user's own key, from their own `.env`, is used instead. Its secrets below only matter if you deploy it for another purpose.
 
 Set these in the Supabase dashboard (**Edge Functions → Secrets**) or with `npx supabase secrets set`:
 

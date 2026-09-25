@@ -12,7 +12,7 @@ import {
     sceneObjectsApi,
     sessionsApi,
     messagesApi,
-    avatarConfigsApi,
+    entitiesApi,
     realtimeApi,
     supabase,
 } from '../lib/supabase'
@@ -21,7 +21,9 @@ import type {
     SceneObject,
     SceneInsert,
     SceneObjectInsert,
-    AvatarConfig,
+    Entity,
+    EntityLook,
+    EntityVec3,
     Message,
     MessageRole,
     MoodType,
@@ -48,7 +50,8 @@ export interface SceneState {
     isLoadingMessages: boolean
 
     // Avatar
-    avatarConfig: AvatarConfig | null
+    /** The signed-in account's entity (appearance + last place). */
+    entity: Entity | null
 
     // Error
     error: string | null
@@ -90,8 +93,9 @@ export interface SceneState {
         intensity?: number
     ) => Promise<Message | null>
 
-    // Avatar
-    saveAvatarConfig: (config: Partial<AvatarConfig>) => Promise<void>
+    // Entity
+    saveLook: (look: EntityLook) => Promise<void>
+    saveLastPlace: (position: EntityVec3, rotation: EntityVec3) => Promise<void>
 
     // Misc
     clearError: () => void
@@ -130,7 +134,7 @@ const INITIAL_STATE = {
     currentSessionId: null,
     messages: [],
     isLoadingMessages: false,
-    avatarConfig: null,
+    entity: null,
     error: null,
     _channel: null,
 } satisfies Partial<SceneState>
@@ -174,13 +178,13 @@ export const useSceneStore = create<SceneState>()((set, get) => ({
         try {
             console.log('[sceneStore] Cargando escena para usuario:', userId)
             
-            const [sceneResult, avatarConfig] = await Promise.all([
+            const [sceneResult, entity] = await Promise.all([
                 scenesApi.getDefault(userId).then(async (sc) => {
                     if (sc) return sc
                     console.log('[sceneStore] No se encontró escena, creando una por defecto...')
                     return await scenesApi.create(makeDefaultScene(userId))
                 }),
-                avatarConfigsApi.getActive(userId)
+                entitiesApi.ensureMine(userId),
             ])
             
             const scene = sceneResult
@@ -192,7 +196,7 @@ export const useSceneStore = create<SceneState>()((set, get) => ({
             set({
                 currentScene: scene,
                 sceneObjects: objects,
-                avatarConfig,
+                entity,
                 isLoadingScene: false,
             })
 
@@ -382,27 +386,25 @@ export const useSceneStore = create<SceneState>()((set, get) => ({
         }
     },
 
-    saveAvatarConfig: async (config: Partial<AvatarConfig>) => {
-        const { userId, avatarConfig } = get()
-        if (!userId) return
-
+    saveLook: async (look: EntityLook) => {
+        const { entity } = get()
+        if (!entity) return
         try {
-            const updated = await avatarConfigsApi.upsert({
-                user_id: userId,
-                character_id: config.character_id ?? avatarConfig?.character_id ?? null,
-                config_name: config.config_name ?? avatarConfig?.config_name ?? 'Mi Avatar',
-                custom_colors: config.custom_colors ?? avatarConfig?.custom_colors ?? {},
-                shader_params: config.shader_params ?? avatarConfig?.shader_params ?? {},
-                scale: config.scale ?? avatarConfig?.scale ?? 1.0,
-                position: config.position ?? avatarConfig?.position ?? [0, 0, 0],
-                extra: config.extra ?? avatarConfig?.extra ?? {},
-                is_active: true,
-            })
-
-            set({ avatarConfig: updated })
+            set({ entity: await entitiesApi.saveLook(entity.id, look) })
         } catch (err) {
-            set({ error: `Error al guardar avatar: ${err instanceof Error ? err.message : err}` })
+            console.error('[sceneStore] saveLook:', err)
+            set({ error: 'No se pudo guardar el look de la entidad.' })
         }
+    },
+
+    saveLastPlace: async (position: EntityVec3, rotation: EntityVec3) => {
+        const { entity, currentScene } = get()
+        if (!entity) return
+        const sceneId = currentScene?.id ?? null
+        await entitiesApi.saveLastPlace(entity.id, sceneId, position, rotation)
+        set({
+            entity: { ...entity, last_scene_id: sceneId, last_position: position, last_rotation: rotation },
+        })
     },
 
     _subscribeToScene: (sceneId: string) => {

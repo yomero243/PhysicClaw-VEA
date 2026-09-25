@@ -1,19 +1,17 @@
 # Troubleshooting
 
-## The header says `INITIALIZING` forever / toast "Error al iniciar sesión anónima."
+## The app shows the login screen
 
-Anonymous sign-ins are disabled in your Supabase project. Enable them:
-**Dashboard → Authentication → Sign In / Providers → Allow anonymous sign-ins**, then reload the app.
+That is expected: PhysicClaw needs an account (email + password), the same one you use in VEA perZona. Use **Request access** to create one. If sign-up says to confirm your email, confirm it and sign in.
 
 ## Chat never replies (avatar goes sad, toast "No se pudo conectar con el asistente")
 
-The `chat` Edge Function is unreachable or misconfigured. Check in order:
+Chat runs through your local Vite server with your own key. Check in order:
 
-1. Is the function deployed? `npx supabase functions list`
-2. Are its secrets set? It returns HTTP 500 `Server misconfiguration` when `OPENCLAW_SECRET_TOKEN` is missing.
-3. Is your origin allowed? A 403 means `CHAT_ALLOWED_ORIGINS` doesn't include your domain.
-4. HTTP 429 means you hit the per-user rate limit (default 12/min).
-5. Inspect logs: **Dashboard → Edge Functions → chat → Logs**.
+1. Are you running `npm run dev` or `npm run preview`? A static deployment has no `/v1` proxy (HTTP 404).
+2. Is `LLM_API_KEY` set in your personal `.env` (without a `VITE_` prefix)? Restart the server after editing `.env`.
+3. Does `LLM_API_URL` point at an OpenAI-compatible endpoint? Empty means a local OpenClaw gateway on `OPENCLAW_LOCAL_PORT`.
+4. HTTP 401/403 from the provider means the key itself was rejected.
 
 ## Messages don't persist (`POST /rest/v1/messages` returns 400)
 
@@ -45,4 +43,4 @@ The dev control endpoint requires `CONTROL_API_TOKEN`. If you didn't set one in 
 
 ## Realtime presence shows 0 users when a friend is connected
 
-Both users must be in the **same scene**. Presence is keyed by scene id — each anonymous user gets their own default scene, so a shared-scene flow (or the same scene id) is required to see each other.
+Both users must be in the **same scene**. Presence is keyed by scene id — each account gets its own default scene, so a shared-scene flow (or the same scene id) is required to see each other.

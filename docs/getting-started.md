@@ -31,9 +31,8 @@ See [Configuration](configuration.md) for the full list.
 
 ## 3. Prepare Supabase
 
-1. **Enable anonymous sign-ins** — the app signs every visitor in anonymously.
-   Dashboard → **Authentication → Sign In / Providers → Allow anonymous sign-ins**.
-   Without this the app shows `INITIALIZING` forever and a toast reading *"Error al iniciar sesión anónima."*
+1. **Email sign-in** is on by default in Supabase. Users sign in with email + password — the same account as VEA perZona.
+   Your LLM key goes in your personal `.env` as `LLM_API_KEY` (never `VITE_`); it never leaves your machine.
 2. **Apply the migrations** in `supabase/migrations/` (in order). With the Supabase CLI:
 
     ```bash

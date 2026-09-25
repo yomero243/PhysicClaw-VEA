@@ -4,11 +4,11 @@ The app has no custom server: the browser talks to Supabase directly (Postgres v
 
 ## Authentication
 
-Anonymous sign-in (`signInAnonymously`) bootstraps every visitor into a real `authenticated` session — no registration. This must be enabled in the project (**Authentication → Sign In / Providers → Allow anonymous sign-ins**).
+Email + password. The same account signs in to VEA perZona: both apps use one shared project, and every tenant's rows are isolated by RLS. The app never signs anyone in anonymously (an anonymous user is new on every sign-in, so nothing it saved survives a reload).
 
 ## Database schema
 
-Migrations live in `supabase/migrations/` and are numbered `001`–`012`.
+Migrations live in `supabase/migrations/` and are numbered `001`–`016`. This repository owns the whole schema of the shared project; VEA perZona's former migrations are `013`–`015`.
 
 | Table | Purpose | Migration |
 |---|---|---|
@@ -18,7 +18,8 @@ Migrations live in `supabase/migrations/` and are numbered `001`–`012`.
 | `messages` | Chat history with mood/intensity snapshots | 001 + 008 |
 | `scene_objects` | Persistent scene objects (cubes, splats, models) | 004 |
 | `sessions` | Chat sessions | 004 |
-| `avatar_configs` | Per-user avatar customization | 004 |
+| `entities` | One row per account, all tenants in one table: appearance (`form` from perZona, `look` from the panel), idle clip, default mood, and last place (`last_scene_id`, `last_position`, `last_rotation`). Owner-only RLS; other tenants see appearance only, through the `entity_appearances` view. No files, no secrets | 016 |
+| `costumes`, `rigs`, `animation_clips` | perZona wardrobe and animation library | 013–015 |
 | `user_preferences` | Misc user preferences | 003 |
 | `session_users` | Multiplayer session membership | 005 |
 | `physics_events` | Multiplayer physics/scene event log | 005 |
@@ -68,6 +69,8 @@ The response is returned in OpenAI `chat/completions` format unchanged.
 npx supabase functions deploy chat
 npx supabase secrets set OPENCLAW_SECRET_TOKEN=... OPENCLAW_API_URL=... CHAT_ALLOWED_ORIGINS=https://physicclaw.vercel.app
 ```
+
+> **Not called by the app any more.** Chat goes through the local Vite proxy with each user's own key from their personal `.env`; this function used one project-owned key for everyone.
 
 ## `control` Edge Function
 

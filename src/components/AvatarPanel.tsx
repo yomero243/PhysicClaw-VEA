@@ -152,11 +152,11 @@ const SaveButton = memo(function SaveButton({ onClick, disabled, saving }: { onC
 export const AvatarPanel = () => {
   // Selectores granulares para no re-renderizar el panel con cada mensaje guardado
   const currentScene = useSceneStore(s => s.currentScene)
-  const avatarConfig = useSceneStore(s => s.avatarConfig)
+  const entity = useSceneStore(s => s.entity)
   const isLoadingScene = useSceneStore(s => s.isLoadingScene)
   const error = useSceneStore(s => s.error)
   const saveSceneSettings = useSceneStore(s => s.saveSceneSettings)
-  const saveAvatarConfig = useSceneStore(s => s.saveAvatarConfig)
+  const saveLook = useSceneStore(s => s.saveLook)
   const clearError = useSceneStore(s => s.clearError)
 
   // Selectores granulares para evitar re-renders de todo el panel
@@ -184,22 +184,23 @@ export const AvatarPanel = () => {
   const [bgColor, setBgColor] = useState('#0A0B0A')
   const [ambientIntensity, setAmbientIntensity] = useState(0.5)
 
-  useEffect(function syncAvatarConfig() {
-    if (avatarConfig) {
+  useEffect(function syncEntityLook() {
+    const look = entity?.look
+    if (look) {
       setColors({
-        primary:   avatarConfig.custom_colors?.primary   ?? DEFAULT_COLORS.primary,
-        secondary: avatarConfig.custom_colors?.secondary ?? DEFAULT_COLORS.secondary,
-        glow:      avatarConfig.custom_colors?.glow      ?? DEFAULT_COLORS.glow,
-        emission:  avatarConfig.custom_colors?.emission  ?? DEFAULT_COLORS.emission,
+        primary:   look.colors?.primary   ?? DEFAULT_COLORS.primary,
+        secondary: look.colors?.secondary ?? DEFAULT_COLORS.secondary,
+        glow:      look.colors?.glow      ?? DEFAULT_COLORS.glow,
+        emission:  look.colors?.emission  ?? DEFAULT_COLORS.emission,
       })
       setShaders({
-        wireframeOpacity: (avatarConfig.shader_params?.wireframeOpacity as number) ?? DEFAULT_SHADERS.wireframeOpacity,
-        glowIntensity:    (avatarConfig.shader_params?.glowIntensity    as number) ?? DEFAULT_SHADERS.glowIntensity,
-        pulseSpeed:       (avatarConfig.shader_params?.pulseSpeed       as number) ?? DEFAULT_SHADERS.pulseSpeed,
-        distortion:       (avatarConfig.shader_params?.distortion       as number) ?? DEFAULT_SHADERS.distortion,
+        wireframeOpacity: (look.shader?.wireframeOpacity as number) ?? DEFAULT_SHADERS.wireframeOpacity,
+        glowIntensity:    (look.shader?.glowIntensity    as number) ?? DEFAULT_SHADERS.glowIntensity,
+        pulseSpeed:       (look.shader?.pulseSpeed       as number) ?? DEFAULT_SHADERS.pulseSpeed,
+        distortion:       (look.shader?.distortion       as number) ?? DEFAULT_SHADERS.distortion,
       })
     }
-  }, [avatarConfig])
+  }, [entity])
 
   useEffect(function syncCurrentScene() {
     if (currentScene) {
@@ -225,7 +226,7 @@ export const AvatarPanel = () => {
         setApiConfig({ apiModel: botModel })
         flash('BOT CONFIG SAVED', true)
       } else {
-        await saveAvatarConfig({ character_id: null, config_name: 'Mi Avatar', custom_colors: colors, shader_params: shaders, is_active: true })
+        await saveLook({ colors, shader: shaders })
         flash('AVATAR SAVED', true)
       }
     } catch {

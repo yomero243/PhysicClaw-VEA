@@ -46,7 +46,6 @@ The repo's migrations are ahead of the production database. To bring production 
     ```
 
 4. **Dashboard settings** (one-time):
-    - Authentication → enable **anonymous sign-ins**
     - Authentication → enable **leaked password protection**
     - Verify the `models` storage bucket is private after migration `007`
 

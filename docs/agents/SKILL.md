@@ -29,7 +29,7 @@ These forms are exact. Do not vary them.
 - `VEA` — ALWAYS uppercase. An initialism. NEVER "Vea" or "vea" in prose.
 - `perZona` — brand form, capital Z. Prose, UI, documentation, repository names.
 - `perzona` — lowercase form, ONLY where the identifier is conventionally
-  lowercase: database tables (`perzona_avatars`), env vars, URL paths.
+  lowercase: env vars, URL paths.
 - `PhysicClaw` — one word, two capitals.
 - Repositories are `VEA-perZona` and `PhysicClaw-VEA` — brand casing, so the two
   siblings look like siblings.
@@ -305,17 +305,22 @@ blob still renders someone rather than failing.
 </form_is_a_value>
 
 <storage>
-Table `perzona_avatars`, in the same Supabase project PhysicClaw uses — one
-account covers both apps.
+Table `entities`, in the same Supabase project PhysicClaw uses — one account
+covers both apps, and one table holds every tenant's entity.
 
 | Column | Meaning |
 |---|---|
-| `user_id` | Owner. RLS restricts every operation to `auth.uid() = user_id`. |
-| `name` | Unique per user; the upsert key. |
-| `config` | The blob above. |
+| `owner_id` | Owner. RLS restricts every operation to `auth.uid() = owner_id`. |
+| `name` | Unique per owner; the upsert key. |
+| `form` | The blob above. perZona writes only this column. |
+| `look`, `last_*` | Written by PhysicClaw: panel colours and where the entity was last. |
 
 Writing requires a signed-in session. Anonymous writes are rejected by
-row-level security, by design.
+row-level security, by design. Other tenants see only appearance
+(`entity_appearances`), never where an entity was.
+
+No API key, token or credential is ever stored here. An agent's LLM key lives
+only in its owner's personal `.env`.
 </storage>
 
 <export>

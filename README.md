@@ -14,7 +14,7 @@
 - **Voice in / voice out** — Web Speech API for microphone input and spoken responses (`es-ES`).
 - **Character system** — switchable FBX/GLB characters with mood-driven animation retargeting, plus user-uploaded GLB models stored in Supabase Storage.
 - **Gaussian splat environments** — load `.splat` environments by URL and persist them per scene.
-- **Cloud persistence** — anonymous Supabase auth; scenes, 3D objects, chat sessions, and avatar configs stored in Postgres behind row-level security.
+- **Cloud persistence** — email + password login (one account shared with VEA perZona); scenes, 3D objects, chat sessions and each account's entity (appearance + last place) stored in Postgres behind row-level security.
 - **Multi-user presence** — realtime channels broadcast presence and scene events to other connected users (user discovery panel, remote avatars).
 - **External agent control** — external agents can drive the entity state via `openclaw-control.json` (file watcher) or the dev server's authenticated `/api/control` endpoint. See [docs/agents/SKILL.md](docs/agents/SKILL.md).
 - **Error surfacing** — toast notification system reports persistence/chat failures to the user instead of failing silently.
@@ -38,7 +38,7 @@ npm run dev             # http://localhost:5173
 
 See [.env.example](.env.example) for every variable with descriptions. The two required ones are `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
 
-> **Security note:** never put LLM tokens in `VITE_*` variables — anything `VITE_*` ships to the browser. LLM secrets live server-side as Edge Function secrets (`OPENCLAW_SECRET_TOKEN`). The build runs `verify-env` and fails if a secret-like `VITE_*` variable is detected.
+> **Your API key never leaves your machine.** Put `LLM_API_KEY` (and `LLM_API_URL`) in your personal `.env`. The local Vite server (`npm run dev` / `npm run preview`) adds it to the requests it forwards; the page never sees it, the UI never asks for it, and it is never stored in Supabase. Never prefix it with `VITE_` — anything `VITE_*` ships to the browser, and the build's `verify-env` gate fails if it finds a secret-like `VITE_*` variable.
 
 ### Scripts
 
@@ -62,7 +62,7 @@ src/
 ├── multiplayer/    # presence system, session client, zod validation
 ├── hooks/          # useMultiplayer, usePresence, useGLBUpload, useAnimationRetarget, ...
 ├── shaders/        # EnergyShader, DemoShader (GLSL)
-├── auth/           # AuthProvider (Supabase anonymous sessions)
+├── auth/           # AuthProvider (email + password sessions)
 ├── lib/            # supabase client + typed table APIs, constraints, bone maps
 └── constants/      # CHARACTERS config
 
@@ -85,9 +85,9 @@ Switch via the character tabs in the chat UI, or externally through the control 
 
 ## Backend
 
-- **Auth:** anonymous sign-in (Supabase) — every visitor gets a real `authenticated` session without registering. Requires "Allow anonymous sign-ins" enabled in the Supabase dashboard.
-- **Database:** Postgres tables (`profiles`, `scenes`, `scene_objects`, `objects_3d`, `sessions`, `messages`, `avatar_configs`) with owner-scoped RLS policies. Migration `010` consolidated all policies into single per-table owner policies using `(SELECT auth.uid())` (statement-level evaluation) scoped to `authenticated`.
-- **Chat:** the client never talks to the LLM directly in production. `supabase/functions/chat` validates the caller's JWT, enforces an origin allowlist, a model allowlist, message size limits, and per-user rate limiting, then forwards to the OpenClaw gateway using the server-side `OPENCLAW_SECRET_TOKEN`.
+- **Auth:** email + password (Supabase). The same account signs in to VEA perZona: one shared project, many tenants, isolated by RLS.
+- **Database:** Postgres tables (`profiles`, `scenes`, `scene_objects`, `objects_3d`, `sessions`, `messages`, `entities`) with owner-scoped RLS policies. Migration `010` consolidated all policies into single per-table owner policies using `(SELECT auth.uid())` (statement-level evaluation) scoped to `authenticated`.
+- **Chat:** the page calls same-origin `/v1/chat/completions`; the local Vite server forwards it to `LLM_API_URL` with the key from your personal `.env`. The `chat` Edge Function is no longer called by the app (it used a single project-owned key).
 - **CI/CD:** GitHub Actions runs typecheck, tests, lint, and build on every push/PR to `main`/`develop`. Vercel deploys from Git integration. Dependabot keeps dependencies patched.
 
 ### Known gaps (tracked)
@@ -101,7 +101,7 @@ Switch via the character tabs in the chat UI, or externally through the control 
 | Phase | Goal | Status |
 |-------|------|--------|
 | **v1.x** | Single-user local app: reactive VEA, AI chat, FBX/GLB support | ✅ Done |
-| **v2.0** | Auth + cloud scene persistence (Supabase, RLS) | ✅ Done (anonymous auth; account linking pending) |
+| **v2.0** | Auth + cloud scene persistence (Supabase, RLS) | ✅ Done (email + password, shared with perZona) |
 | **v2.5** | Real-time collaborative scenes (presence, realtime events) | 🟡 In progress — client ready, DB sync pending |
 | **v3.0** | CI/CD, staging/production environments, monitoring | 🟡 In progress — CI + deploys live, monitoring pending |
 | **v3.5** | Agent marketplace: per-user system prompts, models, avatars | ⬜ Planned |

@@ -15,7 +15,7 @@
                 ▼                            ▼
 ┌───────────────────────────────┐  ┌────────────────────────┐
 │ SUPABASE                      │  │ DEV SERVER (Vite)      │
-│  Auth (anonymous sessions)    │  │  /api/control endpoint │
+│  Auth (email + password)      │  │  /api/control endpoint │
 │  Postgres + RLS               │  │  openclaw-control.json │
 │  Realtime (presence, scenes)  │  │  watcher → HMR events  │
 │  Storage (GLB models)         │  └────────────────────────┘
@@ -44,9 +44,9 @@ See [Agent Control API](agent-control.md) for the full contract.
 
 ## Design decisions
 
-**Anonymous-first auth.** Every visitor gets a real `authenticated` Supabase session without signing up. This keeps onboarding at zero friction while still giving each user isolated, RLS-protected rows. Account linking (upgrading an anonymous session to a permanent account) is a planned v2.x feature.
+**One account, many tenants.** Email + password, the same account as VEA perZona, in one shared project. Each tenant's rows are isolated by RLS; entities of all tenants live in one `entities` table.
 
-**Secrets never reach the browser.** The LLM token lives only as an Edge Function secret. The `verify-env` build gate fails any build where a secret-like `VITE_*` variable exists. In development you *may* use a direct client token, but that path is compiled out of production builds (`import.meta.env.PROD` guard).
+**Each user's key stays on their machine.** The LLM key lives only in the user's personal `.env`; the local Vite server adds it to the `/v1` requests it forwards and drops any credentials the page sends. The page never holds a key and nothing stores one. The `verify-env` build gate fails any build where a secret-like `VITE_*` variable exists.
 
 **The database is the boundary.** The client talks to Postgres directly through supabase-js, so **RLS is the security model**, not a trusted API layer. Every table carries an owner policy (`(SELECT auth.uid()) = user_id`); see [Backend](backend.md#row-level-security).
 
@@ -64,7 +64,7 @@ src/
 ├── multiplayer/    # presenceSystem, sessionClient, zod validation
 ├── hooks/          # useMultiplayer, usePresence, useGLBUpload, useAnimationRetarget, ...
 ├── shaders/        # EnergyShader, DemoShader (GLSL)
-├── auth/           # AuthProvider (anonymous sessions)
+├── auth/           # AuthProvider (email + password sessions)
 ├── lib/            # supabase client + typed APIs, constraints (zod), bone maps
 └── constants/      # CHARACTERS config
 

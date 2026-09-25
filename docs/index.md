@@ -12,7 +12,7 @@
 - **Voice in / voice out** — Web Speech API for microphone input and spoken responses (Spanish, `es-ES`).
 - **Character system** — switchable GLB/procedural characters with mood-driven animation, plus user-uploaded GLB models.
 - **Gaussian splat environments** — load `.splat` environments by URL and persist them per scene.
-- **Cloud persistence** — anonymous Supabase auth; scenes, 3D objects, chat sessions, and avatar configs stored in Postgres behind row-level security.
+- **Cloud persistence** — email + password login (one account shared with VEA perZona); scenes, 3D objects, chat sessions and each account's entity (appearance + last place) stored in Postgres behind row-level security.
 - **Multi-user presence** — realtime channels broadcast presence and scene events to other connected users.
 - **External agent control** — any external agent (Claude, custom scripts, CI jobs) can drive the entity through the [Agent Control API](agent-control.md).
 

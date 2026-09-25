@@ -20,7 +20,7 @@ Ephemeral entity state plus user customizations. Persisted selectively to localS
 
 ### `sceneStore` — cloud persistence
 
-Owns all Supabase I/O: anonymous auth bootstrap, the active scene, scene objects, chat sessions/messages, avatar config, and the realtime subscription for scene changes. Errors land in `sceneStore.error`, which the toast system watches.
+Owns all Supabase I/O for the signed-in account: the active scene, scene objects, chat sessions/messages, the account's entity (look + last place), and the realtime subscription for scene changes. Errors land in `sceneStore.error`, which the toast system watches.
 
 ### `toastStore` — user-facing notifications
 
