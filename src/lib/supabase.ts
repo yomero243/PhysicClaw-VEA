@@ -30,9 +30,13 @@ function assertData<T>(data: T | null, error: any, context: string): T {
     return data
 }
 
+/** False when the build had no Supabase URL or key; the login page says so. */
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey)
+
 // Falls back to localhost so createClient does not throw on undefined – the
 // Supabase SDK will return auth errors when the user tries to sign in.
-if (!supabaseUrl || !supabaseAnonKey) {
+// Deployed builds cannot get here: scripts/verify-env.js fails them instead.
+if (!isSupabaseConfigured) {
     console.error(
         '[Supabase] VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY no configurados. ' +
         'La app arranca pero toda la integración con el backend fallará. ' +
