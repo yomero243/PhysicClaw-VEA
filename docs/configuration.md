@@ -23,17 +23,10 @@ All configuration is driven by environment variables. Copy `.env.example` to `.e
 
 ## Edge Function secrets (Supabase, server-side only)
 
-> The app no longer calls the `chat` function: each user's own key, from their own `.env`, is used instead. Its secrets below only matter if you deploy it for another purpose.
-
 Set these in the Supabase dashboard (**Edge Functions → Secrets**) or with `npx supabase secrets set`:
 
 | Variable | Function | Description |
 |---|---|---|
-| `OPENCLAW_SECRET_TOKEN` | `chat` | Bearer token for the upstream LLM gateway. **Required** for AI replies |
-| `OPENCLAW_API_URL` | `chat` | Upstream gateway base URL (default `https://api.openclaw.ai`) |
-| `OPENCLAW_MODEL` | `chat` | Default model when the client doesn't request one |
-| `CHAT_ALLOWED_ORIGINS` | `chat` | Comma-separated CORS origin allowlist (defaults to localhost dev origins) |
-| `CHAT_RATE_LIMIT_PER_MINUTE` | `chat` | Per user+IP request budget (default `12`) |
 | `CONTROL_RATE_LIMIT_PER_MINUTE` | `control` | State-command budget per agent token (default `60`) |
 | `CONTROL_SCENE_RATE_LIMIT_PER_MINUTE` | `control` | Scene-command budget per agent token (default `10`) |
 

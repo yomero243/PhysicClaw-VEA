@@ -5,7 +5,7 @@
 
 **PhysicClaw-VEA** is a real-time, interactive 3D visualization environment that gives a digital "body" to an AI agent. A **Virtual Entity Augmented (VEA)** reacts dynamically to conversation — mood, intensity, and thinking states drive custom GLSL shaders and character animations — while scenes, chat history, and avatars persist to Supabase and sync across users in real time.
 
-**Live:** [physicclaw.vercel.app](https://physicclaw.vercel.app)
+**Live:** [physic-claw-vea.vercel.app](https://physic-claw-vea.vercel.app)
 
 ## Features
 
@@ -58,7 +58,7 @@ src/
 │                   # panels (Avatar, GLBUpload, GaussianSplat, UserDiscovery), Toasts, InterfaceChrome
 ├── store/          # Zustand stores: soulStore (entity state), sceneStore (persistence),
 │                   # splatStore, mineStore, toastStore
-├── services/       # openClawService — LLM chat via Supabase Edge Function
+├── services/       # openClawService — LLM chat via the local /v1 proxy (key from your .env)
 ├── multiplayer/    # presence system, session client, zod validation
 ├── hooks/          # useMultiplayer, usePresence, useGLBUpload, useAnimationRetarget, ...
 ├── shaders/        # EnergyShader, DemoShader (GLSL)
@@ -67,8 +67,8 @@ src/
 └── constants/      # CHARACTERS config
 
 supabase/
-├── functions/chat/ # Edge Function: authenticated LLM proxy (JWT + CORS + rate limit)
-└── migrations/     # 001–010 SQL migrations
+├── functions/control/ # Edge Function: external agents (hashed agent tokens + rate limit)
+└── migrations/     # 001–017 SQL migrations
 
 docs/agents/        # Context files for AI coding agents (GEMINI.md, SKILL.md)
 ```

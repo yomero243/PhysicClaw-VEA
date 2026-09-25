@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://physicclaw.vercel.app/sitemap.xml
+Sitemap: https://physic-claw-vea.vercel.app/sitemap.xml

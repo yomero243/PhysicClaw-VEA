@@ -38,39 +38,9 @@ RLS is the security model — there is no trusted API tier between the browser a
 !!! tip "Check your RLS health"
     Supabase's advisors (Dashboard → Advisors, or the `get_advisors` MCP tool) lint for duplicate permissive policies, per-row `auth.uid()` evaluation, and missing FK indexes. Migration `010` was written to clear all of them — re-run the advisors after any policy change.
 
-## `chat` Edge Function
+## No LLM function
 
-`supabase/functions/chat` — authenticated proxy to an OpenAI-compatible LLM gateway.
-
-**Request:** `POST /functions/v1/chat` with the user's Supabase JWT and body:
-
-```json
-{
-  "model": "google/gemini-2.5-flash",
-  "messages": [{ "role": "user", "content": "hola" }],
-  "stream": false
-}
-```
-
-**Validation pipeline:**
-
-1. CORS origin allowlist (`CHAT_ALLOWED_ORIGINS`)
-2. Supabase JWT → resolves the calling user
-3. Rate limit per `user:ip` (`CHAT_RATE_LIMIT_PER_MINUTE`, default 12/min)
-4. Message shape: ≤ 50 messages, each role ∈ {system, user, assistant}, content ≤ 8000 chars
-5. Model allowlist
-6. Forward to `OPENCLAW_API_URL` with the server-side `OPENCLAW_SECRET_TOKEN`
-
-The response is returned in OpenAI `chat/completions` format unchanged.
-
-**Deploy:**
-
-```bash
-npx supabase functions deploy chat
-npx supabase secrets set OPENCLAW_SECRET_TOKEN=... OPENCLAW_API_URL=... CHAT_ALLOWED_ORIGINS=https://physicclaw.vercel.app
-```
-
-> **Not called by the app any more.** Chat goes through the local Vite proxy with each user's own key from their personal `.env`; this function used one project-owned key for everyone.
+There is no chat Edge Function. The app sends chat to `/v1/chat/completions` on its own origin; the local Vite proxy forwards it with the key from that user's personal `.env`. Supabase never sees or stores an LLM key.
 
 ## `control` Edge Function
 

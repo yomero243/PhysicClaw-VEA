@@ -40,7 +40,7 @@ See [Configuration](configuration.md) for the full list.
     npx supabase db push
     ```
 
-3. *(Optional, for AI chat)* Deploy the `chat` Edge Function and set its secrets — see [Backend](backend.md#chat-edge-function).
+3. *(Optional, for AI chat)* Put `LLM_API_URL` and `LLM_API_KEY` in your own `.env` — see [Configuration](configuration.md). The key never goes to Supabase.
 
 ## 4. Run
 

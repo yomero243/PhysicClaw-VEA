@@ -14,7 +14,7 @@
 
 ## Hosting
 
-- **Frontend:** Vercel, connected to the GitHub repo. Push to `main` → production deploy at [physicclaw.vercel.app](https://physicclaw.vercel.app); PRs get preview URLs. Static asset caching is configured in `vercel.json`.
+- **Frontend:** Vercel, connected to the GitHub repo. Push to `main` → production deploy at [physic-claw-vea.vercel.app](https://physic-claw-vea.vercel.app); PRs get preview URLs. Static asset caching is configured in `vercel.json`.
 - **Backend:** Supabase project (`PhysicClaw`) — Postgres, Auth, Realtime, Storage, Edge Functions.
 - **Docs:** this site builds on [Read the Docs](https://readthedocs.org) from `mkdocs.yml` + `.readthedocs.yaml` on every push.
 
@@ -29,27 +29,20 @@ The repo's migrations are ahead of the production database. To bring production 
     npx supabase db push
     ```
 
-2. **Deploy Edge Functions:**
+2. **Deploy the one Edge Function:**
 
     ```bash
-    npx supabase functions deploy chat
     npx supabase functions deploy control
     ```
 
-3. **Set function secrets:**
+    There is no LLM function and no LLM secret in Supabase. Each user's key lives only in their own `.env` and goes through their local Vite proxy.
 
-    ```bash
-    npx supabase secrets set \
-      OPENCLAW_SECRET_TOKEN=<gateway-token> \
-      OPENCLAW_API_URL=<gateway-url> \
-      CHAT_ALLOWED_ORIGINS=https://physicclaw.vercel.app
-    ```
-
-4. **Dashboard settings** (one-time):
+3. **Dashboard settings** (one-time):
+    - Authentication → turn **off** anonymous sign-ins; keep **Email** on
     - Authentication → enable **leaked password protection**
     - Verify the `models` storage bucket is private after migration `007`
 
-5. **Re-run the advisors** (Dashboard → Advisors) — security and performance should both be clean.
+4. **Re-run the advisors** (Dashboard → Advisors) — security and performance should both be clean.
 
 ## Releases
 

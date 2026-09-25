@@ -2,7 +2,7 @@
 
 **PhysicClaw-VEA** is a real-time, interactive 3D visualization environment that gives a digital "body" to an AI agent. A **Virtual Entity Augmented (VEA)** reacts dynamically to conversation — mood, intensity, and thinking states drive custom GLSL shaders and character animations — while scenes, chat history, and avatars persist to Supabase and sync across users in real time.
 
-**Live app:** [physicclaw.vercel.app](https://physicclaw.vercel.app) ·
+**Live app:** [physic-claw-vea.vercel.app](https://physic-claw-vea.vercel.app) ·
 **Source:** [github.com/yomero243/PhysicClaw-VEA](https://github.com/yomero243/PhysicClaw-VEA)
 
 ## What can it do?
