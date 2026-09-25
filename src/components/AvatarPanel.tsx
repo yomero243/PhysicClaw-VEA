@@ -163,8 +163,6 @@ export const AvatarPanel = () => {
   const setActiveCharacterId = useSoulStore(s => s.setActiveCharacterId)
   const mood = useSoulStore(s => s.mood)
   const intensity = useSoulStore(s => s.intensity)
-  const apiBaseUrl = useSoulStore(s => s.apiBaseUrl)
-  const apiToken = useSoulStore(s => s.apiToken)
   const apiModel = useSoulStore(s => s.apiModel)
   const setApiConfig = useSoulStore(s => s.setApiConfig)
 
@@ -175,8 +173,6 @@ export const AvatarPanel = () => {
   const [saveMsg, setSaveMsg] = useState<{ text: string; ok: boolean } | null>(null)
 
   // Bot states
-  const [botUrl, setBotUrl] = useState(apiBaseUrl)
-  const [botToken, setBotToken] = useState(apiToken)
   const [botModel, setBotModel] = useState(apiModel)
 
   const [colors, setColors] = useState<ColorConfig>(DEFAULT_COLORS)
@@ -224,7 +220,7 @@ export const AvatarPanel = () => {
         await saveSceneSettings({ name: sceneName, environment: sceneEnv, background_color: bgColor, ambient_intensity: ambientIntensity })
         flash('SCENE SAVED', true)
       } else if (tab === 'bot') {
-        setApiConfig({ apiBaseUrl: botUrl, apiToken: botToken, apiModel: botModel })
+        setApiConfig({ apiModel: botModel })
         flash('BOT CONFIG SAVED', true)
       } else {
         await saveAvatarConfig({ character_id: null, config_name: 'Mi Avatar', custom_colors: colors, shader_params: shaders, is_active: true })
@@ -466,17 +462,8 @@ export const AvatarPanel = () => {
             <>
               <PanelLabel>CLAWBOT CONFIG</PanelLabel>
               <div style={{ fontSize: 10, color: 'var(--muted)', marginBottom: 12, lineHeight: 1.4 }}>
-                Route conversations through our secure server or use your own API key.
-              </div>
-
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 9, letterSpacing: 2, color: 'var(--muted)', marginBottom: 5 }}>API BASE URL</div>
-                <CyberInput value={botUrl} onChange={setBotUrl} placeholder="https://api.openclaw.ai" />
-              </div>
-
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 9, letterSpacing: 2, color: 'var(--muted)', marginBottom: 5 }}>API TOKEN (OPTIONAL)</div>
-                <CyberInput value={botToken} onChange={setBotToken} placeholder="Your API key" />
+                Your API key lives only in your personal .env (LLM_API_KEY) and is added by your
+                local server. It is never entered here, sent from this page, or stored anywhere.
               </div>
 
               <div style={{ marginBottom: 14 }}>

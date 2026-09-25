@@ -109,10 +109,9 @@ export interface SoulState {
     setUserName: (name: string | null) => void
 
     // API Connection Settings
-    apiBaseUrl: string
+    /** Model name only. The LLM URL and key live in the personal .env, never here. */
     apiModel: string
-    apiToken: string
-    setApiConfig: (config: Partial<{ apiBaseUrl: string; apiModel: string; apiToken: string }>) => void
+    setApiConfig: (config: Partial<{ apiModel: string }>) => void
 
     // Performance Settings
     lowPerformanceMode: boolean
@@ -217,9 +216,7 @@ export const useSoulStore = create<SoulState>()(
             setUserName: (name) => set({ userName: name }),
 
             // API settings
-            apiBaseUrl: import.meta.env.VITE_OPENCLAW_API_URL || '',
             apiModel: import.meta.env.VITE_OPENCLAW_MODEL || 'claude-3-5-sonnet-20241022',
-            apiToken: '',
             setApiConfig: (config) => set((state) => ({ ...state, ...config })),
 
             // Performance Settings
@@ -254,7 +251,6 @@ export const useSoulStore = create<SoulState>()(
                 ])
 
                 return {
-                    apiBaseUrl: state.apiBaseUrl,
                     apiModel: state.apiModel,
                     customCharacters,
                     characterOverrides: filterRecord(state.characterOverrides, allowedIds),

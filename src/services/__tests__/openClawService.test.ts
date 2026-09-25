@@ -2,9 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // --- Mock soulStore BEFORE importing the service ---
 const mockStore = {
-    apiBaseUrl: '',
     apiModel: 'test-model',
-    apiToken: 'test-token',
     isThinking: false,
     setIsThinking: vi.fn(),
     setMood: vi.fn(),
@@ -19,7 +17,7 @@ vi.mock('../../store/soulStore', () => ({
     },
 }))
 
-import { openClawService } from '../openClawService'
+import { LLM_ENDPOINT, openClawService } from '../openClawService'
 
 // Helper: build a minimal OpenAI-compatible response body
 function makeApiResponse(content: string) {
@@ -155,34 +153,37 @@ describe('openClawService', () => {
             expect(history[1].role).toBe('assistant')
         })
 
-        it('sends Authorization header only when apiToken is set', async () => {
+        it('calls the same-origin proxy endpoint, never a remote URL', async () => {
             const fetchMock = vi.fn().mockResolvedValue({
                 ok: true,
                 json: async () => makeApiResponse(JSON.stringify({ text: 'ok', mood: 'calm', intensity: 0.5 })),
             })
             vi.stubGlobal('fetch', fetchMock)
 
-            await openClawService.sendMessage('auth test')
-            const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
-            const headers = init.headers as Record<string, string>
-            expect(headers['Authorization']).toBe('Bearer test-token')
+            await openClawService.sendMessage('where to')
+            const [url] = fetchMock.mock.calls[0] as [string, RequestInit]
+            expect(url).toBe(LLM_ENDPOINT)
+            expect(url.startsWith('/')).toBe(true)
         })
 
-        it('omits Authorization header when apiToken is empty', async () => {
-            mockStore.apiToken = ''
+        it('never sends an API key or credentials from the page', async () => {
             const fetchMock = vi.fn().mockResolvedValue({
                 ok: true,
                 json: async () => makeApiResponse(JSON.stringify({ text: 'ok', mood: 'calm', intensity: 0.5 })),
             })
             vi.stubGlobal('fetch', fetchMock)
 
-            await openClawService.sendMessage('no token')
+            await openClawService.sendMessage('no secrets')
             const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
-            const headers = init.headers as Record<string, string>
-            expect(headers['Authorization']).toBeUndefined()
+            const headers = Object.keys(init.headers as Record<string, string>).map((h) => h.toLowerCase())
+            expect(headers).not.toContain('authorization')
+            expect(init.credentials).toBe('omit')
+        })
 
-            // restore
-            mockStore.apiToken = 'test-token'
+        it('explains how to run the local proxy when it is missing', async () => {
+            vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 404 }))
+            const result = await openClawService.sendMessage('static deploy')
+            expect(result.isError).toBe(true)
         })
     })
 })
