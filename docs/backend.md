@@ -23,7 +23,7 @@ Migrations live in `supabase/migrations/` and are numbered `001`–`016`. This r
 | `user_preferences` | Misc user preferences | 003 |
 | `session_users` | Multiplayer session membership | 005 |
 | `physics_events` | Multiplayer physics/scene event log | 005 |
-| `rate_limits` | Durable rate limiting shared across Edge Function isolates | 011 |
+| `rate_limits` | Durable rate limiting shared across Edge Function isolates | 011, 018 |
 | `agent_tokens` | Hashed per-user tokens for the production control API | 012 |
 
 ## Row-Level Security
@@ -32,7 +32,7 @@ RLS is the security model — there is no trusted API tier between the browser a
 
 - **Owner policies everywhere** (migration `010`): each table has a single permissive policy `FOR ALL TO authenticated USING ((SELECT auth.uid()) = user_id) WITH CHECK (...)`. The `(SELECT ...)` wrapper makes Postgres evaluate `auth.uid()` once per statement instead of once per row.
 - **Cross-owner protections** (migration `009`): security-definer helpers (`owns_scene`, `owns_session`, `can_access_scene`, `is_session_participant`) prevent attaching your rows to another user's scene/session, while letting legitimate scene participants read shared data.
-- **Service-role-only tables**: `rate_limits` has RLS enabled with *no* policies — only the Edge Functions (service role) touch it.
+- **Service-role-only tables**: clients hold no privilege on `rate_limits` at all, and a restrictive deny-all policy backs that up. Only the Edge Functions (service role) touch it, through `consume_rate_limit`, which runs as its caller.
 - **Agent tokens** store only a SHA-256 hash; the plaintext is shown once at creation.
 
 !!! tip "Check your RLS health"
