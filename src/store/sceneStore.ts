@@ -184,7 +184,14 @@ export const useSceneStore = create<SceneState>()((set, get) => ({
                     console.log('[sceneStore] No se encontró escena, creando una por defecto...')
                     return await scenesApi.create(makeDefaultScene(userId))
                 }),
-                entitiesApi.ensureMine(userId),
+                // The entity is optional for the scene: if it cannot load (for
+                // example migration 016 not applied yet) the world still opens,
+                // just without saved look or last place.
+                entitiesApi.ensureMine(userId).catch((err) => {
+                    console.error('[sceneStore] entity unavailable:', err)
+                    set({ error: 'No se pudo cargar tu entidad; la escena sigue sin su look guardado.' })
+                    return null
+                }),
             ])
             
             const scene = sceneResult

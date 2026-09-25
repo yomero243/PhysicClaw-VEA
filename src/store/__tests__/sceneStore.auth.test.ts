@@ -37,3 +37,25 @@ describe('sceneStore session handling', () => {
         expect(useSceneStore.getState().sceneObjects).toEqual([])
     })
 })
+
+describe('sceneStore entity loading', () => {
+    it('opens the scene even when the entity cannot load', async () => {
+        const lib = await import('../../lib/supabase')
+        const scene = { id: 'scene-1' }
+        vi.spyOn(lib.scenesApi, 'getDefault').mockResolvedValue(scene as never)
+        vi.spyOn(lib.sceneObjectsApi, 'listForScene').mockResolvedValue([])
+        vi.spyOn(lib.entitiesApi, 'ensureMine').mockRejectedValue(new Error('relation "entities" does not exist'))
+
+        // Real loadDefaultScene, not the stub the other suite installs.
+        useSceneStore.getState().reset()
+        const { loadDefaultScene } = await import('../sceneStore').then((m) => m.useSceneStore.getInitialState())
+        useSceneStore.setState({ userId: 'user-a', loadDefaultScene, _subscribeToScene: vi.fn() })
+
+        await useSceneStore.getState().loadDefaultScene()
+
+        const state = useSceneStore.getState()
+        expect(state.currentScene).toEqual(scene)
+        expect(state.entity).toBeNull()
+        expect(state.error).toMatch(/entidad/)
+    })
+})
