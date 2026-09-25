@@ -52,7 +52,7 @@ Each token controls **only its owner's entity**; delivery is a private Realtime 
 | `setIsThinking` | `boolean` | Thinking animation + intensity boost |
 | `setIntensity` | `number` (0–2, clamped) | Shader energy level |
 | `setLastMessage` | `string` | Message shown in the chat UI |
-| `setActiveCharacterId` | `string` | Switch character (`happy-idle`, `base-sphere`, …) |
+| `setActiveCharacterId` | `string` | Switch character (`base-sphere` — the built-in entity) |
 | `setShaderColor` | `{ "characterId": "...", "color": "#rrggbb" }` | Per-character shader color |
 | `setObjectVisibility` | `{ "id": "...", "visible": false }` | Show/hide a character or model |
 

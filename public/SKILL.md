@@ -252,9 +252,9 @@ transport. Do NOT fall back to this one; it will fail silently.
 | `setIsThinking` | `boolean` | Thinking animation, and +0.8 intensity |
 | `setIntensity` | `number` | Shader energy, 0 to ~2 (default 0.5) |
 | `setLastMessage` | `string` | Text shown in the chat UI |
-| `setActiveCharacterId` | `string` | `'happy-idle'` or `'base-sphere'` |
+| `setActiveCharacterId` | `string` | `'base-sphere'` (the built-in entity) |
 | `setShaderColor` | `object` | `{ "characterId": "base-sphere", "color": "#ff44aa" }` |
-| `setObjectVisibility` | `object` | `{ "id": "happy-idle", "visible": false }` |
+| `setObjectVisibility` | `object` | `{ "id": "base-sphere", "visible": false }` |
 </commands>
 
 <commands type="scene">
@@ -272,8 +272,7 @@ Create and delete rows in `scene_objects`; the running app updates live.
 <characters>
 | ID | Name | Description |
 |---|---|---|
-| `happy-idle` | Happy Bot | Animated FBX, Mixamo rig |
-| `base-sphere` | Energy Core | Procedural sphere with `EnergyShader` |
+| `base-sphere` | Entity | Procedural aura (core, halo, particles). Its colour follows `setMood` unless `setShaderColor` pins one. |
 </characters>
 </control_api>
 

@@ -29,14 +29,14 @@ describe('ControlCommandSchema — state commands', () => {
     it('accepts setObjectVisibility', () => {
         expect(parse({
             command: 'setObjectVisibility',
-            value: { id: 'happy-idle', visible: false },
+            value: { id: 'base-sphere', visible: false },
         }).success).toBe(true)
     })
 
     it('rejects setObjectVisibility with non-boolean visible', () => {
         expect(parse({
             command: 'setObjectVisibility',
-            value: { id: 'happy-idle', visible: 'no' },
+            value: { id: 'base-sphere', visible: 'no' },
         }).success).toBe(false)
     })
 })

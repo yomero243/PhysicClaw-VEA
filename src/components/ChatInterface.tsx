@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, memo } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react'
 import { useSceneStore } from '../store/sceneStore'
 import { useSoulStore } from '../store/soulStore'
 import { openClawService } from '../services/openClawService'
@@ -212,6 +212,8 @@ export const ChatInterface = () => {
   const setIntensity = useSoulStore(s => s.setIntensity)
   const activeCharacterId = useSoulStore(s => s.activeCharacterId)
   const setActiveCharacterId = useSoulStore(s => s.setActiveCharacterId)
+  const customCharacters = useSoulStore(s => s.customCharacters)
+  const selectableCharacters = useMemo(() => [...CHARACTERS, ...customCharacters], [customCharacters])
   const userName = useSoulStore(s => s.userName)
   
   // Scene store for persistent messages
@@ -411,17 +413,19 @@ export const ChatInterface = () => {
 
           {!collapsed && (
             <>
-              {/* ── Character tabs ── */}
+              {/* ── Character tabs — only when there is a choice to make ── */}
+              {selectableCharacters.length > 1 && (
               <div style={{
                 padding: '8px 16px',
                 borderBottom: '1px solid rgba(140,255,176,0.06)',
               }}>
                 <CharacterTabs
-                  characters={CHARACTERS}
+                  characters={selectableCharacters}
                   activeId={activeCharacterId}
                   onSelect={setActiveCharacterId}
                 />
               </div>
+              )}
 
               {/* ── Message list ── */}
               {(messages.length > 0 || isThinking || (!isThinking && lastMessage && messages.length === 0)) && (

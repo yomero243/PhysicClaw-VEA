@@ -12,7 +12,7 @@ Ephemeral entity state plus user customizations. Persisted selectively to localS
 | `mood` | `string` | `'calm'` | Current mood (see mood table below) |
 | `intensity` | `number` | `0.5` | Shader energy, clamped 0.0–2.0 |
 | `lastMessage` | `string` | `''` | Last user message shown in the UI |
-| `activeCharacterId` | `string` | `'happy-idle'` | Active 3D character |
+| `activeCharacterId` | `string` | `'base-sphere'` | Active 3D character |
 | `customCharacters` | `CharacterConfig[]` | `[]` | User-uploaded GLB models |
 | `characterOverrides` | `Record<id, override>` | presets | Per-character scale/color/intensity overrides |
 | `visibleObjects` | `Record<id, boolean>` | built-ins | Which characters/models render in the scene |
@@ -61,10 +61,7 @@ Defined in `src/constants/characters.ts`:
 
 | ID | Name | Type |
 |----|------|------|
-| `happy-idle` | Happy Bot | GLB (`/Avata1.glb`) |
-| `base-sphere` | Energy Core | Procedural sphere + EnergyShader |
-| `cyber-sentinel` | Cyber Sentinel | Procedural (red shader preset) |
-| `logic-guardian` | Logic Guardian | Procedural (gold preset) |
+| `base-sphere` | Entity | Procedural aura: core, halo and GPU particles (`AuraEntity`), coloured by mood |
 
 Users can upload their own `.glb` models (max 50 MB) through the GLB Upload panel; rigged models support animation retargeting (`mixamo`, `rpm`, `vrm`, `standard` rig types via `useAnimationRetarget`).
 

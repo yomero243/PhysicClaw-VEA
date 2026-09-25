@@ -79,10 +79,7 @@ Defined in [src/constants/characters.ts](src/constants/characters.ts):
 
 | ID | Name | Type |
 |----|------|------|
-| `happy-idle` | Happy Bot | GLB (`/Avata1.glb`) |
-| `base-sphere` | Energy Core | Procedural (base geometry + EnergyShader) |
-| `cyber-sentinel` | Cyber Sentinel | Procedural (red shader preset) |
-| `logic-guardian` | Logic Guardian | Procedural (gold shader preset) |
+| `base-sphere` | Entity | Procedural aura: core, halo and GPU particles (`AuraEntity`), coloured by mood |
 
 Switch via the character tabs in the chat UI, or externally through the control interface. Users can also upload their own GLB models.
 
