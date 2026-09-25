@@ -187,7 +187,9 @@ export const Experience = ({
     return (
         <Canvas 
             camera={{ fov: CAMERA.FOV }}
-            dpr={lowPerformanceMode ? 1 : [1, 2]}
+            // Capped at 1.5: on 3x phone screens [1, 2] shades 4x the pixels of
+            // dpr 1 for a difference few people can see.
+            dpr={lowPerformanceMode ? 1 : [1, 1.5]}
             shadows={!lowPerformanceMode}
         >
             <color attach="background" args={[scenePalette.background]} />
@@ -252,16 +254,18 @@ export const Experience = ({
 
             <FloorGrid />
 
-            {/* Conservar ContactShadows de apoyo para el suelo */}
-            <ContactShadows
-                position={CONTACT_SHADOWS_POS}
-                resolution={512} // Reducida a 512 para excelente rendimiento en ambos modos
-                scale={10}
-                blur={2.5}
-                opacity={0.4}
-                far={10}
-                color="#000000"
-            />
+            {/* Contact shadows re-render the scene every frame; skipped in eco mode. */}
+            {!lowPerformanceMode && (
+                <ContactShadows
+                    position={CONTACT_SHADOWS_POS}
+                    resolution={512} // Reducida a 512 para excelente rendimiento en ambos modos
+                    scale={10}
+                    blur={2.5}
+                    opacity={0.4}
+                    far={10}
+                    color="#000000"
+                />
+            )}
             <Environment preset="city" />
 
             <OrbitControls

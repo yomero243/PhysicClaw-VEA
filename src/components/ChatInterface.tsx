@@ -5,6 +5,7 @@ import { openClawService } from '../services/openClawService'
 import { toast } from '../store/toastStore'
 import { CHARACTERS } from '../constants/characters'
 import type { MessageRole, MoodType } from '../types/database'
+import { COMPACT, useCompactLayout } from '../hooks/useCompactLayout'
 
 // Polyfill for SpeechRecognition
 const SpeechRecognition =
@@ -198,6 +199,7 @@ export const ChatInterface = () => {
   const [inputText, setInputText] = useState('')
   const [isListening, setIsListening] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
+  const compact = useCompactLayout()
   const recognitionRef = useRef<any>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const sendRef = useRef<(text: string) => void>(() => {})
@@ -335,6 +337,11 @@ export const ChatInterface = () => {
         zIndex: 10,
         width: '92%',
         maxWidth: 660,
+        ...(compact ? {
+          bottom: `calc(${COMPACT.EDGE / 2}px + env(safe-area-inset-bottom, 0px))`,
+          left: COMPACT.EDGE / 2, right: COMPACT.EDGE / 2,
+          transform: 'none', width: 'auto', maxWidth: 'none',
+        } : {}),
         fontFamily: '"Courier New", monospace',
       }}>
         {/* ── Main panel ── */}

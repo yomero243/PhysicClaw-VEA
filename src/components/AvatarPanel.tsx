@@ -5,6 +5,7 @@ import React, { useState, useEffect, memo } from 'react'
 import { useSceneStore } from '../store/sceneStore'
 import { CHARACTERS } from '../constants/characters'
 import { useSoulStore } from '../store/soulStore'
+import { COMPACT, useCompactLayout } from '../hooks/useCompactLayout'
 
 interface ColorConfig {
   primary: string; secondary: string; glow: string; emission: string
@@ -168,6 +169,7 @@ export const AvatarPanel = () => {
   const setApiConfig = useSoulStore(s => s.setApiConfig)
 
   const [open, setOpen] = useState(false)
+  const compact = useCompactLayout()
   const [tab, setTab] = useState<Tab>('avatar')
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState<{ text: string; ok: boolean } | null>(null)
@@ -242,6 +244,7 @@ export const AvatarPanel = () => {
         style={{
           position: 'absolute', top: 20, left: 20, zIndex: 20,
           width: 44, height: 44, borderRadius: 4,
+          ...(compact ? { top: COMPACT.EDGE, left: COMPACT.EDGE, width: COMPACT.BUTTON, height: COMPACT.BUTTON } : {}),
           background: 'rgba(var(--panel-deep-rgb), 0.75)', backdropFilter: 'blur(12px)',
           border: '1px solid rgba(var(--accent-rgb), 0.25)',
           color: 'var(--accent)', fontSize: 18, cursor: 'pointer',
@@ -268,6 +271,8 @@ export const AvatarPanel = () => {
       <div style={{
         position: 'absolute', top: 20, left: 20, zIndex: 20,
         width: 300,
+        // Full-width on phones, and above the + button it would otherwise sit under.
+        ...(compact ? { zIndex: 25, top: COMPACT.EDGE, left: COMPACT.EDGE, right: COMPACT.EDGE, width: 'auto', maxHeight: `calc(100dvh - ${COMPACT.EDGE * 2}px)`, overflowY: 'auto' as const } : {}),
         background: 'rgba(var(--panel-deep-rgb), 0.90)',
         backdropFilter: 'blur(20px)',
         border: '1px solid rgba(var(--accent-rgb), 0.18)',
@@ -384,7 +389,7 @@ export const AvatarPanel = () => {
                         boxShadow: active ? '0 0 8px rgba(var(--accent-rgb), 0.15)' : 'none',
                       }}>
                       <span>{active ? '▶ ' : '· '}{char.name.toUpperCase()}</span>
-                      <span style={{ opacity: 0.4, fontSize: 9 }}>{char.type.toUpperCase()}</span>
+                      <span style={{ opacity: 0.4, fontSize: 9 }}>{char.modelUrl ? char.type.toUpperCase() : 'AURA'}</span>
                     </button>
                   )
                 })}

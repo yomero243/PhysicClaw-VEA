@@ -5,6 +5,7 @@ import { CubeGenerator } from './components/CubeGenerator'
 import { AvatarPanel } from './components/AvatarPanel'
 import { GLBUploadPanel } from './components/GLBUploadPanel'
 import { GaussianSplatPanel } from './components/GaussianSplatPanel'
+
 import { MoodDemo } from './components/MoodDemo'
 import { InterfaceChrome } from './components/InterfaceChrome'
 import { UserDiscoveryPanel } from './components/UserDiscoveryPanel'
@@ -16,6 +17,10 @@ import { useProductionControl } from './hooks/useProductionControl'
 import { useMultiplayer } from './hooks/useMultiplayer'
 import { useSoulStore } from './store/soulStore'
 import { useSceneStore } from './store/sceneStore'
+
+// Gaussian splats are on hold; the panel returns when that work resumes.
+// Splats already in a scene still render (see GaussianSplats).
+const SHOW_SPLAT_PANEL = false
 
 const isDemoMode = new URLSearchParams(window.location.search).has('demo')
 
@@ -66,7 +71,7 @@ function AppContent() {
                     onTogglePerformance={() => setLowPerformanceMode(!lowPerformanceMode)}
                 />
                 <CubeGenerator />
-                <GaussianSplatPanel />
+                {SHOW_SPLAT_PANEL && <GaussianSplatPanel />}
                 <UserDiscoveryPanel remoteUsers={remoteUsers} sceneId={currentScene?.id ?? null} />
                 <AgentTokenPanel />
                 <ChatInterface />

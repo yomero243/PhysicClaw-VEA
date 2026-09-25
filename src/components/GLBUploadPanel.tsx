@@ -8,6 +8,7 @@ import type { CharacterId } from '../lib/constraints'
 import type { CharacterConfig } from '../constants/characters'
 import { CHARACTERS } from '../constants/characters'
 import { supabase } from '../lib/supabase'
+import { COMPACT, useCompactLayout } from '../hooks/useCompactLayout'
 
 // ─── Helpers ─────────────────────────────────────────────────
 
@@ -37,6 +38,7 @@ interface UploadedModel {
 
 export const GLBUploadPanel = () => {
     const [open, setOpen] = useState(false)
+    const compact = useCompactLayout()
     const [dragOver, setDragOver] = useState(false)
     const [model, setModel] = useState<UploadedModel | null>(null)
     const [modelName, setModelName] = useState('')
@@ -165,6 +167,7 @@ export const GLBUploadPanel = () => {
                 style={{
                     position: 'absolute', top: 20, right: 60, zIndex: 20,
                     width: 44, height: 44, borderRadius: 4,
+                    ...(compact ? { top: COMPACT.EDGE, right: COMPACT.EDGE, width: COMPACT.BUTTON, height: COMPACT.BUTTON } : {}),
                     background: 'rgba(var(--panel-deep-rgb), 0.75)', backdropFilter: 'blur(12px)',
                     border: '1px solid rgba(var(--accent2-rgb), 0.25)',
                     color: 'var(--accent2)', fontSize: 18, cursor: 'pointer',
@@ -190,6 +193,7 @@ export const GLBUploadPanel = () => {
             <div style={{
                 position: 'absolute', top: 20, right: 60, zIndex: 20,
                 width: 320,
+                ...(compact ? { top: COMPACT.EDGE, left: COMPACT.EDGE, right: COMPACT.EDGE, width: 'auto', maxHeight: `calc(100dvh - ${COMPACT.EDGE * 2}px)`, overflowY: 'auto' as const } : {}),
                 background: 'rgba(var(--panel-deep-rgb), 0.92)',
                 backdropFilter: 'blur(20px)',
                 border: '1px solid rgba(var(--accent2-rgb), 0.18)',

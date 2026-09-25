@@ -6,12 +6,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { agentTokensApi, type AgentToken } from '../lib/agentTokens'
 import { useSoulStore } from '../store/soulStore'
+import { COMPACT, useCompactLayout } from '../hooks/useCompactLayout'
 
 const MONO = '"Courier New", monospace'
 
 export function AgentTokenPanel() {
     const userId = useSoulStore((s) => s.userId)
     const [open, setOpen] = useState(false)
+    const compact = useCompactLayout()
     const [tokens, setTokens] = useState<AgentToken[]>([])
     const [name, setName] = useState('')
     const [freshSecret, setFreshSecret] = useState<string | null>(null)
@@ -66,6 +68,7 @@ export function AgentTokenPanel() {
                 onClick={() => setOpen(true)}
                 style={{
                     position: 'absolute', bottom: 16, left: 16, zIndex: 20,
+                    ...(compact ? { bottom: 'auto', top: COMPACT.BELOW_TOP_ROW, left: COMPACT.EDGE } : {}),
                     background: 'rgba(var(--panel-deep-rgb), 0.85)', color: 'var(--accent)',
                     border: '1px solid rgba(var(--accent-rgb), 0.25)', borderRadius: 4,
                     padding: '6px 12px', fontFamily: MONO, fontSize: 10,
@@ -82,6 +85,7 @@ export function AgentTokenPanel() {
             style={{
                 position: 'absolute', bottom: 16, left: 16, zIndex: 20,
                 width: 320, maxHeight: '60vh', overflowY: 'auto',
+                ...(compact ? { bottom: 'auto', top: COMPACT.EDGE, left: COMPACT.EDGE, right: COMPACT.EDGE, width: 'auto', maxHeight: `calc(100dvh - ${COMPACT.EDGE * 2}px)` } : {}),
                 background: 'rgba(var(--panel-deep-rgb), 0.92)', color: 'var(--dim)',
                 border: '1px solid rgba(var(--accent-rgb), 0.25)', borderRadius: 6,
                 padding: 14, fontFamily: MONO,

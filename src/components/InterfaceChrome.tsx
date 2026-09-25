@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { COMPACT, useCompactLayout } from '../hooks/useCompactLayout'
 
 interface InterfaceChromeProps {
     sceneName?: string | null
@@ -45,6 +46,7 @@ export function InterfaceChrome({
     lowPerformanceMode,
     onTogglePerformance,
 }: InterfaceChromeProps) {
+    const compact = useCompactLayout()
     const sceneLabel = sceneName?.trim() || (sceneId ? `SCENE ${sceneId.slice(0, 8).toUpperCase()}` : 'INITIALIZING')
 
     return (
@@ -82,17 +84,22 @@ export function InterfaceChrome({
             <div
                 style={{
                     position: 'absolute',
-                    top: 18,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    width: 'min(720px, calc(100vw - 420px))',
-                    minWidth: 'min(420px, calc(100vw - 40px))',
-                    minHeight: 46,
+                    // Compact: sits between the two corner buttons instead of under them.
+                    ...(compact
+                        ? { top: COMPACT.EDGE, left: COMPACT.BELOW_TOP_ROW, right: COMPACT.BELOW_TOP_ROW, minHeight: COMPACT.BUTTON, boxSizing: 'border-box' as const }
+                        : {
+                              top: 18,
+                              left: '50%',
+                              transform: 'translateX(-50%)',
+                              width: 'min(720px, calc(100vw - 420px))',
+                              minWidth: 'min(420px, calc(100vw - 40px))',
+                              minHeight: 46,
+                          }),
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    gap: 12,
-                    padding: '8px 10px 8px 14px',
+                    gap: compact ? 8 : 12,
+                    padding: compact ? '4px 6px 4px 10px' : '8px 10px 8px 14px',
                     borderRadius: 7,
                     border: '1px solid rgba(var(--accent-rgb), 0.18)',
                     background: 'linear-gradient(180deg, rgba(var(--panel-rgb), 0.78), rgba(var(--panel-deep-rgb), 0.62))',
@@ -108,9 +115,10 @@ export function InterfaceChrome({
                             alignItems: 'center',
                             gap: 9,
                             color: 'var(--text)',
-                            fontSize: 12,
+                            fontSize: compact ? 10 : 12,
                             fontWeight: 700,
-                            letterSpacing: 2.4,
+                            letterSpacing: compact ? 1.4 : 2.4,
+                            whiteSpace: 'nowrap',
                         }}
                     >
                         <StatusDot color="var(--accent)" />
@@ -140,14 +148,18 @@ export function InterfaceChrome({
                         flexShrink: 0,
                     }}
                 >
-                    <span style={chipStyle}>
-                        <StatusDot color="var(--accent2)" />
-                        CORE ON
-                    </span>
-                    <span style={chipStyle}>
-                        <StatusDot color={remoteCount > 0 ? 'var(--accent2)' : 'var(--muted)'} />
-                        {remoteCount} ONLINE
-                    </span>
+                    {!compact && (
+                        <>
+                            <span style={chipStyle}>
+                                <StatusDot color="var(--accent2)" />
+                                CORE ON
+                            </span>
+                            <span style={chipStyle}>
+                                <StatusDot color={remoteCount > 0 ? 'var(--accent2)' : 'var(--muted)'} />
+                                {remoteCount} ONLINE
+                            </span>
+                        </>
+                    )}
                     <button
                         onClick={onTogglePerformance}
                         title={lowPerformanceMode ? 'Activar modo visual completo' : 'Activar modo optimizado'}
@@ -160,12 +172,12 @@ export function InterfaceChrome({
                             boxShadow: lowPerformanceMode ? 'none' : '0 0 18px rgba(var(--accent-rgb), 0.12)',
                         }}
                     >
-                        PERF {lowPerformanceMode ? 'ECO' : 'ULTRA'}
+                        {compact ? '' : 'PERF '}{lowPerformanceMode ? 'ECO' : 'ULTRA'}
                     </button>
                 </div>
             </div>
 
-            {[
+            {!compact && [
                 { top: 18, left: 18, borderTop: '1px solid rgba(var(--accent-rgb), 0.34)', borderLeft: '1px solid rgba(var(--accent-rgb), 0.34)' },
                 { top: 18, right: 18, borderTop: '1px solid rgba(var(--accent-rgb), 0.34)', borderRight: '1px solid rgba(var(--accent-rgb), 0.34)' },
                 { bottom: 18, left: 18, borderBottom: '1px solid rgba(var(--accent-rgb), 0.24)', borderLeft: '1px solid rgba(var(--accent-rgb), 0.24)' },

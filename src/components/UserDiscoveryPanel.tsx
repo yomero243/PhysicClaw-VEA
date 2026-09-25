@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { SessionUser } from '../types/multiplayer'
+import { COMPACT, isCompactViewport, useCompactLayout } from '../hooks/useCompactLayout'
 
 interface UserDiscoveryPanelProps {
     remoteUsers: SessionUser[]
@@ -38,7 +39,9 @@ function lastSeenLabel(value: string): string {
 }
 
 export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelProps) {
-    const [collapsed, setCollapsed] = useState(false)
+    const compact = useCompactLayout()
+    // Phones start collapsed: the panel would otherwise cover the entity.
+    const [collapsed, setCollapsed] = useState(isCompactViewport)
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
     const [copyStatus, setCopyStatus] = useState<string | null>(null)
     const [notice, setNotice] = useState<PresenceNotice | null>(null)
@@ -110,6 +113,7 @@ export function UserDiscoveryPanel({ remoteUsers, sceneId }: UserDiscoveryPanelP
                 position: 'absolute',
                 top: 84,
                 right: 20,
+                ...(compact ? { top: COMPACT.BELOW_TOP_ROW, right: COMPACT.EDGE, maxWidth: `calc(100vw - ${COMPACT.EDGE * 2}px)` } : {}),
                 zIndex: 12,
                 width: 'min(320px, calc(100vw - 40px))',
                 fontFamily: '"Courier New", monospace',

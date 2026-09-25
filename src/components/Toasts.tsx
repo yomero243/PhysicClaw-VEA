@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useToastStore, type ToastType } from '../store/toastStore'
 import { useSceneStore } from '../store/sceneStore'
+import { COMPACT, useCompactLayout } from '../hooks/useCompactLayout'
 
 const ACCENTS: Record<ToastType, string> = {
     error: 'var(--danger)',
@@ -15,6 +16,7 @@ const LABELS: Record<ToastType, string> = {
 }
 
 export function Toasts() {
+    const compact = useCompactLayout()
     const toasts = useToastStore((s) => s.toasts)
     const removeToast = useToastStore((s) => s.removeToast)
     const addToast = useToastStore((s) => s.addToast)
@@ -37,6 +39,7 @@ export function Toasts() {
                 position: 'absolute',
                 top: 76,
                 right: 18,
+                ...(compact ? { top: COMPACT.BELOW_TOP_ROW, right: COMPACT.EDGE, left: COMPACT.EDGE } : {}),
                 zIndex: 30,
                 display: 'flex',
                 flexDirection: 'column',

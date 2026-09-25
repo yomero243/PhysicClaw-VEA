@@ -2,12 +2,14 @@ import React, { useCallback } from 'react'
 import { useSceneStore } from '../store/sceneStore'
 import { supabase } from '../lib/supabase'
 import type { ObjectType } from '../types/database'
+import { useCompactLayout } from '../hooks/useCompactLayout'
 
 /**
  * CubeGenerator — Botón para crear un cubo y persistirlo en la BD,
  * y otro para borrar todos los cubos existentes.
  */
 export const CubeGenerator: React.FC = () => {
+  const compact = useCompactLayout()
   const upsertObject = useSceneStore(s => s.upsertObject)
   const removeObject = useSceneStore(s => s.removeObject)
   const sceneObjects = useSceneStore(s => s.sceneObjects)
@@ -100,6 +102,10 @@ export const CubeGenerator: React.FC = () => {
     width: '142px',
     backdropFilter: 'blur(14px)',
   }
+
+  // A debug tool. On phones it covered the chat's SEND button; agents can
+  // still spawn cubes through the control API.
+  if (compact) return null
 
   return (
     <div style={{
