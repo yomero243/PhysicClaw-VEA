@@ -14,41 +14,22 @@ export interface CharacterConfig {
     rigType?: RigType
 }
 
+/**
+ * One agent, one entity. The built-in entity is the procedural aura
+ * (AuraEntity); a user's uploaded models join it as custom characters.
+ * The id stays 'base-sphere' because agents already address it by that
+ * name through the control API.
+ */
+export const ENTITY_ID = 'base-sphere' as CharacterId
+
 export const CHARACTERS: CharacterConfig[] = [
     {
-        id: 'happy-idle' as CharacterId,
-        name: 'Happy Bot',
-        modelUrl: '/Avata1.glb',
-
-
-        type: 'glb',
-        scale: 1,
-        position: [0, -1, 0.5],
-        defaultAnimation: 'mixamo.com',
-    },
-    {
-        id: 'base-sphere' as CharacterId,
-        name: 'Energy Core',
+        id: ENTITY_ID,
+        name: 'Entity',
         modelUrl: '',
         type: 'glb',
         scale: 1,
         position: [0, 0, 0],
-    },
-    {
-        id: 'cyber-sentinel' as CharacterId,
-        name: 'Cyber Sentinel',
-        modelUrl: '', // Uses base sphere
-        type: 'glb',
-        scale: 1.2,
-        position: [-2, 0, 0],
-    },
-    {
-        id: 'logic-guardian' as CharacterId,
-        name: 'Logic Guardian',
-        modelUrl: '', // Uses base sphere
-        type: 'glb',
-        scale: 1.2,
-        position: [2, 0, 0],
     },
 ]
 

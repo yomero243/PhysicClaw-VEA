@@ -1,6 +1,8 @@
 import { useSoulStore } from '../store/soulStore';
-import { supabase } from '../lib/supabase';
 import type { Mood } from '../lib/constraints';
+
+/** Same-origin; see the LLM proxy in vite.config.ts. */
+export const LLM_ENDPOINT = '/v1/chat/completions';
 
 export interface OpenClawResponse {
     text: string;
@@ -159,43 +161,25 @@ export const openClawService = {
                 stream: false,
             };
 
-            let data: { choices?: Array<{ message?: { content?: string } }> };
+            // Always same-origin. The local Vite server (`npm run dev` or
+            // `npm run preview`) forwards /v1 to LLM_API_URL and adds the key
+            // from this machine's personal .env. The page never holds a key,
+            // never sends one, and nothing here stores or forwards one.
+            const response = await fetch(LLM_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'omit',
+                body: JSON.stringify(requestBody),
+            });
 
-            if (store.apiToken && !import.meta.env.PROD) {
-                // Development-only: allow direct client API token for local testing.
-                const baseUrl = store.apiBaseUrl.trim().replace(/\/$/, '');
-                const endpoint = baseUrl
-                    ? `${baseUrl}/v1/chat/completions`
-                    : '/v1/chat/completions';
-
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${store.apiToken}`,
-                    },
-                    body: JSON.stringify(requestBody),
-                });
-
-                if (!response.ok) {
-                    throw new Error(`LLM API responded with HTTP ${response.status}`);
-                }
-                data = await response.json();
-            } else {
-                if (store.apiToken && import.meta.env.PROD) {
-                    // Warn if a client token exists in production environment.
-                    console.warn('[OpenClawService] Client-provided API token detected in production. Requests will be routed via Edge Function to avoid exposing secrets.');
-                }
-                // Secure default: route through Supabase Edge Function.
-                const { data: fnData, error: fnError } = await supabase.functions.invoke('chat', {
-                    body: requestBody,
-                });
-
-                if (fnError) {
-                    throw new Error(`Edge Function error: ${fnError.message}`);
-                }
-                data = fnData;
+            if (!response.ok) {
+                throw new Error(
+                    response.status === 404
+                        ? 'No local LLM proxy. Run the app with `npm run dev` or `npm run preview` and set LLM_API_KEY in your .env.'
+                        : `LLM API responded with HTTP ${response.status}`,
+                );
             }
+            const data: { choices?: Array<{ message?: { content?: string } }> } = await response.json();
             const rawReply: string = data.choices?.[0]?.message?.content ?? '';
 
             // Parse the structured response

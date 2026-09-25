@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { CharacterConfig } from '../constants/characters'
+import { ENTITY_ID, REGISTERED_CHARACTER_IDS, type CharacterConfig } from '../constants/characters'
 import type { Intensity, CharacterId, RigType } from '../lib/constraints'
 
 // ----------------------------------------------------------------
@@ -24,12 +24,7 @@ export interface ChatMessage {
     timestamp: number
 }
 
-const BUILT_IN_CHARACTER_IDS = new Set([
-    'happy-idle',
-    'base-sphere',
-    'cyber-sentinel',
-    'logic-guardian',
-])
+const BUILT_IN_CHARACTER_IDS = new Set<string>(REGISTERED_CHARACTER_IDS)
 
 function isTransientModelUrl(url: string): boolean {
     return url.startsWith('blob:') || url.startsWith('data:') || url.includes('/storage/v1/object/sign/')
@@ -114,10 +109,9 @@ export interface SoulState {
     setUserName: (name: string | null) => void
 
     // API Connection Settings
-    apiBaseUrl: string
+    /** Model name only. The LLM URL and key live in the personal .env, never here. */
     apiModel: string
-    apiToken: string
-    setApiConfig: (config: Partial<{ apiBaseUrl: string; apiModel: string; apiToken: string }>) => void
+    setApiConfig: (config: Partial<{ apiModel: string }>) => void
 
     // Performance Settings
     lowPerformanceMode: boolean
@@ -136,7 +130,7 @@ export const useSoulStore = create<SoulState>()(
             mood: 'calm',
             lastMessage: '',
             intensity: 0.5 as Intensity,
-            activeCharacterId: 'happy-idle' as CharacterId,
+            activeCharacterId: ENTITY_ID,
             setIsThinking: (thinking) => set({ isThinking: thinking }),
             setMood: (mood) => set({ mood }),
             setLastMessage: (msg) => set({ lastMessage: msg }),
@@ -165,18 +159,14 @@ export const useSoulStore = create<SoulState>()(
                         customCharacters: state.customCharacters.filter((c) => c.id !== id),
                         activeCharacterId:
                             state.activeCharacterId === id
-                                ? 'happy-idle' as CharacterId
+                                ? ENTITY_ID
                                 : state.activeCharacterId,
                         characterOverrides: remainingOverrides,
                         visibleObjects: remainingVisibility,
                     }
                 }),
 
-            visibleObjects: { 
-                'happy-idle': true,
-                'cyber-sentinel': true,
-                'logic-guardian': true 
-            },
+            visibleObjects: { [ENTITY_ID]: true },
             toggleObjectVisibility: (id) =>
                 set((state) => ({
                     visibleObjects: {
@@ -192,10 +182,7 @@ export const useSoulStore = create<SoulState>()(
                     },
                 })),
 
-            characterOverrides: {
-                'cyber-sentinel': { shaderColor: '#ff0033', intensity: 1.5 },
-                'logic-guardian': { shaderColor: '#ffcc00', intensity: 1.2 }
-            },
+            characterOverrides: {},
             setCharacterOverride: (id, overrides) =>
                 set((state) => ({
                     characterOverrides: {
@@ -229,9 +216,7 @@ export const useSoulStore = create<SoulState>()(
             setUserName: (name) => set({ userName: name }),
 
             // API settings
-            apiBaseUrl: import.meta.env.VITE_OPENCLAW_API_URL || '',
             apiModel: import.meta.env.VITE_OPENCLAW_MODEL || 'claude-3-5-sonnet-20241022',
-            apiToken: '',
             setApiConfig: (config) => set((state) => ({ ...state, ...config })),
 
             // Performance Settings
@@ -240,6 +225,21 @@ export const useSoulStore = create<SoulState>()(
         }),
         {
             name: 'physicclaw-storage',
+            // v1: the demo characters (Happy Bot, Cyber Sentinel, Logic
+            // Guardian) were removed. Saves from v0 never listed the entity
+            // as visible, and a persisted record replaces the default
+            // wholesale, so without this the entity would stay hidden.
+            version: 1,
+            migrate: (persisted, version) => {
+                const state = (persisted ?? {}) as Partial<SoulState>
+                if (version < 1) {
+                    const customIds = new Set((state.customCharacters ?? []).map((c) => c.id as string))
+                    const keep = new Set([...BUILT_IN_CHARACTER_IDS, ...customIds])
+                    state.visibleObjects = { ...filterRecord(state.visibleObjects ?? {}, keep), [ENTITY_ID]: true }
+                    state.characterOverrides = filterRecord(state.characterOverrides ?? {}, keep)
+                }
+                return state as SoulState
+            },
             // session-only fields excluded — only persist api config + customizations
             partialize: (state) => {
                 const customCharacters = state.customCharacters
@@ -251,7 +251,6 @@ export const useSoulStore = create<SoulState>()(
                 ])
 
                 return {
-                    apiBaseUrl: state.apiBaseUrl,
                     apiModel: state.apiModel,
                     customCharacters,
                     characterOverrides: filterRecord(state.characterOverrides, allowedIds),

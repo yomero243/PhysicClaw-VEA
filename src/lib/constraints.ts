@@ -63,12 +63,9 @@ export const SPAWN_BOUNDS = {
     SCALE_MIN: 0.01,
     SCALE_MAX: 20,
     LABEL_MAX_LEN: 60,
-    MODEL_URL_MAX_LEN: 512,
 } as const
 
 export const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/
-// Only .splat URLs are spawnable by agents (rendered by GaussianSplats).
-export const SPLAT_URL_RE = /^https:\/\/.+\.splat$/i
 
 const positionCoord = z.number().finite().min(-SPAWN_BOUNDS.POSITION_LIMIT).max(SPAWN_BOUNDS.POSITION_LIMIT)
 const rotationCoord = z.number().finite()
@@ -127,7 +124,9 @@ export const ControlCommandSchema = z.discriminatedUnion('command', [
             position: z.tuple([positionCoord, positionCoord, positionCoord]).optional(),
             rotation: z.tuple([rotationCoord, rotationCoord, rotationCoord]).optional(),
             scale: z.tuple([scaleCoord, scaleCoord, scaleCoord]).optional(),
-            model_url: z.string().max(SPAWN_BOUNDS.MODEL_URL_MAX_LEN).regex(SPLAT_URL_RE).optional(),
+            // Agents spawn cubes only. Rejected rather than silently dropped,
+            // so an agent still sending a .splat URL learns it is gone.
+            model_url: z.never().optional(),
         }),
         id: z.string().optional(),
     }),

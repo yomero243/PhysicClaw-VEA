@@ -128,36 +128,46 @@ export interface Message {
 
 export type MessageInsert = Omit<Message, 'id' | 'created_at'>
 
-// ---- avatar_configs ----
-export interface AvatarConfig {
-    id: string
-    user_id: string
-    character_id: string | null
-    config_name: string
-    custom_colors: {
+// ---- entities ----
+// One table for every tenant (see supabase/migrations/016_entities.sql).
+// Appearance and last place only — never files, never secrets.
+
+export type EntityVec3 = [number, number, number]
+
+export interface EntityLook {
+    colors?: {
         primary?: string
         secondary?: string
         glow?: string
         emission?: string
         background?: string
     }
-    shader_params: {
+    shader?: {
         wireframeOpacity?: number
         glowIntensity?: number
         pulseSpeed?: number
         distortion?: number
         [key: string]: unknown
     }
-    scale: number | null
-    position: [number, number, number] | null
-    extra: Record<string, unknown>
+}
+
+export interface Entity {
+    id: string
+    owner_id: string
+    name: string
+    /** VEA perZona's avatar config; null means the procedural aura. */
+    form: Record<string, unknown> | null
+    look: EntityLook
+    idle_clip: string
+    default_mood: 'calm' | 'excited' | 'thinking' | 'listening'
+    last_scene_id: string | null
+    last_position: EntityVec3 | null
+    last_rotation: EntityVec3 | null
+    last_seen_at: string | null
     is_active: boolean
     created_at: string
     updated_at: string
 }
-
-export type AvatarConfigInsert = Omit<AvatarConfig, 'id' | 'created_at' | 'updated_at'>
-export type AvatarConfigUpdate = Partial<Omit<AvatarConfig, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
 
 // ---- user_preferences ----
 export interface UserPreferences {

@@ -5,8 +5,8 @@ description: VEA (Virtual Entity Augmented) gives an AI agent a visible body on 
 
 <!--
   CANONICAL SOURCE: VEA-perZona/docs/agents/SKILL.md
-  PhysicClaw-VEA keeps a synced copy (and serves it at /SKILL.md via its
-  prebuild step). Edit this file; do not edit the copies.
+  PhysicClaw-VEA serves a copy at public/SKILL.md (its /SKILL.md). Edit
+  this file, then copy it there; do not edit the copy.
 -->
 
 # VEA — Virtual Entity Augmented
@@ -29,7 +29,7 @@ These forms are exact. Do not vary them.
 - `VEA` — ALWAYS uppercase. An initialism. NEVER "Vea" or "vea" in prose.
 - `perZona` — brand form, capital Z. Prose, UI, documentation, repository names.
 - `perzona` — lowercase form, ONLY where the identifier is conventionally
-  lowercase: database tables (`perzona_avatars`), env vars, URL paths.
+  lowercase: env vars, URL paths.
 - `PhysicClaw` — one word, two capitals.
 - Repositories are `VEA-perZona` and `PhysicClaw-VEA` — brand casing, so the two
   siblings look like siblings.
@@ -252,9 +252,9 @@ transport. Do NOT fall back to this one; it will fail silently.
 | `setIsThinking` | `boolean` | Thinking animation, and +0.8 intensity |
 | `setIntensity` | `number` | Shader energy, 0 to ~2 (default 0.5) |
 | `setLastMessage` | `string` | Text shown in the chat UI |
-| `setActiveCharacterId` | `string` | `'happy-idle'` or `'base-sphere'` |
+| `setActiveCharacterId` | `string` | `'base-sphere'` (the built-in entity) |
 | `setShaderColor` | `object` | `{ "characterId": "base-sphere", "color": "#ff44aa" }` |
-| `setObjectVisibility` | `object` | `{ "id": "happy-idle", "visible": false }` |
+| `setObjectVisibility` | `object` | `{ "id": "base-sphere", "visible": false }` |
 </commands>
 
 <commands type="scene">
@@ -262,7 +262,7 @@ Create and delete rows in `scene_objects`; the running app updates live.
 
 | Command | Value | Description |
 |---|---|---|
-| `spawnObject` | `object` | Cube by default. Optional: `label` (≤60 chars), `color` (`#rrggbb`), `position`/`rotation`/`scale` (`[x,y,z]`; position ±50, scale 0.01–20), `model_url` (https, ends in `.splat`) |
+| `spawnObject` | `object` | Cube by default. Optional: `label` (≤60 chars), `color` (`#rrggbb`), `position`/`rotation`/`scale` (`[x,y,z]`; position ±50, scale 0.01–20) |
 | `removeObject` | `string` | A `scene_objects` uuid, or `'primitives'` to delete every cube |
 
 `spawnObject` returns the new id so you can remove it later:
@@ -272,8 +272,7 @@ Create and delete rows in `scene_objects`; the running app updates live.
 <characters>
 | ID | Name | Description |
 |---|---|---|
-| `happy-idle` | Happy Bot | Animated FBX, Mixamo rig |
-| `base-sphere` | Energy Core | Procedural sphere with `EnergyShader` |
+| `base-sphere` | Entity | Procedural aura (core, halo, particles). Its colour follows `setMood` unless `setShaderColor` pins one. |
 </characters>
 </control_api>
 
@@ -306,17 +305,22 @@ blob still renders someone rather than failing.
 </form_is_a_value>
 
 <storage>
-Table `perzona_avatars`, in the same Supabase project PhysicClaw uses — one
-account covers both apps.
+Table `entities`, in the same Supabase project PhysicClaw uses — one account
+covers both apps, and one table holds every tenant's entity.
 
 | Column | Meaning |
 |---|---|
-| `user_id` | Owner. RLS restricts every operation to `auth.uid() = user_id`. |
-| `name` | Unique per user; the upsert key. |
-| `config` | The blob above. |
+| `owner_id` | Owner. RLS restricts every operation to `auth.uid() = owner_id`. |
+| `name` | Unique per owner; the upsert key. |
+| `form` | The blob above. perZona writes only this column. |
+| `look`, `last_*` | Written by PhysicClaw: panel colours and where the entity was last. |
 
 Writing requires a signed-in session. Anonymous writes are rejected by
-row-level security, by design.
+row-level security, by design. Other tenants see only appearance
+(`entity_appearances`), never where an entity was.
+
+No API key, token or credential is ever stored here. An agent's LLM key lives
+only in its owner's personal `.env`.
 </storage>
 
 <export>

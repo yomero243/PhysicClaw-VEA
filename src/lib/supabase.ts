@@ -8,8 +8,9 @@ import type {
     SessionInsert,
     Message,
     MessageInsert,
-    AvatarConfig,
-    AvatarConfigInsert,
+    Entity,
+    EntityLook,
+    EntityVec3,
 } from '../types/database'
 import type { SessionUser } from '../types/multiplayer'
 
@@ -54,16 +55,6 @@ export const auth = {
         if (error) {
             console.error('[Supabase/auth.getUser] Error:', error.message)
             return { user: null }
-        }
-        return data
-    },
-
-    /** Sign in anonymously (Supabase anonymous auth). */
-    async signInAnon() {
-        const { data, error } = await supabase.auth.signInAnonymously()
-        if (error) {
-            console.error('[Supabase/auth.signInAnon] Error:', error.message)
-            throw error
         }
         return data
     },
@@ -205,29 +196,67 @@ export const messagesApi = {
 }
 
 // ============================================================
-// avatarConfigsApi
+// entitiesApi — one row per account: how the entity looks, where it was last
 // ============================================================
-export const avatarConfigsApi = {
-    /** Get the active avatar config for a user, or null. */
-    async getActive(userId: string): Promise<AvatarConfig | null> {
+export const DEFAULT_ENTITY_NAME = 'My entity'
+
+export const entitiesApi = {
+    /** The account's active entity, or null. */
+    async getMine(ownerId: string): Promise<Entity | null> {
         const { data, error } = await supabase
-            .from('avatar_configs')
+            .from('entities')
             .select('*')
-            .eq('user_id', userId)
+            .eq('owner_id', ownerId)
             .eq('is_active', true)
             .maybeSingle()
-        if (error) throw new Error(`[Supabase/avatarConfigsApi.getActive] ${error.message}`)
+        if (error) throw new Error(`[Supabase/entitiesApi.getMine] ${error.message}`)
         return data
     },
 
-    /** Upsert an avatar config (keyed on user_id + config_name) and return it. */
-    async upsert(config: AvatarConfigInsert): Promise<AvatarConfig> {
+    /**
+     * The account's entity, created on first visit. Keyed on (owner_id, name)
+     * like VEA perZona's writes, so both apps land on the same row.
+     */
+    async ensureMine(ownerId: string): Promise<Entity> {
+        const existing = await entitiesApi.getMine(ownerId)
+        if (existing) return existing
         const { data, error } = await supabase
-            .from('avatar_configs')
-            .upsert(config, { onConflict: 'user_id,config_name' })
+            .from('entities')
+            .upsert({ owner_id: ownerId, name: DEFAULT_ENTITY_NAME }, { onConflict: 'owner_id,name', ignoreDuplicates: true })
+            .select()
+            .maybeSingle()
+        if (error) throw new Error(`[Supabase/entitiesApi.ensureMine] ${error.message}`)
+        // ignoreDuplicates returns nothing if another tab created it first.
+        return data ?? assertData(await entitiesApi.getMine(ownerId), null, 'entitiesApi.ensureMine')
+    },
+
+    async saveLook(entityId: string, look: EntityLook): Promise<Entity> {
+        const { data, error } = await supabase
+            .from('entities')
+            .update({ look })
+            .eq('id', entityId)
             .select()
             .single()
-        return assertData(data, error, 'avatarConfigsApi.upsert')
+        return assertData(data, error, 'entitiesApi.saveLook')
+    },
+
+    /** Where the entity is now, so it is there again next time. */
+    async saveLastPlace(
+        entityId: string,
+        sceneId: string | null,
+        position: EntityVec3,
+        rotation: EntityVec3,
+    ): Promise<void> {
+        const { error } = await supabase
+            .from('entities')
+            .update({
+                last_scene_id: sceneId,
+                last_position: position,
+                last_rotation: rotation,
+                last_seen_at: new Date().toISOString(),
+            })
+            .eq('id', entityId)
+        if (error) throw new Error(`[Supabase/entitiesApi.saveLastPlace] ${error.message}`)
     },
 }
 

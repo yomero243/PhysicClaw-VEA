@@ -1,10 +1,11 @@
 import React, { useRef, useEffect, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { useGLTF, useFBX, useAnimations, Sphere } from '@react-three/drei'
+import { useGLTF, useFBX, useAnimations } from '@react-three/drei'
 import * as THREE from 'three'
 import { useSoulStore } from '../store/soulStore'
 import { CHARACTERS, type CharacterConfig } from '../constants/characters'
 import { EnergyShaderMaterial } from '../shaders/EnergyShader'
+import { AuraEntity } from './AuraEntity'
 import '../shaders/EnergyShader'
 import type { CharacterOverride } from '../store/soulStore'
 import { supabase } from '../lib/supabase'
@@ -176,44 +177,11 @@ const GLBModel = ({ url, config }: { url: string; config: any }) => {
     )
 }
 
-// ── Base Entity (no model URL) ─────────────────────────────────────────────────
-
-const BaseEntity = ({ characterId }: { characterId: string }) => {
-    const materialRef = useRef<any>(null)
-
-    const lowPerformanceMode = useSoulStore((s) => s.lowPerformanceMode)
-    const overrides = useSoulStore((s) => s.characterOverrides[characterId]) || EMPTY_OVERRIDE
-
-    const shaderColor = useShaderColor(characterId)
-
-    useEnergyUniforms(materialRef, overrides, shaderColor)
-
-    const scale = overrides.scale ?? 1
-
-    return (
-        <Sphere 
-            args={[1, 64, 64]} 
-            scale={scale}
-            castShadow={!lowPerformanceMode}
-            receiveShadow={!lowPerformanceMode}
-        >
-            <energyShaderMaterial
-                ref={materialRef}
-                attach="material"
-                transparent
-                uColor={shaderColor}
-                uIntensity={0.5}
-                uTime={0}
-            />
-        </Sphere>
-    )
-}
-
 // ── Single character renderer ─────────────────────────────────────────────────
 
 const CharacterRenderer: React.FC<{ config: CharacterConfig }> = ({ config }) => {
     if (!config.modelUrl) {
-        return <BaseEntity characterId={config.id} />
+        return <AuraEntity config={config} />
     }
     if (config.type === 'fbx') {
         return <FBXModel url={config.modelUrl} config={config} />

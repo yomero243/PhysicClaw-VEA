@@ -12,8 +12,7 @@ import {
     sceneObjectsApi,
     sessionsApi,
     messagesApi,
-    avatarConfigsApi,
-    auth,
+    entitiesApi,
     realtimeApi,
     supabase,
 } from '../lib/supabase'
@@ -22,7 +21,9 @@ import type {
     SceneObject,
     SceneInsert,
     SceneObjectInsert,
-    AvatarConfig,
+    Entity,
+    EntityLook,
+    EntityVec3,
     Message,
     MessageRole,
     MoodType,
@@ -49,7 +50,8 @@ export interface SceneState {
     isLoadingMessages: boolean
 
     // Avatar
-    avatarConfig: AvatarConfig | null
+    /** The signed-in account's entity (appearance + last place). */
+    entity: Entity | null
 
     // Error
     error: string | null
@@ -60,7 +62,10 @@ export interface SceneState {
     // --- Actions ---
     
     // Auth e Init
-    initialize: () => Promise<void>
+    /** Loads the signed-in user's world. The id comes from the Supabase session. */
+    initialize: (userId: string) => Promise<void>
+    /** Drops the previous user's world (sign-out, account switch). */
+    reset: () => void
     
     // Escena
     loadDefaultScene: () => Promise<void>
@@ -88,8 +93,9 @@ export interface SceneState {
         intensity?: number
     ) => Promise<Message | null>
 
-    // Avatar
-    saveAvatarConfig: (config: Partial<AvatarConfig>) => Promise<void>
+    // Entity
+    saveLook: (look: EntityLook) => Promise<void>
+    saveLastPlace: (position: EntityVec3, rotation: EntityVec3) => Promise<void>
 
     // Misc
     clearError: () => void
@@ -118,7 +124,7 @@ const makeDefaultScene = (userId: string): SceneInsert => ({
 // Store
 // ----------------------------------------------------------------
 
-export const useSceneStore = create<SceneState>()((set, get) => ({
+const INITIAL_STATE = {
     userId: null,
     isAuthenticated: false,
     isInitializing: false,
@@ -128,39 +134,36 @@ export const useSceneStore = create<SceneState>()((set, get) => ({
     currentSessionId: null,
     messages: [],
     isLoadingMessages: false,
-    avatarConfig: null,
+    entity: null,
     error: null,
     _channel: null,
+} satisfies Partial<SceneState>
+
+export const useSceneStore = create<SceneState>()((set, get) => ({
+    ...INITIAL_STATE,
 
     // ── Actions ──────────────────────────────────────────────────
 
+    reset: () => {
+        get()._cleanupRealtime()
+        set({ ...INITIAL_STATE })
+    },
+
     clearError: () => set({ error: null }),
 
-    initialize: async () => {
-        const { isAuthenticated, isInitializing, isLoadingScene, loadDefaultScene } = get()
-        if (isAuthenticated || isInitializing || isLoadingScene) return
+    initialize: async (userId: string) => {
+        const current = get()
+        if (current.userId === userId && (current.isAuthenticated || current.isInitializing)) return
+        // A different account in the same tab: never show it the previous world.
+        if (current.userId && current.userId !== userId) get().reset()
 
-        set({ isInitializing: true, error: null })
-
+        // No sign-in here. The session comes from the login screen (email +
+        // password, the same account as VEA perZona). This used to call
+        // signInAnonymously() on every load, which minted a brand-new user
+        // each time and orphaned everything saved by the previous one.
+        set({ userId, isAuthenticated: true, isInitializing: true, error: null })
         try {
-            console.log('[sceneStore] Inicializando sesión anónima...')
-            const data = await auth.signInAnon()
-            const user = data?.user
-
-            if (!user) {
-                set({ error: 'No se pudo obtener el usuario anónimo.' })
-                return
-            }
-
-            set({
-                userId: user.id,
-                isAuthenticated: true,
-            })
-            console.log('[sceneStore] Sesión iniciada:', user.id)
-            await loadDefaultScene()
-        } catch (err) {
-            console.error('[sceneStore] Error en inicialización:', err)
-            set({ error: 'Error al iniciar sesión anónima.' })
+            await get().loadDefaultScene()
         } finally {
             set({ isInitializing: false })
         }
@@ -175,13 +178,20 @@ export const useSceneStore = create<SceneState>()((set, get) => ({
         try {
             console.log('[sceneStore] Cargando escena para usuario:', userId)
             
-            const [sceneResult, avatarConfig] = await Promise.all([
+            const [sceneResult, entity] = await Promise.all([
                 scenesApi.getDefault(userId).then(async (sc) => {
                     if (sc) return sc
                     console.log('[sceneStore] No se encontró escena, creando una por defecto...')
                     return await scenesApi.create(makeDefaultScene(userId))
                 }),
-                avatarConfigsApi.getActive(userId)
+                // The entity is optional for the scene: if it cannot load (for
+                // example migration 016 not applied yet) the world still opens,
+                // just without saved look or last place.
+                entitiesApi.ensureMine(userId).catch((err) => {
+                    console.error('[sceneStore] entity unavailable:', err)
+                    set({ error: 'No se pudo cargar tu entidad; la escena sigue sin su look guardado.' })
+                    return null
+                }),
             ])
             
             const scene = sceneResult
@@ -193,7 +203,7 @@ export const useSceneStore = create<SceneState>()((set, get) => ({
             set({
                 currentScene: scene,
                 sceneObjects: objects,
-                avatarConfig,
+                entity,
                 isLoadingScene: false,
             })
 
@@ -383,27 +393,25 @@ export const useSceneStore = create<SceneState>()((set, get) => ({
         }
     },
 
-    saveAvatarConfig: async (config: Partial<AvatarConfig>) => {
-        const { userId, avatarConfig } = get()
-        if (!userId) return
-
+    saveLook: async (look: EntityLook) => {
+        const { entity } = get()
+        if (!entity) return
         try {
-            const updated = await avatarConfigsApi.upsert({
-                user_id: userId,
-                character_id: config.character_id ?? avatarConfig?.character_id ?? null,
-                config_name: config.config_name ?? avatarConfig?.config_name ?? 'Mi Avatar',
-                custom_colors: config.custom_colors ?? avatarConfig?.custom_colors ?? {},
-                shader_params: config.shader_params ?? avatarConfig?.shader_params ?? {},
-                scale: config.scale ?? avatarConfig?.scale ?? 1.0,
-                position: config.position ?? avatarConfig?.position ?? [0, 0, 0],
-                extra: config.extra ?? avatarConfig?.extra ?? {},
-                is_active: true,
-            })
-
-            set({ avatarConfig: updated })
+            set({ entity: await entitiesApi.saveLook(entity.id, look) })
         } catch (err) {
-            set({ error: `Error al guardar avatar: ${err instanceof Error ? err.message : err}` })
+            console.error('[sceneStore] saveLook:', err)
+            set({ error: 'No se pudo guardar el look de la entidad.' })
         }
+    },
+
+    saveLastPlace: async (position: EntityVec3, rotation: EntityVec3) => {
+        const { entity, currentScene } = get()
+        if (!entity) return
+        const sceneId = currentScene?.id ?? null
+        await entitiesApi.saveLastPlace(entity.id, sceneId, position, rotation)
+        set({
+            entity: { ...entity, last_scene_id: sceneId, last_position: position, last_rotation: rotation },
+        })
     },
 
     _subscribeToScene: (sceneId: string) => {
