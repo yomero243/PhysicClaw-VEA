@@ -6,6 +6,19 @@ updates:
     schedule:
       interval: "weekly"
     groups:
+      # vitest and @vitest/* pin each other's exact version as peers: bumping
+      # one without the others breaks npm ci (ERESOLVE). Always move together.
+      # Listed first so these packages land here, not in the catch-all group.
+      vitest-security:
+        applies-to: security-updates
+        patterns:
+          - "vitest"
+          - "@vitest/*"
+      vitest:
+        applies-to: version-updates
+        patterns:
+          - "vitest"
+          - "@vitest/*"
       security-updates:
         patterns:
           - "*"
