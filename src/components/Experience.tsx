@@ -4,7 +4,6 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls, Environment, ContactShadows, Grid } from '@react-three/drei'
 import * as THREE from 'three'
 import { DynamicCharacter } from './DynamicCharacter'
-import { GaussianSplats } from './GaussianSplats'
 import { RemoteAvatars } from './RemoteAvatars'
 import { CAMERA } from '../lib/constraints'
 import { useSceneStore } from '../store/sceneStore'
@@ -252,7 +251,6 @@ export const Experience = ({
                 />
                 <RemoteAvatars remoteUsers={remoteUsers} />
                 <SceneObjects />
-                <GaussianSplats />
             </Suspense>
 
             <FloorGrid />

@@ -64,7 +64,7 @@ const COMMAND_VALIDATORS: Record<string, (v: unknown) => boolean> = {
         (v.position === undefined || isVec3(v.position)) &&
         (v.rotation === undefined || isVec3(v.rotation)) &&
         (v.scale === undefined || isVec3(v.scale)) &&
-        (v.model_url === undefined || (typeof v.model_url === 'string' && /^https:\/\/.+\.splat$/i.test(v.model_url))),
+        v.model_url === undefined,
     removeObject: v => typeof v === 'string' &&
         (v === 'primitives' || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)),
 }

@@ -1,12 +1,8 @@
 import { useEffect } from 'react'
 import { Experience } from './components/Experience'
 import { ChatInterface } from './components/ChatInterface'
-import { CubeGenerator } from './components/CubeGenerator'
 import { AvatarPanel } from './components/AvatarPanel'
 import { GLBUploadPanel } from './components/GLBUploadPanel'
-import { GaussianSplatPanel } from './components/GaussianSplatPanel'
-
-import { MoodDemo } from './components/MoodDemo'
 import { InterfaceChrome } from './components/InterfaceChrome'
 import { UserDiscoveryPanel } from './components/UserDiscoveryPanel'
 import { Toasts } from './components/Toasts'
@@ -18,12 +14,6 @@ import { useProductionControl } from './hooks/useProductionControl'
 import { useMultiplayer } from './hooks/useMultiplayer'
 import { useSoulStore } from './store/soulStore'
 import { useSceneStore } from './store/sceneStore'
-
-// Gaussian splats are on hold; the panel returns when that work resumes.
-// Splats already in a scene still render (see GaussianSplats).
-const SHOW_SPLAT_PANEL = false
-
-const isDemoMode = new URLSearchParams(window.location.search).has('demo')
 
 function AppContent({ userId: sessionUserId, displayName }: { userId: string; displayName: string }) {
     const setUserId = useSoulStore((s) => s.setUserId)
@@ -77,8 +67,6 @@ function AppContent({ userId: sessionUserId, displayName }: { userId: string; di
                     lowPerformanceMode={lowPerformanceMode}
                     onTogglePerformance={() => setLowPerformanceMode(!lowPerformanceMode)}
                 />
-                <CubeGenerator />
-                {SHOW_SPLAT_PANEL && <GaussianSplatPanel />}
                 <UserDiscoveryPanel remoteUsers={remoteUsers} sceneId={currentScene?.id ?? null} />
                 <AgentTokenPanel />
                 <ChatInterface />
@@ -110,7 +98,6 @@ function AuthGate() {
 }
 
 function App() {
-    if (isDemoMode) return <MoodDemo />
     return (
         <AuthProvider>
             <AuthGate />

@@ -52,13 +52,11 @@ export function applyCommand(cmd: ControlCommand) {
                 object_type: 'prop' as ObjectType,
                 character_id: null,
                 label: v.label ?? `AgentObject_${Date.now()}`,
-                model_url: v.model_url ?? null,
+                model_url: null,
                 position: v.position ?? [0, 0, 0],
                 rotation: v.rotation ?? [0, 0, 0],
                 scale_v: v.scale ?? [1, 1, 1],
-                metadata: v.model_url
-                    ? { kind: 'gaussian_splat', format: 'splat', spawned_by: 'agent' }
-                    : { shape: 'cube', is_primitive: true, color: v.color ?? '#8CFFB0', spawned_by: 'agent' },
+                metadata: { shape: 'cube', is_primitive: true, color: v.color ?? '#8CFFB0', spawned_by: 'agent' },
                 sort_order: 0,
                 is_visible: true,
             })

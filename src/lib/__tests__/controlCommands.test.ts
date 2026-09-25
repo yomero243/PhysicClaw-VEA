@@ -73,24 +73,10 @@ describe('ControlCommandSchema — scene commands', () => {
         }).success).toBe(false)
     })
 
-    it('accepts spawnObject with https .splat model_url', () => {
+    it('rejects spawnObject with any model_url (agents spawn cubes only)', () => {
         expect(parse({
             command: 'spawnObject',
             value: { model_url: 'https://example.com/room.splat' },
-        }).success).toBe(true)
-    })
-
-    it('rejects spawnObject with non-splat model_url', () => {
-        expect(parse({
-            command: 'spawnObject',
-            value: { model_url: 'https://example.com/model.glb' },
-        }).success).toBe(false)
-    })
-
-    it('rejects spawnObject with http (non-https) model_url', () => {
-        expect(parse({
-            command: 'spawnObject',
-            value: { model_url: 'http://example.com/room.splat' },
         }).success).toBe(false)
     })
 

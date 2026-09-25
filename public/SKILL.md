@@ -5,8 +5,8 @@ description: VEA (Virtual Entity Augmented) gives an AI agent a visible body on 
 
 <!--
   CANONICAL SOURCE: VEA-perZona/docs/agents/SKILL.md
-  PhysicClaw-VEA keeps a synced copy (and serves it at /SKILL.md via its
-  prebuild step). Edit this file; do not edit the copies.
+  PhysicClaw-VEA serves a copy at public/SKILL.md (its /SKILL.md). Edit
+  this file, then copy it there; do not edit the copy.
 -->
 
 # VEA — Virtual Entity Augmented
@@ -262,7 +262,7 @@ Create and delete rows in `scene_objects`; the running app updates live.
 
 | Command | Value | Description |
 |---|---|---|
-| `spawnObject` | `object` | Cube by default. Optional: `label` (≤60 chars), `color` (`#rrggbb`), `position`/`rotation`/`scale` (`[x,y,z]`; position ±50, scale 0.01–20), `model_url` (https, ends in `.splat`) |
+| `spawnObject` | `object` | Cube by default. Optional: `label` (≤60 chars), `color` (`#rrggbb`), `position`/`rotation`/`scale` (`[x,y,z]`; position ±50, scale 0.01–20) |
 | `removeObject` | `string` | A `scene_objects` uuid, or `'primitives'` to delete every cube |
 
 `spawnObject` returns the new id so you can remove it later:

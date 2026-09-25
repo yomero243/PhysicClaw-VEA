@@ -12,14 +12,12 @@ const INTENSITY_MAX = 2.0;
 const MESSAGE_MAX_LEN = 500;
 const CHAR_ID_MAX_LEN = 64;
 const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
-const SPLAT_URL_RE = /^https:\/\/.+\.splat$/i;
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const POSITION_LIMIT = 50;
 const SCALE_MIN = 0.01;
 const SCALE_MAX = 20;
 const LABEL_MAX_LEN = 60;
-const MODEL_URL_MAX_LEN = 512;
 
 // Commands executed server-side (DB write → Realtime updates the client)
 // instead of being broadcast on the control channel.
@@ -85,11 +83,8 @@ function validateSpawnObject(value: unknown): string | null {
   if (v.scale !== undefined && !isVec3(v.scale, SCALE_MIN, SCALE_MAX)) {
     return `spawnObject scale must be [x,y,z] within [${SCALE_MIN}, ${SCALE_MAX}]`;
   }
-  if (v.model_url !== undefined &&
-      (typeof v.model_url !== "string" ||
-        v.model_url.length > MODEL_URL_MAX_LEN ||
-        !SPLAT_URL_RE.test(v.model_url))) {
-    return "spawnObject model_url must be an https URL ending in .splat";
+  if (v.model_url !== undefined) {
+    return "spawnObject no longer accepts model_url; agents spawn cubes only";
   }
   return null;
 }
@@ -354,18 +349,16 @@ Deno.serve(async (req: Request) => {
         object_type: "prop",
         character_id: null,
         label: (v.label as string | undefined) ?? `AgentObject_${Date.now()}`,
-        model_url: (v.model_url as string | undefined) ?? null,
+        model_url: null,
         position: v.position ?? [0, 0, 0],
         rotation: v.rotation ?? [0, 0, 0],
         scale_v: v.scale ?? [1, 1, 1],
-        metadata: v.model_url
-          ? { kind: "gaussian_splat", format: "splat", spawned_by: "agent" }
-          : {
-            shape: "cube",
-            is_primitive: true,
-            color: (v.color as string | undefined) ?? "#8CFFB0",
-            spawned_by: "agent",
-          },
+        metadata: {
+          shape: "cube",
+          is_primitive: true,
+          color: (v.color as string | undefined) ?? "#8CFFB0",
+          spawned_by: "agent",
+        },
         sort_order: 0,
         is_visible: true,
       })
