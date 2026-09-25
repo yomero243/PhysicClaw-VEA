@@ -1,5 +1,7 @@
 import { useState, FormEvent, useEffect, useRef } from 'react'
 import { useAuth } from '../auth'
+import { AUTH_MESSAGES } from '../auth/authErrors'
+import { isSupabaseConfigured } from '../lib/supabase'
 import { getPalette } from '../theme/theme'
 
 /* ─── Animated background canvas ─── */
@@ -309,27 +311,29 @@ function ErrorBadge({ msg }: { msg: string }) {
 }
 
 function SubmitButton({ submitting, label }: { submitting: boolean; label: string }) {
+  // Without a Supabase project no login can work; the banner says why.
+  const blocked = submitting || !isSupabaseConfigured
   return (
     <button
       type="submit"
-      disabled={submitting}
+      disabled={blocked}
       aria-busy={submitting}
-      aria-disabled={submitting}
+      aria-disabled={blocked}
       style={{
         padding: '12px 0',
-        background: submitting
+        background: blocked
           ? 'rgba(var(--olive-rgb), 0.35)'
           : 'linear-gradient(135deg, rgba(var(--accent-rgb), 0.15), rgba(var(--accent-rgb), 0.05))',
-        color: submitting ? 'var(--dim)' : 'var(--accent)',
-        border: `1px solid ${submitting ? 'rgba(var(--accent-rgb), 0.2)' : 'var(--accent)'}`,
+        color: blocked ? 'var(--dim)' : 'var(--accent)',
+        border: `1px solid ${blocked ? 'rgba(var(--accent-rgb), 0.2)' : 'var(--accent)'}`,
         borderRadius: 4,
         fontSize: 13,
         fontFamily: '"Courier New", monospace',
         fontWeight: 700,
         letterSpacing: 3,
-        cursor: submitting ? 'wait' : 'pointer',
+        cursor: submitting ? 'wait' : blocked ? 'not-allowed' : 'pointer',
         transition: 'all 0.2s',
-        boxShadow: submitting ? 'none' : '0 0 16px rgba(var(--accent-rgb), 0.2)',
+        boxShadow: blocked ? 'none' : '0 0 16px rgba(var(--accent-rgb), 0.2)',
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -415,6 +419,10 @@ export function LoginPage() {
           ))}
 
           <div style={{ padding: '32px 36px 28px' }}>
+            {/* Said up front, instead of after a login that cannot work. */}
+            {!isSupabaseConfigured && (
+              <div style={{ marginBottom: 16 }}><ErrorBadge msg={AUTH_MESSAGES.notConfigured} /></div>
+            )}
             {view === 'login'
               ? <LoginView onSwitch={() => setView('register')} />
               : <RegisterView onSwitch={() => setView('login')} />
