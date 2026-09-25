@@ -11,6 +11,7 @@ import { useSceneStore } from '../store/sceneStore'
 import { useSoulStore } from '../store/soulStore'
 import type { PhysicsEvent, SessionUser } from '../types/multiplayer'
 import { useThemeStore } from '../theme/theme'
+import { useLastPlace } from '../hooks/useLastPlace'
 
 /**
  * Arrays estáticos para evitar recreación de memoria en cada render (Performance R3F)
@@ -181,6 +182,8 @@ export const Experience = ({
     localUserId,
 }: ExperienceProps) => {
     const playerRef = useRef<THREE.Group>(null)
+    // Back where its owner left it; the place is saved as it changes.
+    useLastPlace(playerRef)
     const lowPerformanceMode = useSoulStore((s) => s.lowPerformanceMode)
     const scenePalette = useThemeStore((s) => s.palette.scene)
 
