@@ -129,7 +129,7 @@ export interface Message {
 export type MessageInsert = Omit<Message, 'id' | 'created_at'>
 
 // ---- entities ----
-// One table for every tenant (see supabase/migrations/016_entities.sql).
+// One table for every tenant (see supabase/migrations/20260925000000_baseline.sql).
 // Appearance and last place only — never files, never secrets.
 
 export type EntityVec3 = [number, number, number]

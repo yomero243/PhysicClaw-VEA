@@ -48,11 +48,11 @@ src/
 └── lib/          Supabase client, typed table APIs, command validation
 supabase/
 ├── functions/control/   agent entry point
-└── migrations/          001–018, applied in order
+└── migrations/          baseline + later changes, applied in order
 ```
 
 ## Deploy
 
-Vercel builds `main` automatically. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the Vercel project. Apply new migrations in order before merging code that needs them.
+Vercel builds `main` automatically. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the Vercel project. Schema changes are new files in `supabase/migrations/`; apply them with `npx supabase link --project-ref <ref>` then `npx supabase db push` before merging code that needs them. Never edit the baseline.
 
 [Security policy](SECURITY.md) · [MIT](LICENSE) © 2026 Gabriel Cerdio

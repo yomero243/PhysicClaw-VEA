@@ -185,7 +185,7 @@ export const useSceneStore = create<SceneState>()((set, get) => ({
                     return await scenesApi.create(makeDefaultScene(userId))
                 }),
                 // The entity is optional for the scene: if it cannot load (for
-                // example migration 016 not applied yet) the world still opens,
+                // example the entities table is missing) the world still opens,
                 // just without saved look or last place.
                 entitiesApi.ensureMine(userId).catch((err) => {
                     console.error('[sceneStore] entity unavailable:', err)
