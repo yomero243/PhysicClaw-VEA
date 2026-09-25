@@ -25,14 +25,32 @@ jobs:
       issues: read
       id-token: write
 
+    # Without the token the action fails during startup, which turned every
+    # pull request red for a reason that had nothing to do with its contents.
+    # A gate that breaks on missing configuration is noise, not a gate.
+    #
+    # The guard lives in `env` rather than the job-level `if:` because the
+    # `secrets` context is not available there. Add CLAUDE_CODE_OAUTH_TOKEN in
+    # Settings → Secrets and variables → Actions and the review starts running
+    # on its own; no further edit needed here.
+    env:
+      HAS_CLAUDE_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+
     steps:
       - name: Checkout repository
+        if: env.HAS_CLAUDE_TOKEN == 'true'
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
+      - name: Report that the review was skipped
+        if: env.HAS_CLAUDE_TOKEN != 'true'
+        run: |
+          echo "::notice title=Claude review skipped::CLAUDE_CODE_OAUTH_TOKEN is not set, so the automated review did not run."
+
       - name: Run Claude Code Review
         id: claude-review
+        if: env.HAS_CLAUDE_TOKEN == 'true'
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
