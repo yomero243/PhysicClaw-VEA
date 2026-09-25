@@ -57,16 +57,6 @@ export const auth = {
         }
         return data
     },
-
-    /** Sign in anonymously (Supabase anonymous auth). */
-    async signInAnon() {
-        const { data, error } = await supabase.auth.signInAnonymously()
-        if (error) {
-            console.error('[Supabase/auth.signInAnon] Error:', error.message)
-            throw error
-        }
-        return data
-    },
 }
 
 // ============================================================

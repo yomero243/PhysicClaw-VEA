@@ -13,7 +13,6 @@ import {
     sessionsApi,
     messagesApi,
     avatarConfigsApi,
-    auth,
     realtimeApi,
     supabase,
 } from '../lib/supabase'
@@ -60,7 +59,10 @@ export interface SceneState {
     // --- Actions ---
     
     // Auth e Init
-    initialize: () => Promise<void>
+    /** Loads the signed-in user's world. The id comes from the Supabase session. */
+    initialize: (userId: string) => Promise<void>
+    /** Drops the previous user's world (sign-out, account switch). */
+    reset: () => void
     
     // Escena
     loadDefaultScene: () => Promise<void>
@@ -118,7 +120,7 @@ const makeDefaultScene = (userId: string): SceneInsert => ({
 // Store
 // ----------------------------------------------------------------
 
-export const useSceneStore = create<SceneState>()((set, get) => ({
+const INITIAL_STATE = {
     userId: null,
     isAuthenticated: false,
     isInitializing: false,
@@ -131,36 +133,33 @@ export const useSceneStore = create<SceneState>()((set, get) => ({
     avatarConfig: null,
     error: null,
     _channel: null,
+} satisfies Partial<SceneState>
+
+export const useSceneStore = create<SceneState>()((set, get) => ({
+    ...INITIAL_STATE,
 
     // ── Actions ──────────────────────────────────────────────────
 
+    reset: () => {
+        get()._cleanupRealtime()
+        set({ ...INITIAL_STATE })
+    },
+
     clearError: () => set({ error: null }),
 
-    initialize: async () => {
-        const { isAuthenticated, isInitializing, isLoadingScene, loadDefaultScene } = get()
-        if (isAuthenticated || isInitializing || isLoadingScene) return
+    initialize: async (userId: string) => {
+        const current = get()
+        if (current.userId === userId && (current.isAuthenticated || current.isInitializing)) return
+        // A different account in the same tab: never show it the previous world.
+        if (current.userId && current.userId !== userId) get().reset()
 
-        set({ isInitializing: true, error: null })
-
+        // No sign-in here. The session comes from the login screen (email +
+        // password, the same account as VEA perZona). This used to call
+        // signInAnonymously() on every load, which minted a brand-new user
+        // each time and orphaned everything saved by the previous one.
+        set({ userId, isAuthenticated: true, isInitializing: true, error: null })
         try {
-            console.log('[sceneStore] Inicializando sesión anónima...')
-            const data = await auth.signInAnon()
-            const user = data?.user
-
-            if (!user) {
-                set({ error: 'No se pudo obtener el usuario anónimo.' })
-                return
-            }
-
-            set({
-                userId: user.id,
-                isAuthenticated: true,
-            })
-            console.log('[sceneStore] Sesión iniciada:', user.id)
-            await loadDefaultScene()
-        } catch (err) {
-            console.error('[sceneStore] Error en inicialización:', err)
-            set({ error: 'Error al iniciar sesión anónima.' })
+            await get().loadDefaultScene()
         } finally {
             set({ isInitializing: false })
         }

@@ -11,7 +11,8 @@ import { InterfaceChrome } from './components/InterfaceChrome'
 import { UserDiscoveryPanel } from './components/UserDiscoveryPanel'
 import { Toasts } from './components/Toasts'
 import { AgentTokenPanel } from './components/AgentTokenPanel'
-import { AuthProvider } from './auth'
+import { AuthProvider, useAuth } from './auth'
+import { LoginPage } from './components/LoginPage'
 import { useOpenClawControl } from './hooks/useOpenClawControl'
 import { useProductionControl } from './hooks/useProductionControl'
 import { useMultiplayer } from './hooks/useMultiplayer'
@@ -24,7 +25,7 @@ const SHOW_SPLAT_PANEL = false
 
 const isDemoMode = new URLSearchParams(window.location.search).has('demo')
 
-function AppContent() {
+function AppContent({ userId: sessionUserId, displayName }: { userId: string; displayName: string }) {
     const setUserId = useSoulStore((s) => s.setUserId)
     const initialize = useSceneStore((s) => s.initialize)
     const userId = useSceneStore((s) => s.userId)
@@ -35,9 +36,15 @@ function AppContent() {
     useOpenClawControl()
     useProductionControl()
 
+    const setUserName = useSoulStore((s) => s.setUserName)
+
     useEffect(function initStore() {
-        initialize()
-    }, [initialize])
+        initialize(sessionUserId)
+    }, [initialize, sessionUserId])
+
+    useEffect(function showWhoIsSignedIn() {
+        setUserName(displayName)
+    }, [displayName, setUserName])
 
     useEffect(function syncUserId() {
         if (userId) setUserId(userId)
@@ -81,11 +88,32 @@ function AppContent() {
     )
 }
 
+/**
+ * One account for PhysicClaw and VEA perZona: same Supabase project, same
+ * email + password. Anonymous sessions left over from older builds do not
+ * count; they could not be recovered after a reload anyway.
+ */
+function AuthGate() {
+    const { user, loading } = useAuth()
+    const resetScene = useSceneStore((s) => s.reset)
+    const signedIn = Boolean(user && !user.is_anonymous)
+
+    useEffect(function dropWorldOnSignOut() {
+        if (!loading && !signedIn) resetScene()
+    }, [loading, signedIn, resetScene])
+
+    if (loading) return null
+    if (!user || !signedIn) return <LoginPage />
+    const displayName = user.email?.split('@')[0] ?? 'user'
+    // Keyed by account, so switching users remounts with a clean slate.
+    return <AppContent key={user.id} userId={user.id} displayName={displayName} />
+}
+
 function App() {
     if (isDemoMode) return <MoodDemo />
     return (
         <AuthProvider>
-            <AppContent />
+            <AuthGate />
         </AuthProvider>
     )
 }

@@ -6,6 +6,7 @@ import { useSceneStore } from '../store/sceneStore'
 import { CHARACTERS } from '../constants/characters'
 import { useSoulStore } from '../store/soulStore'
 import { COMPACT, useCompactLayout } from '../hooks/useCompactLayout'
+import { useAuth } from '../auth'
 
 interface ColorConfig {
   primary: string; secondary: string; glow: string; emission: string
@@ -168,6 +169,7 @@ export const AvatarPanel = () => {
 
   const [open, setOpen] = useState(false)
   const compact = useCompactLayout()
+  const { signOut } = useAuth()
   const [tab, setTab] = useState<Tab>('avatar')
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState<{ text: string; ok: boolean } | null>(null)
@@ -485,9 +487,10 @@ export const AvatarPanel = () => {
               {saveMsg.ok ? '✓' : '✗'} {saveMsg.text}
             </span>
           ) : (
-            <span style={{ fontSize: 9, letterSpacing: 1, color: 'var(--line)' }}>
-              ● SESSION ACTIVE
-            </span>
+            <button onClick={() => void signOut()} title="Sign out"
+              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 9, letterSpacing: 1, color: 'var(--line)' }}>
+              ● SESSION ACTIVE · SIGN OUT
+            </button>
           )}
           <SaveButton onClick={handleSave} disabled={saving} saving={saving} />
         </div>
