@@ -2,7 +2,7 @@
 // R3F component — renders remote users' avatars inside an existing Canvas.
 // MUST be placed inside a <Canvas> — never renders its own Canvas.
 
-import { useRef, useEffect } from 'react'
+import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Text, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
@@ -16,67 +16,33 @@ interface RemoteAvatarProps {
 }
 
 /**
- * GLTFAvatar — loaded from a URL via useGLTF.
- * useGLTF handles asset caching; we only dispose the clone on unmount.
+ * GLTFAvatar — loaded from a URL via useGLTF, which caches and owns the asset.
+ * The clone shares geometries/materials with the cached asset, so it must NOT
+ * dispose them — useGLTF.clear() is the only owner of that GPU memory.
  */
 function GLTFAvatar({ url }: { url: string }) {
     const { scene } = useGLTF(url)
-    const clonedScene = useRef<THREE.Group | null>(null)
-
-    useEffect(() => {
-        // Clone so multiple remote users with the same URL get independent transforms.
-        clonedScene.current = scene.clone(true)
-        return () => {
-            // Dispose cloned geometries and materials to avoid GPU leaks.
-            clonedScene.current?.traverse((obj) => {
-                if ((obj as THREE.Mesh).isMesh) {
-                    const mesh = obj as THREE.Mesh
-                    mesh.geometry?.dispose()
-                    if (Array.isArray(mesh.material)) {
-                        mesh.material.forEach((m) => m.dispose())
-                    } else {
-                        mesh.material?.dispose()
-                    }
-                }
-            })
-            clonedScene.current = null
-        }
-    }, [scene])
-
-    if (!clonedScene.current) return null
-    return <primitive object={clonedScene.current} scale={1} />
+    // Clone so multiple remote users with the same URL get independent transforms.
+    const clonedScene = useMemo(() => scene.clone(true), [scene])
+    return <primitive object={clonedScene} scale={1} />
 }
 
 /**
  * SphereAvatar — simple colored sphere used for 'base-sphere' avatarId.
  * Each instance gets a unique color derived from the userId.
+ * R3F auto-disposes JSX-declared geometries/materials on unmount.
  */
 function SphereAvatar({ userId }: { userId: string }) {
-    const geometryRef = useRef<THREE.SphereGeometry | null>(null)
-    const materialRef = useRef<THREE.MeshStandardMaterial | null>(null)
-
     // Deterministic color from userId (first 6 hex chars of a simple hash).
     const color = '#' + Array.from(userId.slice(0, 6))
         .map((c) => ((c.charCodeAt(0) * 37) % 256).toString(16).padStart(2, '0'))
         .join('')
         .slice(0, 6)
 
-    useEffect(() => {
-        return () => {
-            // Dispose geometry and material on unmount.
-            geometryRef.current?.dispose()
-            materialRef.current?.dispose()
-        }
-    }, [])
-
     return (
         <mesh>
-            <sphereGeometry
-                ref={geometryRef}
-                args={[0.4, 16, 16]}
-            />
+            <sphereGeometry args={[0.4, 16, 16]} />
             <meshStandardMaterial
-                ref={materialRef}
                 color={color}
                 emissive={color}
                 emissiveIntensity={0.3}
@@ -89,20 +55,10 @@ function SphereAvatar({ userId }: { userId: string }) {
  * PlaceholderAvatar — minimal box mesh used for 'happy-idle' or unknown avatarIds.
  */
 function PlaceholderAvatar() {
-    const geometryRef = useRef<THREE.BoxGeometry | null>(null)
-    const materialRef = useRef<THREE.MeshStandardMaterial | null>(null)
-
-    useEffect(() => {
-        return () => {
-            geometryRef.current?.dispose()
-            materialRef.current?.dispose()
-        }
-    }, [])
-
     return (
         <mesh>
-            <boxGeometry ref={geometryRef} args={[0.5, 1, 0.3]} />
-            <meshStandardMaterial ref={materialRef} color="#8CFFB0" wireframe />
+            <boxGeometry args={[0.5, 1, 0.3]} />
+            <meshStandardMaterial color="#8CFFB0" wireframe />
         </mesh>
     )
 }

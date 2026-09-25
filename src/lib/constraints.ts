@@ -55,6 +55,25 @@ export const MODEL_UPLOAD = {
 
 export type RigType = typeof MODEL_UPLOAD.RIG_TYPES[number]
 
+// ─── Agent scene-command bounds ──────────────────────────────────────────────
+// Mirrored in supabase/functions/control/index.ts (keep in sync).
+
+export const SPAWN_BOUNDS = {
+    POSITION_LIMIT: 50,
+    SCALE_MIN: 0.01,
+    SCALE_MAX: 20,
+    LABEL_MAX_LEN: 60,
+    MODEL_URL_MAX_LEN: 512,
+} as const
+
+export const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/
+// Only .splat URLs are spawnable by agents (rendered by GaussianSplats).
+export const SPLAT_URL_RE = /^https:\/\/.+\.splat$/i
+
+const positionCoord = z.number().finite().min(-SPAWN_BOUNDS.POSITION_LIMIT).max(SPAWN_BOUNDS.POSITION_LIMIT)
+const rotationCoord = z.number().finite()
+const scaleCoord = z.number().finite().min(SPAWN_BOUNDS.SCALE_MIN).max(SPAWN_BOUNDS.SCALE_MAX)
+
 // ─── Zod schema: external ControlCommand JSON ────────────────────────────────
 // Validates the JSON payload from /openclaw-control.json before applying it.
 
@@ -82,6 +101,40 @@ export const ControlCommandSchema = z.discriminatedUnion('command', [
     z.object({
         command: z.literal('setActiveCharacterId'),
         value: z.string().min(1).max(CHAR_ID_MAX_LEN),
+        id: z.string().optional(),
+    }),
+    z.object({
+        command: z.literal('setShaderColor'),
+        value: z.object({
+            characterId: z.string().min(1).max(CHAR_ID_MAX_LEN),
+            color: z.string().regex(HEX_COLOR_RE),
+        }),
+        id: z.string().optional(),
+    }),
+    z.object({
+        command: z.literal('setObjectVisibility'),
+        value: z.object({
+            id: z.string().min(1).max(CHAR_ID_MAX_LEN),
+            visible: z.boolean(),
+        }),
+        id: z.string().optional(),
+    }),
+    z.object({
+        command: z.literal('spawnObject'),
+        value: z.object({
+            label: z.string().min(1).max(SPAWN_BOUNDS.LABEL_MAX_LEN).optional(),
+            color: z.string().regex(HEX_COLOR_RE).optional(),
+            position: z.tuple([positionCoord, positionCoord, positionCoord]).optional(),
+            rotation: z.tuple([rotationCoord, rotationCoord, rotationCoord]).optional(),
+            scale: z.tuple([scaleCoord, scaleCoord, scaleCoord]).optional(),
+            model_url: z.string().max(SPAWN_BOUNDS.MODEL_URL_MAX_LEN).regex(SPLAT_URL_RE).optional(),
+        }),
+        id: z.string().optional(),
+    }),
+    z.object({
+        command: z.literal('removeObject'),
+        // A scene_objects uuid, or 'primitives' to clear all agent/user cubes.
+        value: z.union([z.string().uuid(), z.literal('primitives')]),
         id: z.string().optional(),
     }),
 ])

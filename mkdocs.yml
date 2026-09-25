@@ -1,0 +1,38 @@
+site_name: PhysicClaw-VEA
+site_description: Real-time interactive 3D visualization that gives a digital body to an AI agent
+site_url: https://physicclaw-vea.readthedocs.io/
+repo_url: https://github.com/yomero243/PhysicClaw-VEA
+repo_name: yomero243/PhysicClaw-VEA
+edit_uri: edit/main/docs/
+
+theme:
+  name: readthedocs
+  highlightjs: true
+  prev_next_buttons_location: both
+
+docs_dir: docs
+
+# Agent context files and internal notes are not part of the docs site
+exclude_docs: |
+  agents/
+  ENHANCEMENT-multiagent-open-world.md
+
+markdown_extensions:
+  - admonition
+  - tables
+  - fenced_code
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Configuration: configuration.md
+  - Architecture: architecture.md
+  - Frontend: frontend.md
+  - Backend (Supabase): backend.md
+  - Multiplayer: multiplayer.md
+  - Agent Control API: agent-control.md
+  - Deployment & Operations: deployment.md
+  - Roadmap: roadmap.md
+  - Troubleshooting: troubleshooting.md

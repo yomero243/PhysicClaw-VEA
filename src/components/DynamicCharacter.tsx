@@ -26,17 +26,9 @@ function useShaderColor(characterId: string): THREE.Color {
     )
 }
 
-// ── FBX Model ─────────────────────────────────────────────────────────────────
-
-const FBXModel = ({ url, config }: { url: string; config: any }) => {
-    const fbx = useFBX(url)
-    const group = useRef<THREE.Group>(null)
-    const { actions } = useAnimations(fbx.animations, group)
+/** Crossfades to the animation mapped to the current mood (shared by FBX/GLB models). */
+function useMoodAnimation(actions: Record<string, THREE.AnimationAction | null>, config: any) {
     const mood = useSoulStore(s => s.mood)
-    const lowPerformanceMode = useSoulStore(s => s.lowPerformanceMode)
-
-    // Clone the FBX model to prevent polluting the cached asset
-    const clonedFbx = useMemo(() => fbx.clone(true), [fbx])
 
     useEffect(() => {
         const actionNames = Object.keys(actions)
@@ -51,16 +43,59 @@ const FBXModel = ({ url, config }: { url: string; config: any }) => {
             action.reset().fadeIn(0.5).play()
         }
     }, [actions, mood, config])
+}
 
-    // Apply castShadow and receiveShadow dynamically based on performance mode
+/** Toggles cast/receiveShadow on every mesh according to the performance mode. */
+function useShadowMode(object: THREE.Object3D) {
+    const lowPerformanceMode = useSoulStore(s => s.lowPerformanceMode)
+
     useEffect(() => {
-        clonedFbx.traverse((child: any) => {
+        object.traverse((child: any) => {
             if (child.isMesh) {
                 child.castShadow = !lowPerformanceMode
                 child.receiveShadow = !lowPerformanceMode
             }
         })
-    }, [clonedFbx, lowPerformanceMode])
+    }, [object, lowPerformanceMode])
+}
+
+/** Drives the energy shader uniforms (time, intensity, live color) each frame. */
+function useEnergyUniforms(
+    materialRef: React.MutableRefObject<any>,
+    overrides: CharacterOverride,
+    shaderColor: THREE.Color,
+) {
+    const intensity = useSoulStore(s => s.intensity)
+    const isThinking = useSoulStore(s => s.isThinking)
+    const mood = useSoulStore(s => s.mood)
+
+    useFrame((_, delta) => {
+        const mat = materialRef.current
+        if (!mat) return
+        mat.uTime += delta
+
+        let target = (overrides.intensity ?? intensity) as number
+        if (isThinking) target += 0.8
+        if (mood === 'excited') target += 0.5
+        mat.uIntensity = THREE.MathUtils.lerp(mat.uIntensity, target, 0.1)
+
+        // Live-update color when override changes
+        if (mat.uniforms) mat.uniforms.uColor.value = shaderColor
+    })
+}
+
+// ── FBX Model ─────────────────────────────────────────────────────────────────
+
+const FBXModel = ({ url, config }: { url: string; config: any }) => {
+    const fbx = useFBX(url)
+    const group = useRef<THREE.Group>(null)
+    const { actions } = useAnimations(fbx.animations, group)
+
+    // Clone the FBX model to prevent polluting the cached asset
+    const clonedFbx = useMemo(() => fbx.clone(true), [fbx])
+
+    useMoodAnimation(actions, config)
+    useShadowMode(clonedFbx)
 
     // Apply per-character override for scale / position
     const overrides = useSoulStore(s => s.characterOverrides[config.id]) || EMPTY_OVERRIDE
@@ -83,67 +118,31 @@ const GLBModel = ({ url, config }: { url: string; config: any }) => {
     const { scene, animations } = useGLTF(url)
     const group = useRef<THREE.Group>(null)
     const { actions } = useAnimations(animations, group)
-    const mood = useSoulStore(s => s.mood)
-    const intensity = useSoulStore(s => s.intensity)
-    const isThinking = useSoulStore(s => s.isThinking)
-    const lowPerformanceMode = useSoulStore(s => s.lowPerformanceMode)
     const overrides = useSoulStore(s => s.characterOverrides[config.id]) || EMPTY_OVERRIDE
 
     // Clone the scene to avoid modifying the cached shared gltf scene
     const clonedScene = useMemo(() => scene.clone(true), [scene])
 
-    useEffect(() => {
-        const actionNames = Object.keys(actions)
-        if (actionNames.length === 0) return
-        const animName =
-            (config.animations && config.animations[mood]) ||
-            config.defaultAnimation ||
-            actionNames[0]
-        const action = actions[animName] || actions[actionNames[0]]
-        if (action) {
-            Object.values(actions).forEach((a) => a?.fadeOut(0.5))
-            action.reset().fadeIn(0.5).play()
-        }
-    }, [actions, mood, config])
+    useMoodAnimation(actions, config)
+    useShadowMode(clonedScene)
 
     const shaderColor = useShaderColor(config.id)
-    
-    // Store the material ref for GPU cleanup
-    const materialRef = useRef<any>(null)
 
-    // Reconstruct material when shader color changes and dispose the old one
+    // Reconstruct material when shader color changes
     const material = useMemo(() => {
         const mat = new EnergyShaderMaterial()
         mat.uniforms.uColor.value = shaderColor
-        
-        if (materialRef.current) {
-            materialRef.current.dispose()
-        }
-        materialRef.current = mat
-        
         return mat
     }, [shaderColor])
 
-    // Cleanup material on unmount
+    // Dispose each replaced material (and the last one on unmount)
     useEffect(() => {
-        return () => {
-            if (materialRef.current) {
-                materialRef.current.dispose()
-                materialRef.current = null
-            }
-        }
-    }, [])
+        return () => material.dispose()
+    }, [material])
 
-    useFrame((_, delta) => {
-        if (material) {
-            material.uTime += delta
-
-            let target = (overrides.intensity ?? intensity) as number
-            if (isThinking) target += 0.8
-            if (mood === 'excited') target += 0.5
-            material.uIntensity = THREE.MathUtils.lerp(material.uIntensity, target, 0.1)
-        }
-    })
+    const materialRef = useRef(material)
+    materialRef.current = material
+    useEnergyUniforms(materialRef, overrides, shaderColor)
 
     // Apply material shader to the cloned scene (or restore originals)
     useEffect(() => {
@@ -164,16 +163,6 @@ const GLBModel = ({ url, config }: { url: string; config: any }) => {
         }
     }, [clonedScene, material, overrides.useEnergyShader])
 
-    // Apply castShadow and receiveShadow dynamically based on performance mode
-    useEffect(() => {
-        clonedScene.traverse((child: any) => {
-            if (child.isMesh) {
-                child.castShadow = !lowPerformanceMode
-                child.receiveShadow = !lowPerformanceMode
-            }
-        })
-    }, [clonedScene, lowPerformanceMode])
-
     const effectiveScale = overrides.scale ?? config.scale
     const effectivePositionY = overrides.positionY ?? config.position[1]
 
@@ -192,32 +181,12 @@ const GLBModel = ({ url, config }: { url: string; config: any }) => {
 const BaseEntity = ({ characterId }: { characterId: string }) => {
     const materialRef = useRef<any>(null)
 
-    const intensity = useSoulStore((s) => s.intensity)
-    const isThinking = useSoulStore((s) => s.isThinking)
-    const mood = useSoulStore((s) => s.mood)
     const lowPerformanceMode = useSoulStore((s) => s.lowPerformanceMode)
     const overrides = useSoulStore((s) => s.characterOverrides[characterId]) || EMPTY_OVERRIDE
 
     const shaderColor = useShaderColor(characterId)
 
-    useFrame((_, delta) => {
-        if (materialRef.current) {
-            materialRef.current.uTime += delta
-
-            let target = (overrides.intensity ?? intensity) as number
-            if (isThinking) target += 0.8
-            if (mood === 'excited') target += 0.5
-            materialRef.current.uIntensity = THREE.MathUtils.lerp(
-                materialRef.current.uIntensity,
-                target,
-                0.1,
-            )
-            // Live-update color when override changes
-            if (materialRef.current.uniforms) {
-                materialRef.current.uniforms.uColor.value = shaderColor
-            }
-        }
-    })
+    useEnergyUniforms(materialRef, overrides, shaderColor)
 
     const scale = overrides.scale ?? 1
 
