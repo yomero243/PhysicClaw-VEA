@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { Session, User } from '@supabase/supabase-js'
-import { supabase } from '../lib/supabase'
+import { isSupabaseConfigured, supabase } from '../lib/supabase'
+import { describeAuthError } from './authErrors'
 import { openClawService } from '../services/openClawService'
 
 interface AuthContextType {
@@ -13,6 +14,9 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+const userFacing = (error: Error | null) =>
+  error ? new Error(describeAuthError(error, isSupabaseConfigured)) : null
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
@@ -36,12 +40,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return { error }
+    return { error: userFacing(error) }
   }
 
   const signUp = async (email: string, password: string) => {
     const { error } = await supabase.auth.signUp({ email, password })
-    return { error }
+    return { error: userFacing(error) }
   }
 
   const signOut = async () => {
