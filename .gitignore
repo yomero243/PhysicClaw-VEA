@@ -1,0 +1,45 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# MkDocs build output
+site/
+
+# Editor directories and files
+.claude/*
+!.claude/launch.json
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment variables — ignore all .env files except the example template
+.env
+.env.*
+!.env.example
+
+# OpenClaw control file
+openclaw-control.json
+
+# Agent & Review states
+AGENTS_STATE.md
+CLAUDE.md
+REVIEW.md
+
+# OpenClaw Dev Token
+.openclaw-token
