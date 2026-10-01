@@ -316,8 +316,8 @@ covers both apps, and one table holds every tenant's entity.
 | `look`, `last_*` | Written by PhysicClaw: panel colours and where the entity was last. |
 
 Writing requires a signed-in session. Anonymous writes are rejected by
-row-level security, by design. Other tenants see only appearance
-(`entity_appearances`), never where an entity was.
+row-level security, by design. Other tenants cannot read anyone's
+entities: not their look, and never where they were.
 
 No API key, token or credential is ever stored here. An agent's LLM key lives
 only in its owner's personal `.env`.
