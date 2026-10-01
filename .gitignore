@@ -46,3 +46,9 @@ REVIEW.md
 
 # OpenClaw Dev Token
 .openclaw-token
+
+# Vercel CLI project link
+.vercel
+
+# Local tool caches (search index)
+.tgrep/
